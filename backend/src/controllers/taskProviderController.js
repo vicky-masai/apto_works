@@ -42,6 +42,7 @@ const updateProfile = async (req, res) => {
 
     res.json(updatedTaskProvider);
   } catch (error) {
+    console.log(error.message);
     res.status(500).json({ error: 'Failed to update profile' });
   }
 };

@@ -4,8 +4,8 @@ const prisma = require('../config/database');
 const createTask = async (req, res) => {
   try {
     const {
-      taskTitle,
-      taskDescription,
+      title,
+      description,
       category,
       price,
       estimatedTime,
@@ -18,8 +18,8 @@ const createTask = async (req, res) => {
 
     const task = await prisma.task.create({
       data: {
-        taskTitle,
-        taskDescription,
+        taskTitle :title,
+        taskDescription:description,
         category,
         price,
         estimatedTime,
@@ -32,11 +32,77 @@ const createTask = async (req, res) => {
       }
     });
 
-    res.status(201).json(task);
+    res.status(201).json({ task, message: 'Task created successfully' });
+
   } catch (error) {
+    console.log(error.message);
     res.status(500).json({ error: 'Failed to create task' });
   }
 };
+
+
+const getAllPublishedTasks = async (req, res) => {
+  try {
+    const publishedTasks = await prisma.task.findMany({
+      where: {
+        status: "published", // Only fetch published tasks
+      },
+      include: {
+        taskProvider: true, // Include task provider details (optional)
+      },
+    });
+
+    res.json(publishedTasks);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch published tasks" });
+  }
+};
+
+
+const getUnPublishedTasks = async (req, res) => {
+  try {
+    const publishedTasks = await prisma.task.findMany({
+      where: {
+        status: "unpublished", // Only fetch published tasks
+      },
+      include: {
+        taskProvider: true, // Include task provider details (optional)
+      },
+    });
+
+    res.json(publishedTasks);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch published tasks" });
+  }
+};
+
+
+const getAllTask = async (req, res) => {
+  try {
+    const publishedTasks = await prisma.task.findMany({
+      where: {
+        status: "published", // Only fetch published tasks
+      },
+      include: {
+        taskProvider: true, // Include task provider details (optional)
+      },
+    });
+
+    res.json(publishedTasks);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch published tasks" });
+  }
+};
+
+
+
+
+
+
+
 
 const getProviderTasks = async (req, res) => {
   try {
@@ -78,6 +144,7 @@ const updateTask = async (req, res) => {
 
     res.json(task);
   } catch (error) {
+    console.log(error.message);
     res.status(500).json({ error: 'Failed to update task' });
   }
 };
@@ -343,6 +410,9 @@ const getCategories = async (req, res) => {
 
 module.exports = {
   createTask,
+  getAllPublishedTasks,
+  getUnPublishedTasks,
+  getAllTask,
   getProviderTasks,
   updateTask,
   publishTask,
