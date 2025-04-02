@@ -181,7 +181,7 @@ export default function WalletPage() {
           </div>
         </div>
       </header>
-      <main className="flex-1 container py-6">
+      <main className="flex-1 container py-6 m-auto">
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">My Wallet</h1>

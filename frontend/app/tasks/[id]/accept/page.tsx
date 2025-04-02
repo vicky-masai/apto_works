@@ -54,7 +54,7 @@ export default function TaskAcceptPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="container py-6 max-w-4xl">
+    <div className="container py-6 max-w-4xl m-auto">
       <div className="mb-6">
         <Link href="/tasks" className="flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="mr-1 h-4 w-4" />

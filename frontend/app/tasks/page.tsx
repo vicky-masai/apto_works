@@ -39,7 +39,7 @@ export default function TasksPage() {
           </div>
         </div>
       </header>
-      <main className="flex-1 container py-6">
+      <main className="flex-1 container py-6 m-auto">
         <div className="flex flex-col md:flex-row gap-6">
           <div className="md:w-1/4">
             <Card className="bg-white border shadow-sm">

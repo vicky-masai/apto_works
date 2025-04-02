@@ -29,7 +29,7 @@ export default function PostTaskPage() {
   }
 
   return (
-    <div className="container py-6 max-w-2xl">
+    <div className="container py-6 max-w-2xl m-auto">
       <div className="mb-6">
         <Link href="/" className="flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="mr-1 h-4 w-4" />
