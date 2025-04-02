@@ -31,7 +31,7 @@ const registerTaskProvider = async (req, res) => {
         name,
         email,
         password: hashedPassword,
-        organizationType,
+        organizationType:organizationType,
         otp,
         otpExpiry: new Date(Date.now() + 5 * 60 * 1000) // 5 minutes
       }
@@ -197,6 +197,7 @@ const verifyWorkerOTP = async (req, res) => {
 
     res.json({ message: 'Email verified successfully' });
   } catch (error) {
+    console.log(error.message);
     res.status(500).json({ error: 'Verification failed' });
   }
 };

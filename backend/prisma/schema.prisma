@@ -44,6 +44,9 @@ model TaskProvider {
   currentAssignedBalance Float    @default(0)
   totalUsedBalance      Float     @default(0)
   tasks                 Task[]
+  isVerified      Boolean         @default(false)
+  otp             String?
+  otpExpiry       DateTime?
   balanceHistory        BalanceHistory[]
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
@@ -56,8 +59,11 @@ model Worker {
   password        String
   skills          String[]
   balance         Float           @default(0)
+  isVerified      Boolean         @default(false)
   acceptedTasks   AcceptedTask[]
   balanceHistory  BalanceHistory[]
+  otp             String?
+  otpExpiry       DateTime?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 }
