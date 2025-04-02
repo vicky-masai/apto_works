@@ -31,7 +31,7 @@ const registerTaskProvider = async (req, res) => {
         name,
         email,
         password: hashedPassword,
-        organizationType:organizationType,
+        organizationType: organizationType,
         otp,
         otpExpiry: new Date(Date.now() + 5 * 60 * 1000) // 5 minutes
       }
@@ -257,55 +257,27 @@ const forgotPasswordTaskProvider = async (req, res) => {
       return res.status(404).json({ error: 'Task provider not found' });
     }
 
-    const resetToken = generateResetToken();
+    const otp = generateOTP();
     const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+
+
 
     await prisma.taskProvider.update({
       where: { email },
       data: {
-        resetToken,
-        resetTokenExpiry
+        otp,
+        otpExpiry: new Date(Date.now() + 5 * 60 * 1000)
       }
     });
 
-    await sendPasswordResetEmail(email, resetToken);
+    await sendOTP(email, otp);
 
-    res.json({ message: 'Password reset email sent' });
+    // await sendPasswordResetEmail(email, resetToken);
+
+    res.json({ message: 'OTP sended' });
   } catch (error) {
-    res.status(500).json({ error: 'Password reset failed' });
-  }
-};
-
-const resetPasswordTaskProvider = async (req, res) => {
-  try {
-    const { token, newPassword } = req.body;
-
-    const taskProvider = await prisma.taskProvider.findFirst({
-      where: {
-        resetToken: token,
-        resetTokenExpiry: {
-          gt: new Date()
-        }
-      }
-    });
-
-    if (!taskProvider) {
-      return res.status(400).json({ error: 'Invalid or expired token' });
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    await prisma.taskProvider.update({
-      where: { id: taskProvider.id },
-      data: {
-        password: hashedPassword,
-        resetToken: null,
-        resetTokenExpiry: null
-      }
-    });
-
-    res.json({ message: 'Password reset successful' });
-  } catch (error) {
+    console.log(error.message)
     res.status(500).json({ error: 'Password reset failed' });
   }
 };
@@ -313,64 +285,72 @@ const resetPasswordTaskProvider = async (req, res) => {
 const forgotPasswordWorker = async (req, res) => {
   try {
     const { email } = req.body;
+    const worker = await prisma.worker.findUnique({ where: { email } });
+    if (!worker) return res.status(404).json({ error: 'Worker not found' });
 
-    const worker = await prisma.worker.findUnique({
-      where: { email }
-    });
-
-    if (!worker) {
-      return res.status(404).json({ error: 'Worker not found' });
-    }
-
-    const resetToken = generateResetToken();
-    const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    const otp = generateOTP();
+    // const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
     await prisma.worker.update({
       where: { email },
       data: {
-        resetToken,
-        resetTokenExpiry
+        otp,
+        otpExpiry: new Date(Date.now() + 5 * 60 * 1000)
       }
     });
 
-    await sendPasswordResetEmail(email, resetToken);
+    await sendOTP(email, otp);
+    res.json({ message: 'Reset opt sended' });
 
-    res.json({ message: 'Password reset email sent' });
   } catch (error) {
+    console.error('Forgot Password Error:', error);
     res.status(500).json({ error: 'Password reset failed' });
   }
 };
 
+// Reset Password (Worker)
 const resetPasswordWorker = async (req, res) => {
   try {
-    const { token, newPassword } = req.body;
-
+    const { email, otp, newPassword } = req.body;
+    
     const worker = await prisma.worker.findFirst({
-      where: {
-        resetToken: token,
-        resetTokenExpiry: {
-          gt: new Date()
-        }
-      }
+      where: { email, otp, otpExpiry: { gt: new Date() } }
     });
 
-    if (!worker) {
-      return res.status(400).json({ error: 'Invalid or expired token' });
-    }
+    if (!worker) return res.status(400).json({ error: 'Invalid or expired OTP' });
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-
     await prisma.worker.update({
       where: { id: worker.id },
-      data: {
-        password: hashedPassword,
-        resetToken: null,
-        resetTokenExpiry: null
-      }
+      data: { password: hashedPassword, otp: null, otpExpiry: null }
     });
 
     res.json({ message: 'Password reset successful' });
   } catch (error) {
+    console.error('Reset Password Error:', error);
+    res.status(500).json({ error: 'Password reset failed' });
+  }
+};
+
+const resetPasswordTaskProvider = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    
+    const taskProvider = await prisma.taskProvider.findFirst({
+      where: { email, otp, otpExpiry: { gt: new Date() } }
+    });
+
+    if (!taskProvider) return res.status(400).json({ error: 'Invalid or expired OTP' });
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.taskProvider.update({
+      where: { id: taskProvider.id },
+      data: { password: hashedPassword, otp: null, otpExpiry: null }
+    });
+
+    res.json({ message: 'Password reset successful' });
+  } catch (error) {
+    console.error('Reset Password Error:', error);
     res.status(500).json({ error: 'Password reset failed' });
   }
 };
