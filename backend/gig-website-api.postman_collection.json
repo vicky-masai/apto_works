@@ -1,0 +1,777 @@
+{
+  "info": {
+    "name": "Gig Website API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Worker Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"fullName\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\",\n    \"skills\": [\"JavaScript\", \"React\", \"Node.js\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/worker/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "worker", "register"]
+            }
+          }
+        },
+        {
+          "name": "Worker Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/worker/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "worker", "login"]
+            }
+          }
+        },
+        {
+          "name": "Task Provider Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Tech Company\",\n    \"email\": \"company@example.com\",\n    \"password\": \"password123\",\n    \"organizationType\": \"Corporation\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/task-provider/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "task-provider", "register"]
+            }
+          }
+        },
+        {
+          "name": "Task Provider Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"company@example.com\",\n    \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/task-provider/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "task-provider", "login"]
+            }
+          }
+        },
+        {
+          "name": "Verify Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"user@example.com\",\n    \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify-email",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "verify-email"]
+            }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/forgot-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "forgot-password"]
+            }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"user@example.com\",\n    \"otp\": \"123456\",\n    \"newPassword\": \"newpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "reset-password"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Worker",
+      "item": [
+        {
+          "name": "Get Worker Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/workers/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "workers", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Update Worker Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"fullName\": \"John Doe\",\n    \"skills\": [\"JavaScript\", \"React\", \"Node.js\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/workers/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "workers", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Get Accepted Tasks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/workers/accepted-tasks",
+              "host": ["{{base_url}}"],
+              "path": ["api", "workers", "accepted-tasks"]
+            }
+          }
+        },
+        {
+          "name": "Get Worker Balance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/workers/balance",
+              "host": ["{{base_url}}"],
+              "path": ["api", "workers", "balance"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Task Provider",
+      "item": [
+        {
+          "name": "Get Task Provider Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/task-providers/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "task-providers", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Update Task Provider Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Tech Company\",\n    \"organizationType\": \"Corporation\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/task-providers/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "task-providers", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Get Task Provider Balance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/task-providers/balance",
+              "host": ["{{base_url}}"],
+              "path": ["api", "task-providers", "balance"]
+            }
+          }
+        },
+        {
+          "name": "Get Workers List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/task-providers/workers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "task-providers", "workers"]
+            }
+          }
+        },
+        {
+          "name": "Verify Task Proof",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"isApproved\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/task-providers/verify-proof/:taskId/:workerId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "task-providers", "verify-proof", ":taskId", ":workerId"],
+              "variable": [
+                {
+                  "key": "taskId",
+                  "value": "task_id_here"
+                },
+                {
+                  "key": "workerId",
+                  "value": "worker_id_here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "Create Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Build a Website\",\n    \"description\": \"Create a responsive website using React\",\n    \"categoryId\": \"category_id_here\",\n    \"amount\": 1000,\n    \"deadline\": \"2024-05-01T00:00:00Z\",\n    \"requiredSkills\": [\"React\", \"JavaScript\", \"CSS\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tasks",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks"]
+            }
+          }
+        },
+        {
+          "name": "Get All Tasks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tasks",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "category",
+                  "value": "category_id"
+                },
+                {
+                  "key": "status",
+                  "value": "OPEN"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Task by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tasks/:taskId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks", ":taskId"],
+              "variable": [
+                {
+                  "key": "taskId",
+                  "value": "task_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Task",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Updated Task Title\",\n    \"description\": \"Updated task description\",\n    \"amount\": 1200,\n    \"deadline\": \"2024-05-01T00:00:00Z\",\n    \"requiredSkills\": [\"React\", \"JavaScript\", \"CSS\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tasks/:taskId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks", ":taskId"],
+              "variable": [
+                {
+                  "key": "taskId",
+                  "value": "task_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Task",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tasks/:taskId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks", ":taskId"],
+              "variable": [
+                {
+                  "key": "taskId",
+                  "value": "task_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Accept Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tasks/:taskId/accept",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks", ":taskId", "accept"],
+              "variable": [
+                {
+                  "key": "taskId",
+                  "value": "task_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Submit Task Proof",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "proof",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "comments",
+                  "value": "Task completed as requested",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tasks/:taskId/submit-proof",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks", ":taskId", "submit-proof"],
+              "variable": [
+                {
+                  "key": "taskId",
+                  "value": "task_id_here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "categories"]
+            }
+          }
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Web Development\",\n    \"description\": \"Tasks related to web development\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "categories"]
+            }
+          }
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Updated Category Name\",\n    \"description\": \"Updated category description\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/categories/:categoryId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "categories", ":categoryId"],
+              "variable": [
+                {
+                  "key": "categoryId",
+                  "value": "category_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/categories/:categoryId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "categories", ":categoryId"],
+              "variable": [
+                {
+                  "key": "categoryId",
+                  "value": "category_id_here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Balance",
+      "item": [
+        {
+          "name": "Add Balance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"amount\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/balance/add",
+              "host": ["{{base_url}}"],
+              "path": ["api", "balance", "add"]
+            }
+          }
+        },
+        {
+          "name": "Withdraw Balance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"amount\": 500\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/balance/withdraw",
+              "host": ["{{base_url}}"],
+              "path": ["api", "balance", "withdraw"]
+            }
+          }
+        },
+        {
+          "name": "Get Balance History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/balance/history",
+              "host": ["{{base_url}}"],
+              "path": ["api", "balance", "history"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "your_jwt_token_here",
+      "type": "string"
+    }
+  ]
+} 

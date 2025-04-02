@@ -1,0 +1,105 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum OrganizationType {
+  Business
+  NonProfit
+  Individual
+}
+
+enum TaskStatus {
+  Published
+  NotPublished
+}
+
+enum TransactionType {
+  Add
+  Withdraw
+}
+
+enum AcceptedTaskStatus {
+  Active
+  Completed
+  Pending
+  Paid
+  Cancelled
+}
+
+model TaskProvider {
+  id                    String    @id @default(auto()) @map("_id") @db.ObjectId
+  name                  String
+  email                 String    @unique
+  password              String
+  organizationType      OrganizationType?
+  balance               Float     @default(0)
+  currentAssignedBalance Float    @default(0)
+  totalUsedBalance      Float     @default(0)
+  tasks                 Task[]
+  balanceHistory        BalanceHistory[]
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+model Worker {
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  fullName        String
+  email           String          @unique
+  password        String
+  skills          String[]
+  balance         Float           @default(0)
+  acceptedTasks   AcceptedTask[]
+  balanceHistory  BalanceHistory[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model Task {
+  id                    String            @id @default(auto()) @map("_id") @db.ObjectId
+  taskTitle             String
+  taskDescription       String
+  category              String
+  price                 Float
+  estimatedTime         String
+  stepByStepInstructions String
+  taskStatus            TaskStatus        @default(NotPublished)
+  requiredProof         String[]
+  numWorkersNeeded      Int
+  totalAmount           Float
+  acceptedWorkers       AcceptedTask[]
+  taskProviderId        String            @db.ObjectId
+  taskProvider          TaskProvider      @relation(fields: [taskProviderId], references: [id])
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+}
+
+model AcceptedTask {
+  id                String              @id @default(auto()) @map("_id") @db.ObjectId
+  workerId          String              @db.ObjectId
+  taskId            String              @db.ObjectId
+  status            AcceptedTaskStatus  @default(Pending)
+  submittedProof    String?
+  verifiedByProvider Boolean             @default(false)
+  worker            Worker              @relation(fields: [workerId], references: [id])
+  task              Task                @relation(fields: [taskId], references: [id])
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+}
+
+model BalanceHistory {
+  id        String          @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String          @db.ObjectId
+  amount    Float
+  type      TransactionType
+  taskProvider TaskProvider? @relation(fields: [userId], references: [id])
+  worker      Worker?       @relation(fields: [userId], references: [id])
+  createdAt   DateTime      @default(now())
+} 
