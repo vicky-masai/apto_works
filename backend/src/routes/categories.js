@@ -7,8 +7,8 @@ const { taskProviderAuth } = require('../middleware/auth');
 router.get('/', categoryController.getAllCategories);
 
 // Admin routes (protected)
-router.post('/', taskProviderAuth, categoryController.createCategory);
-router.put('/:categoryId', taskProviderAuth, categoryController.updateCategory);
-router.delete('/:categoryId', taskProviderAuth, categoryController.deleteCategory);
+router.post('/', categoryController.createCategory);
+router.put('/:categoryId', categoryController.updateCategory);
+router.delete('/:categoryId', categoryController.deleteCategory);
 
 module.exports = router; 
