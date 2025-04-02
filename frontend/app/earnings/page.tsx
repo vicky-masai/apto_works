@@ -18,6 +18,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { Footer } from "@/components/Footer"
+import { Header } from "@/components/Header"
 
 // Mock data for earnings
 const earningsData = [
@@ -110,37 +112,7 @@ export default function EarningsPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2 font-bold text-xl text-primary">
-            <Link href="/">TaskHub</Link>
-          </div>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link
-              href="/dashboard"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/tasks"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Tasks
-            </Link>
-            <Link href="/earnings" className="text-sm font-medium text-foreground transition-colors">
-              Earnings
-            </Link>
-          </nav>
-          <div className="flex items-center gap-4">
-            <Link href="/profile">
-              <Button variant="ghost" size="sm">
-                Profile
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Header isLoggedIn={true} />
       <main className="flex-1 container py-6 m-auto">
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-between">
@@ -402,6 +374,7 @@ export default function EarningsPage() {
           </Card>
         </div>
       </main>
+      <Footer />
     </div>
   )
 }

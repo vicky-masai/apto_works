@@ -1,3 +1,5 @@
+"use client"
+
 import Link from "next/link"
 import { ArrowUpDown, Search } from "lucide-react"
 
@@ -7,38 +9,13 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TaskCard } from "@/components/task-card"
+import { Footer } from "@/components/Footer"
+import { Header } from "@/components/Header"
 
 export default function TasksPage() {
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      <header className="sticky top-0 z-50 w-full border-b bg-white">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2 font-bold text-xl text-primary">
-            <Link href="/">TaskHub</Link>
-          </div>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="/dashboard" className="text-sm font-medium text-gray-600 hover:text-gray-900">
-              Dashboard
-            </Link>
-            <Link href="/tasks" className="text-sm font-medium text-gray-900">
-              Tasks
-            </Link>
-            <Link href="/earnings" className="text-sm font-medium text-gray-600 hover:text-gray-900">
-              Earnings
-            </Link>
-            <Link href="/wallet" className="text-sm font-medium text-gray-600 hover:text-gray-900">
-              Wallet
-            </Link>
-          </nav>
-          <div className="flex items-center gap-4">
-            <Link href="/profile">
-              <Button variant="ghost" size="sm">
-                Profile
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Header isLoggedIn={true} />
       <main className="flex-1 container py-6 m-auto">
         <div className="flex flex-col md:flex-row gap-6">
           <div className="md:w-1/4">
@@ -253,6 +230,7 @@ export default function TasksPage() {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   )
 }

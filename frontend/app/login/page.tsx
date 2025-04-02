@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Footer } from "@/components/Footer"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -41,74 +42,77 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="container m-auto flex h-screen w-screen flex-col items-center justify-center">
-      <Link
-        href="/"
-        className="absolute left-4 top-4 md:left-8 md:top-8 flex items-center text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="mr-1 h-4 w-4" />
-        Back to Home
-      </Link>
+    <div className="flex min-h-screen flex-col bg-white">
+      <div className="container m-auto flex flex-1 flex-col items-center justify-center">
+        <Link
+          href="/"
+          className="absolute left-4 top-4 md:left-8 md:top-8 flex items-center text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="mr-1 h-4 w-4" />
+          Back to Home
+        </Link>
 
-      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px] sm:mt-10">
-        <div className="flex flex-col space-y-2 text-center">
-          <div className="flex justify-center">
-            <Shield className="h-6 w-6 text-primary" />
+        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px] sm:mt-10">
+          <div className="flex flex-col space-y-2 text-center">
+            <div className="flex justify-center">
+              <Shield className="h-6 w-6 text-primary" />
+            </div>
+            <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
+            <p className="text-sm text-muted-foreground">Enter your credentials to sign in to your account</p>
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
-          <p className="text-sm text-muted-foreground">Enter your credentials to sign in to your account</p>
-        </div>
 
-        <Card>
-          <form onSubmit={handleSubmit}>
-            <CardHeader className="space-y-1">
-              <CardTitle className="text-xl">Sign in</CardTitle>
-              <CardDescription>Enter your email and password to access your account</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {error && <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">{error}</div>}
+          <Card>
+            <form onSubmit={handleSubmit}>
+              <CardHeader className="space-y-1">
+                <CardTitle className="text-xl">Sign in</CardTitle>
+                <CardDescription>Enter your email and password to access your account</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {error && <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">{error}</div>}
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="john@example.com" required />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link
-                    href="/forgot-password"
-                    className="text-xs text-muted-foreground underline-offset-4 hover:underline"
-                  >
-                    Forgot password?
-                  </Link>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" placeholder="john@example.com" required />
                 </div>
-                <Input id="password" type="password" required />
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="remember" />
-                <label
-                  htmlFor="remember"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Remember me
-                </label>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign in"}
-              </Button>
-            </CardFooter>
-          </form>
-        </Card>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">Password</Label>
+                    <Link
+                      href="/forgot-password"
+                      className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
+                  <Input id="password" type="password" required />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="remember" />
+                  <label
+                    htmlFor="remember"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Remember me
+                  </label>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Signing in..." : "Sign in"}
+                </Button>
+              </CardFooter>
+            </form>
+          </Card>
 
-        <div className="text-center text-sm">
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" className="underline underline-offset-4 hover:text-primary">
-            Sign up
-          </Link>
+          <div className="text-center text-sm">
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="underline underline-offset-4 hover:text-primary">
+              Sign up
+            </Link>
+          </div>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

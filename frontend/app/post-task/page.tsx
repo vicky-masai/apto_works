@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Footer } from "@/components/Footer"
 
 export default function PostTaskPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -29,150 +30,153 @@ export default function PostTaskPage() {
   }
 
   return (
-    <div className="container py-6 max-w-2xl m-auto">
-      <div className="mb-6">
-        <Link href="/" className="flex items-center text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          Back to Home
-        </Link>
-      </div>
+    <div className="flex min-h-screen flex-col bg-white">
+      <div className="container py-6 max-w-2xl m-auto flex-1">
+        <div className="mb-6">
+          <Link href="/" className="flex items-center text-sm text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="mr-1 h-4 w-4" />
+            Back to Home
+          </Link>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Post a New Task</CardTitle>
-          <CardDescription>Create a task for workers to complete</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {!isSuccess ? (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="title">Task Title</Label>
-                  <Input id="title" placeholder="e.g., Website Registration Task" required />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="description">Task Description</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Describe what the worker needs to do"
-                    className="min-h-[100px]"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Post a New Task</CardTitle>
+            <CardDescription>Create a task for workers to complete</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!isSuccess ? (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="category">Category</Label>
-                    <Select required>
-                      <SelectTrigger id="category">
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="registration">Registration</SelectItem>
-                        <SelectItem value="social">Social Media</SelectItem>
-                        <SelectItem value="testing">Testing</SelectItem>
-                        <SelectItem value="content">Content Creation</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="title">Task Title</Label>
+                    <Input id="title" placeholder="e.g., Website Registration Task" required />
                   </div>
 
                   <div className="grid gap-2">
-                    <Label htmlFor="difficulty">Difficulty</Label>
-                    <Select required>
-                      <SelectTrigger id="difficulty">
-                        <SelectValue placeholder="Select difficulty" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="easy">Easy</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="hard">Hard</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="price">Price ($)</Label>
-                    <Input id="price" type="number" min="0.50" step="0.50" placeholder="5.00" required />
+                    <Label htmlFor="description">Task Description</Label>
+                    <Textarea
+                      id="description"
+                      placeholder="Describe what the worker needs to do"
+                      className="min-h-[100px]"
+                      required
+                    />
                   </div>
 
-                  <div className="grid gap-2">
-                    <Label htmlFor="estimated-time">Estimated Time</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Input id="estimated-time" type="number" min="1" placeholder="5" required />
-                      <Select defaultValue="minutes">
-                        <SelectTrigger id="time-unit">
-                          <SelectValue placeholder="Unit" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="category">Category</Label>
+                      <Select required>
+                        <SelectTrigger id="category">
+                          <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="minutes">Minutes</SelectItem>
-                          <SelectItem value="hours">Hours</SelectItem>
+                          <SelectItem value="registration">Registration</SelectItem>
+                          <SelectItem value="social">Social Media</SelectItem>
+                          <SelectItem value="testing">Testing</SelectItem>
+                          <SelectItem value="content">Content Creation</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="difficulty">Difficulty</Label>
+                      <Select required>
+                        <SelectTrigger id="difficulty">
+                          <SelectValue placeholder="Select difficulty" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="easy">Easy</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="hard">Hard</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="price">Price ($)</Label>
+                      <Input id="price" type="number" min="0.50" step="0.50" placeholder="5.00" required />
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="estimated-time">Estimated Time</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input id="estimated-time" type="number" min="1" placeholder="5" required />
+                        <Select defaultValue="minutes">
+                          <SelectTrigger id="time-unit">
+                            <SelectValue placeholder="Unit" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="minutes">Minutes</SelectItem>
+                            <SelectItem value="hours">Hours</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="instructions">Step-by-Step Instructions</Label>
+                    <Textarea
+                      id="instructions"
+                      placeholder="1. Go to example.com/register&#10;2. Create a new account&#10;3. Verify your email"
+                      className="min-h-[150px]"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="proof">Required Proof</Label>
+                    <Textarea
+                      id="proof"
+                      placeholder="Describe what proof the worker needs to submit (e.g., screenshots, links)"
+                      className="min-h-[100px]"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="quantity">Number of Workers Needed</Label>
+                    <Input id="quantity" type="number" min="1" defaultValue="1" required />
+                  </div>
                 </div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="instructions">Step-by-Step Instructions</Label>
-                  <Textarea
-                    id="instructions"
-                    placeholder="1. Go to example.com/register&#10;2. Create a new account&#10;3. Verify your email"
-                    className="min-h-[150px]"
-                    required
-                  />
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? "Creating Task..." : "Create Task"}
+                </Button>
+              </form>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-6 space-y-4">
+                <div className="rounded-full bg-green-100 p-3 text-green-600">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-8 w-8"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
                 </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="proof">Required Proof</Label>
-                  <Textarea
-                    id="proof"
-                    placeholder="Describe what proof the worker needs to submit (e.g., screenshots, links)"
-                    className="min-h-[100px]"
-                    required
-                  />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="quantity">Number of Workers Needed</Label>
-                  <Input id="quantity" type="number" min="1" defaultValue="1" required />
+                <h3 className="text-xl font-medium text-center">Task Created Successfully!</h3>
+                <p className="text-center text-muted-foreground">
+                  Your task has been posted and is now available for workers to complete.
+                </p>
+                <div className="flex gap-4 mt-4">
+                  <Link href="/dashboard">
+                    <Button variant="outline">Go to Dashboard</Button>
+                  </Link>
+                  <Button onClick={() => setIsSuccess(false)}>Create Another Task</Button>
                 </div>
               </div>
-
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? "Creating Task..." : "Create Task"}
-              </Button>
-            </form>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-6 space-y-4">
-              <div className="rounded-full bg-green-100 p-3 text-green-600">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-8 w-8"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-medium text-center">Task Created Successfully!</h3>
-              <p className="text-center text-muted-foreground">
-                Your task has been posted and is now available for workers to complete.
-              </p>
-              <div className="flex gap-4 mt-4">
-                <Link href="/dashboard">
-                  <Button variant="outline">Go to Dashboard</Button>
-                </Link>
-                <Button onClick={() => setIsSuccess(false)}>Create Another Task</Button>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+      <Footer />
     </div>
   )
 }

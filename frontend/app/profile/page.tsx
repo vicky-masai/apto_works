@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
+import { Footer } from "@/components/Footer"
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -407,6 +408,7 @@ export default function ProfilePage() {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   )
 }
