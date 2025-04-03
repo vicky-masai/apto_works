@@ -1,12 +1,11 @@
 "use client"
 
 import type React from "react"
-
+import toast, { Toaster } from 'react-hot-toast'; 
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Shield } from "lucide-react"
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -21,6 +20,7 @@ export default function LoginPage() {
   const [userType, setUserType] = useState<"Worker" | "Task Provider">("Worker")
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    toast.success("Login success")
     e.preventDefault()
     setIsLoading(true)
     setError("")
@@ -45,6 +45,10 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
+    <Toaster
+  position="top-center"
+  reverseOrder={false}
+/>
       <div className="container m-auto flex flex-1 flex-col items-center justify-center">
         <Link
           href="/"
