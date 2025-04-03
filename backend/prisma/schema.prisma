@@ -30,6 +30,7 @@ enum AcceptedTaskStatus {
   Active
   Completed
   Pending
+  Review
   Paid
   Cancelled
 }
