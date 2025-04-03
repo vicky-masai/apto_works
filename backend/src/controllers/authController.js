@@ -129,9 +129,15 @@ const registerWorker = async (req, res) => {
   try {
     const { fullName, email, password, skills } = req.body;
 
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
     // Check if email already exists
     const existingWorker = await prisma.worker.findUnique({
-      where: { email }
+      where: {
+        email: email
+      }
     });
 
     if (existingWorker) {
@@ -150,7 +156,7 @@ const registerWorker = async (req, res) => {
         fullName,
         email,
         password: hashedPassword,
-        skills,
+        skills: skills || [],
         otp,
         otpExpiry: new Date(Date.now() + 5 * 60 * 1000) // 5 minutes
       }
