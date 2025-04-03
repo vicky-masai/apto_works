@@ -62,6 +62,7 @@ model Worker {
   balance         Float           @default(0)
   totalEarnings   Float           @default(0)
   inProgress      Int          @default(0)
+  completedTasks  Int          @default(0)
   isVerified      Boolean         @default(false)
   acceptedTasks   AcceptedTask[]
   balanceHistory  BalanceHistory[]
