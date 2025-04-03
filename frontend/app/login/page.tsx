@@ -2,7 +2,7 @@
 
 import type React from "react"
 import toast, { Toaster } from 'react-hot-toast'; 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Shield } from "lucide-react"
@@ -12,15 +12,40 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Footer } from "@/components/Footer"
+import { login } from "@/API/api" // Import the login function from the API
+import cookie from 'js-cookie' // Import the cookie module
 
 export default function LoginPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [userType, setUserType] = useState<"Worker" | "Task Provider">("Worker")
+  const [userType, setUserType] = useState<"Worker" | "TaskProvider">("Worker")
+  const [rememberMe, setRememberMe] = useState(false)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    toast.success("Login success")
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError("")
+      }, 3000) // Hide error after 5 seconds
+      return () => clearTimeout(timer)
+    }
+  }, [error])
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("savedEmail")
+    const savedPassword = localStorage.getItem("savedPassword")
+    const savedUserType = localStorage.getItem("savedUserType")
+    if (savedEmail && savedPassword && savedUserType) {
+      setEmail(savedEmail)
+      setPassword(savedPassword)
+      setUserType(savedUserType as "Worker" | "TaskProvider")
+      setRememberMe(true)
+    }
+  }, [])
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
     setError("")
@@ -28,19 +53,34 @@ export default function LoginPage() {
     const email = (e.currentTarget.elements.namedItem("email") as HTMLInputElement).value
     const password = (e.currentTarget.elements.namedItem("password") as HTMLInputElement).value
 
-    // For demo purposes, accept any login
-    // In a real app, this would validate against a backend
-    setTimeout(() => {
-      setIsLoading(false)
-
-      // Store login state in localStorage for demo
+    try {
+      const response = await login(email, password, userType)
+      // Store login state in localStorage
       localStorage.setItem("isLoggedIn", "true")
       localStorage.setItem("userEmail", email)
       localStorage.setItem("userType", userType)
+      toast.success("Login success")
+      // Set token in cookie with 24h expiry
+      cookie.set('token', response.token, { expires: 1 })
+
+      if (rememberMe) {
+        localStorage.setItem("savedEmail", email)
+        localStorage.setItem("savedPassword", password)
+        localStorage.setItem("savedUserType", userType)
+      } else {
+        localStorage.removeItem("savedEmail")
+        localStorage.removeItem("savedPassword")
+        localStorage.removeItem("savedUserType")
+      }
 
       // Redirect to dashboard
       router.push("/dashboard")
-    }, 1500)
+    } catch (error) {
+      setError("Login failed. Please check your credentials and try again.")
+      toast.error("Login failed")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -79,9 +119,9 @@ export default function LoginPage() {
               </button>
               <button
                 className={`flex-1 px-4 py-3 text-center ${
-                  userType === "Task Provider" ? "bg-primary text-white" : "bg-gray-100"
+                  userType === "TaskProvider" ? "bg-primary text-white" : "bg-gray-100"
                 }`}
-                onClick={() => setUserType("Task Provider")}
+                onClick={() => setUserType("TaskProvider")}
               >
                 Task Provider
               </button>
@@ -100,7 +140,7 @@ export default function LoginPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="john@example.com" required />
+                  <Input id="email" type="email" placeholder="john@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -112,10 +152,10 @@ export default function LoginPage() {
                       Forgot password?
                     </Link>
                   </div>
-                  <Input id="password" type="password" required />
+                  <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="remember" />
+                  <Checkbox id="remember" checked={rememberMe} onCheckedChange={(checked) => setRememberMe(!!checked)} />
                   <label
                     htmlFor="remember"
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -144,4 +184,3 @@ export default function LoginPage() {
     </div>
   )
 }
-

@@ -1,26 +1,30 @@
-const BASE_URL = process.env.BASE_URL;
 const axios = require('axios');
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 const endpoints = {
   Worker: {
-    login: 'worker/login',
-    register: 'worker/register',
-    verifyOTP: 'worker/verify-otp',
-    forgotPassword: 'worker/forgot-password',
-    resetPassword: 'worker/reset-password',
+    login: 'auth/worker/login',
+    register: 'auth/worker/register',
+    verifyOTP: 'auth/worker/verify-otp',
+    forgotPassword: 'auth/worker/forgot-password',
+    resetPassword: 'auth/worker/reset-password',
   },
   TaskProvider: {
-    login: 'task-provider/login',
-    register: 'task-provider/register',
-    verifyOTP: 'task-provider/verify-otp',
-    forgotPassword: 'task-provider/forgot-password',
-    resetPassword: 'task-provider/reset-password',
+    login: 'auth/task-provider/login',
+    register: 'auth/task-provider/register',
+    verifyOTP: 'auth/task-provider/verify-otp',
+    forgotPassword: 'auth/task-provider/forgot-password',
+    resetPassword: 'auth/task-provider/reset-password',
   },
 };
 
 export const login = async (email, password, userType) => {
+    console.log("email, password, userType",email,password,userType);
+    
   try {
     const endpoint = endpoints[userType].login;
+    console.log("endpoint",BASE_URL+endpoint);
+    
     const response = await axios.post(`${BASE_URL}/${endpoint}`, {
       email,
       password,
