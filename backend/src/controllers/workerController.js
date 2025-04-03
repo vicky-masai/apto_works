@@ -10,7 +10,10 @@ const getProfile = async (req, res) => {
         email: true,
         skills: true,
         balance: true,
-        createdAt: true
+        createdAt: true,
+        totalEarnings:true,
+        inProgress:true,
+        completedTasks:true
       }
     });
 
