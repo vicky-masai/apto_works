@@ -368,8 +368,9 @@ const updateTaskStatus = async (req, res) => {
 
 const submitProof = async (req, res) => {
   try {
+    console.log("suraj");
     const { taskId } = req.params;
-    // const proofFile = req.file;
+    const proofFile = req.file;
     // console.log(taskId,proofFile)
 
     if (!proofFile) {
