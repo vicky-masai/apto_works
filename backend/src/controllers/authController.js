@@ -355,6 +355,75 @@ const resetPasswordTaskProvider = async (req, res) => {
   }
 };
 
+const resendVerifyWorkerOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const worker = await prisma.worker.findUnique({
+      where: { email }
+    });
+
+    if (!worker) {
+      return res.status(404).json({ error: 'Worker not found' });
+    }
+
+    // Generate new OTP
+    const otp = generateOTP();
+
+    // Update worker with new OTP
+    await prisma.worker.update({
+      where: { email },
+      data: {
+        otp,
+        otpExpiry: new Date(Date.now() + 5 * 60 * 1000) // 5 minutes
+      }
+    });
+
+    // Send OTP email
+    await sendOTP(email, otp);
+
+    res.json({ message: 'OTP resent successfully' });
+  } catch (error) {
+    console.error('Resend OTP Error:', error);
+    res.status(500).json({ error: 'Failed to resend OTP' });
+  }
+};
+
+const resendTaskProviderOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    console.log(email);
+
+    const taskProvider = await prisma.taskProvider.findUnique({
+      where: { email }
+    });
+
+    if (!taskProvider) {
+      return res.status(404).json({ error: 'Task provider not found' });
+    }
+
+    // Generate new OTP
+    const otp = generateOTP();
+
+    // Update task provider with new OTP
+    await prisma.taskProvider.update({
+      where: { email },
+      data: {
+        otp,
+        otpExpiry: new Date(Date.now() + 5 * 60 * 1000) // 5 minutes
+      }
+    });
+
+    // Send OTP email
+    await sendOTP(email, otp);
+
+    res.json({ message: 'OTP resent successfully' });
+  } catch (error) {
+    console.error('Resend OTP Error:', error);
+    res.status(500).json({ error: 'Failed to resend OTP' });
+  }
+};
+
 module.exports = {
   registerTaskProvider,
   verifyTaskProviderOTP,
@@ -365,5 +434,7 @@ module.exports = {
   forgotPasswordTaskProvider,
   resetPasswordTaskProvider,
   forgotPasswordWorker,
-  resetPasswordWorker
+  resetPasswordWorker,
+  resendVerifyWorkerOtp,
+  resendTaskProviderOtp
 }; 
