@@ -112,12 +112,7 @@ const loginTaskProvider = async (req, res) => {
 
     res.json({
       token,
-      user: {
-        id: taskProvider.id,
-        name: taskProvider.name,
-        email: taskProvider.email,
-        organizationType: taskProvider.organizationType
-      }
+      message: 'Login successful as a task provider'
     });
   } catch (error) {
     res.status(500).json({ error: 'Login failed' });
@@ -232,12 +227,8 @@ const loginWorker = async (req, res) => {
 
     res.json({
       token,
-      user: {
-        id: worker.id,
-        fullName: worker.fullName,
-        email: worker.email,
-        skills: worker.skills
-      }
+      message: 'Login successful as a worker'
+      
     });
   } catch (error) {
     res.status(500).json({ error: 'Login failed' });
