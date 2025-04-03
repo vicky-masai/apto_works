@@ -93,14 +93,18 @@ const verifyProof = async (req, res) => {
   try {
     const { taskId, workerId } = req.params;
     const { isApproved } = req.body;
+    console.log(taskId, workerId);
 
+    const tasks = await prisma.acceptedTask.findMany();
+    console.log(tasks);
+
+
+
+    // Fetch the task along with its provider ID
     const acceptedTask = await prisma.acceptedTask.findFirst({
       where: {
         taskId,
-        workerId,
-        task: {
-          taskProviderId: req.user.id
-        }
+        workerId
       },
       include: {
         task: true
@@ -109,6 +113,11 @@ const verifyProof = async (req, res) => {
 
     if (!acceptedTask) {
       return res.status(404).json({ error: 'Task not found' });
+    }
+
+    // Ensure the task belongs to the currently authenticated provider
+    if (acceptedTask.task.taskProviderId !== req.user.id) {
+      return res.status(403).json({ error: 'Unauthorized to verify this task' });
     }
 
     if (acceptedTask.status !== 'PENDING_REVIEW') {
@@ -150,9 +159,11 @@ const verifyProof = async (req, res) => {
 
     res.json(updatedTask);
   } catch (error) {
+    console.error(error.message);
     res.status(500).json({ error: 'Failed to verify proof' });
   }
 };
+
 
 module.exports = {
   getProfile,

@@ -290,10 +290,12 @@ const getTaskById = async (req, res) => {
 const acceptTask = async (req, res) => {
   try {
     const { taskId } = req.params;
-
+    console.log(taskId)
     const task = await prisma.task.findUnique({
       where: { id: taskId }
     });
+
+    console.log(task)
 
     if (!task || task.taskStatus !== 'Published') {
       return res.status(400).json({ error: 'Task not available' });
@@ -367,7 +369,8 @@ const updateTaskStatus = async (req, res) => {
 const submitProof = async (req, res) => {
   try {
     const { taskId } = req.params;
-    const proofFile = req.file;
+    // const proofFile = req.file;
+    // console.log(taskId,proofFile)
 
     if (!proofFile) {
       return res.status(400).json({ error: 'No proof file uploaded' });

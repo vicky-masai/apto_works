@@ -30,6 +30,7 @@ enum AcceptedTaskStatus {
   Active
   Completed
   Pending
+  Review
   Paid
   Cancelled
 }
@@ -77,7 +78,7 @@ model Task {
   estimatedTime         String
   stepByStepInstructions String
   taskStatus            TaskStatus        @default(NotPublished)
-  requiredProof         String[]?
+  requiredProof         String[]
   numWorkersNeeded      Int
   totalAmount           Float
   acceptedWorkers       AcceptedTask[]
