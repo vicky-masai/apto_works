@@ -18,6 +18,7 @@ export default function LoginPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [userType, setUserType] = useState<"Worker" | "Task Provider">("Worker")
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -35,6 +36,7 @@ export default function LoginPage() {
       // Store login state in localStorage for demo
       localStorage.setItem("isLoggedIn", "true")
       localStorage.setItem("userEmail", email)
+      localStorage.setItem("userType", userType)
 
       // Redirect to dashboard
       router.push("/dashboard")
@@ -62,10 +64,32 @@ export default function LoginPage() {
           </div>
 
           <Card>
+            <div className="flex w-full rounded-t-lg overflow-hidden">
+              <button
+                className={`flex-1 px-4 py-3 text-center ${
+                  userType === "Worker" ? "bg-primary text-white" : "bg-gray-100"
+                }`}
+                onClick={() => setUserType("Worker")}
+              >
+                Worker
+              </button>
+              <button
+                className={`flex-1 px-4 py-3 text-center ${
+                  userType === "Task Provider" ? "bg-primary text-white" : "bg-gray-100"
+                }`}
+                onClick={() => setUserType("Task Provider")}
+              >
+                Task Provider
+              </button>
+            </div>
             <form onSubmit={handleSubmit}>
               <CardHeader className="space-y-1">
-                <CardTitle className="text-xl">Sign in</CardTitle>
-                <CardDescription>Enter your email and password to access your account</CardDescription>
+                <CardTitle className="text-xl">Sign in as {userType}</CardTitle>
+                <CardDescription>
+                  {userType === "Worker" 
+                    ? "Sign in to complete tasks and earn money" 
+                    : "Sign in to post tasks and find workers"}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {error && <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">{error}</div>}
