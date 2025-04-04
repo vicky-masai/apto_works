@@ -168,27 +168,48 @@ const publishTask = async (req, res) => {
       return res.status(400).json({ error: 'Task is already published' });
     }
 
-    if (req.user.balance < task.totalAmount) {
-      return res.status(400).json({ error: 'Insufficient balance' });
+    // Calculate total amount needed (price * number of workers)
+    const totalAmountNeeded = task.price * task.numWorkersNeeded;
+
+    if (req.user.balance < totalAmountNeeded) {
+      return res.status(400).json({ 
+        error: 'Insufficient balance',
+        required: totalAmountNeeded,
+        current: req.user.balance
+      });
     }
 
-    // Update task provider's balance
-    await prisma.taskProvider.update({
-      where: { id: req.user.id },
-      data: {
-        balance: req.user.balance - task.totalAmount,
-        currentAssignedBalance: req.user.currentAssignedBalance + task.totalAmount
-      }
+    // Use transaction to ensure both operations succeed or fail together
+    await prisma.$transaction(async (prisma) => {
+      // Update task provider's balance
+      await prisma.taskProvider.update({
+        where: { id: req.user.id },
+        data: {
+          balance: {
+            decrement: totalAmountNeeded
+          },
+          currentAssignedBalance: {
+            increment: totalAmountNeeded
+          }
+        }
+      });
+
+      // Update task status
+      await prisma.task.update({
+        where: { id: taskId },
+        data: { 
+          taskStatus: 'Published',
+          totalAmount: totalAmountNeeded
+        }
+      });
     });
 
-    // Update task status
-    const updatedTask = await prisma.task.update({
-      where: { id: taskId },
-      data: { taskStatus: 'Published' }
+    res.json({ 
+      message: 'Task published successfully',
+      totalAmount: totalAmountNeeded
     });
-
-    res.json(updatedTask);
   } catch (error) {
+    console.error('Publish Task Error:', error);
     res.status(500).json({ error: 'Failed to publish task' });
   }
 };
@@ -212,23 +233,37 @@ const unpublishTask = async (req, res) => {
       return res.status(400).json({ error: 'Task is already unpublished' });
     }
 
-    // Update task provider's balance
-    await prisma.taskProvider.update({
-      where: { id: req.user.id },
-      data: {
-        balance: req.user.balance + task.totalAmount,
-        currentAssignedBalance: req.user.currentAssignedBalance - task.totalAmount
-      }
+    // Calculate total amount to refund (price * number of workers)
+    const totalAmountToRefund = task.price * task.numWorkersNeeded;
+
+    // Use transaction to ensure both operations succeed or fail together
+    await prisma.$transaction(async (prisma) => {
+      // Update task provider's balance
+      await prisma.taskProvider.update({
+        where: { id: req.user.id },
+        data: {
+          balance: {
+            increment: totalAmountToRefund
+          },
+          currentAssignedBalance: {
+            decrement: totalAmountToRefund
+          }
+        }
+      });
+
+      // Update task status
+      await prisma.task.update({
+        where: { id: taskId },
+        data: { taskStatus: 'NotPublished' }
+      });
     });
 
-    // Update task status
-    const updatedTask = await prisma.task.update({
-      where: { id: taskId },
-      data: { taskStatus: 'NotPublished' }
+    res.json({ 
+      message: 'Task unpublished successfully',
+      refundedAmount: totalAmountToRefund
     });
-
-    res.json(updatedTask);
   } catch (error) {
+    console.error('Unpublish Task Error:', error);
     res.status(500).json({ error: 'Failed to unpublish task' });
   }
 };
@@ -290,12 +325,9 @@ const getTaskById = async (req, res) => {
 const acceptTask = async (req, res) => {
   try {
     const { taskId } = req.params;
-    console.log(taskId)
     const task = await prisma.task.findUnique({
       where: { id: taskId }
     });
-
-    console.log(task)
 
     if (!task || task.taskStatus !== 'Published') {
       return res.status(400).json({ error: 'Task not available' });
@@ -325,16 +357,33 @@ const acceptTask = async (req, res) => {
       return res.status(400).json({ error: 'Task is full' });
     }
 
-    const acceptedTask = await prisma.acceptedTask.create({
-      data: {
-        workerId: req.user.id,
-        taskId,
-        status: 'Active'
-      }
+    // Use transaction to ensure both operations succeed or fail together
+    const result = await prisma.$transaction(async (prisma) => {
+      // Create accepted task
+      const acceptedTask = await prisma.acceptedTask.create({
+        data: {
+          workerId: req.user.id,
+          taskId,
+          status: 'Active'
+        }
+      });
+
+      // Update worker's inProgress count
+      await prisma.worker.update({
+        where: { id: req.user.id },
+        data: {
+          inProgress: {
+            increment: 1
+          }
+        }
+      });
+
+      return acceptedTask;
     });
 
-    res.status(201).json(acceptedTask);
+    res.status(201).json(result);
   } catch (error) {
+    console.error('Accept Task Error:', error);
     res.status(500).json({ error: 'Failed to accept task' });
   }
 };
@@ -368,15 +417,14 @@ const updateTaskStatus = async (req, res) => {
 
 const submitProof = async (req, res) => {
   try {
-    console.log("suraj");
     const { taskId } = req.params;
     const proofFile = req.file;
-    // console.log(taskId,proofFile)
 
     if (!proofFile) {
       return res.status(400).json({ error: 'No proof file uploaded' });
     }
 
+    // Find the accepted task
     const acceptedTask = await prisma.acceptedTask.findFirst({
       where: {
         workerId: req.user.id,
@@ -385,19 +433,32 @@ const submitProof = async (req, res) => {
     });
 
     if (!acceptedTask) {
-      return res.status(404).json({ error: 'Task not found' });
+      return res.status(404).json({ error: 'Task not found or not accepted by you' });
     }
 
+    // Store the relative path to the file
+    const filePath = `/uploads/${proofFile.filename}`;
+
+    // Update the task with proof and change status to Review
     const updatedTask = await prisma.acceptedTask.update({
       where: { id: acceptedTask.id },
       data: {
-        submittedProof: proofFile.path,
-        status: 'Completed'
+        submittedProof: filePath,
+        status: 'Review'
       }
     });
 
-    res.json(updatedTask);
+    // Generate the full URL for the response
+    const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 4000}`;
+    const fullUrl = `${baseUrl}${filePath}`;
+
+    res.json({
+      message: 'Proof submitted successfully',
+      task: updatedTask,
+      proofUrl: fullUrl
+    });
   } catch (error) {
+    console.error('Submit Proof Error:', error);
     res.status(500).json({ error: 'Failed to submit proof' });
   }
 };

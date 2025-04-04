@@ -3,18 +3,34 @@ const router = express.Router();
 const taskController = require('../controllers/taskController');
 const { taskProviderAuth, workerAuth } = require('../middleware/auth');
 const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+
+// Create uploads directory if it doesn't exist
+const uploadDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname);
+    // Sanitize filename and ensure unique name
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const sanitizedFilename = file.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
+    cb(null, uniqueSuffix + '-' + sanitizedFilename);
   }
 });
 
-const upload = multer({ storage });
+const upload = multer({ 
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
+});
 
 // Task Provider routes
 router.post('/', taskProviderAuth, taskController.createTask);

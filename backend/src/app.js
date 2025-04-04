@@ -2,13 +2,28 @@ const express = require('express');
 const cors = require('cors');
 const config = require('./config/config');
 const prisma = require('./config/database');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
+
+// Create uploads directory if it doesn't exist
+const uploadDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(uploadDir, {
+  setHeaders: (res, path) => {
+    res.set('Access-Control-Allow-Origin', '*');
+  }
+}));
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));

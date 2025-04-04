@@ -57,7 +57,7 @@ const verifyTaskProviderOTP = async (req, res) => {
     const taskProvider = await prisma.taskProvider.findUnique({
       where: { email }
     });
-
+  
     if (!taskProvider) {
       return res.status(404).json({ error: 'Task provider not found' });
     }
