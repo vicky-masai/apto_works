@@ -68,21 +68,27 @@ export default function SignupPage() {
         if (formData.get("testing")) userData.skills.push("Testing")
         if (formData.get("data-entry")) userData.skills.push("Data Entry")
       } else {
+        // Task Provider data
+        const organizationType = formData.get("organization-type")?.toString() || "Business"
         userData = {
           name: name,
           email: email,
           password: password,
-          userType: "TaskProvider",
-          organizationType: formData.get("organization-type")?.toString() || "business"
+          organizationType: organizationType === "business" ? "Business" : 
+                          organizationType === "nonprofit" ? "Non-profit" : "Individual"
         }
       }
 
-      console.log("Sending registration data:", userData)
+      console.log("Sending registration data:", {
+        data: userData,
+        type: userType === "worker" ? "Worker" : "TaskProvider",
+        url: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/${userType === "worker" ? "worker" : "task-provider"}/register`
+      });
 
       // Show loading toast
       const loadingToast = toast.loading("Creating your account...")
 
-      const response = await register(userData, userData.userType)
+      const response = await register(userData, userType === "worker" ? "Worker" : "TaskProvider")
       
       // Update loading toast to success
       toast.success("Registration successful! Please verify your email.", {
@@ -90,7 +96,7 @@ export default function SignupPage() {
       })
       
       // Redirect to OTP verification page
-      router.push(`/verify-otp?email=${encodeURIComponent(userData.email)}&userType=${userData.userType}`)
+      router.push(`/verify-otp?email=${encodeURIComponent(email)}&userType=${userType === "worker" ? "Worker" : "TaskProvider"}`)
 
     } catch (error: any) {
       console.error("Registration error:", error)

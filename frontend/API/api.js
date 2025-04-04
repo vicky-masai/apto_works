@@ -39,27 +39,27 @@ export const login = async (email, password, userType) => {
 
 export const register = async (userData, userType) => {
   try {
-    console.log("Registering user with data:", userData)
-    console.log("User type:", userType)
-    console.log("Base URL:", BASE_URL)
-    
     const endpoint = endpoints[userType].register;
-    console.log("Full endpoint URL:", `${BASE_URL}/${endpoint}`)
     
+    console.log("Making registration request:", {
+      url: `${BASE_URL}/${endpoint}`,
+      data: userData
+    });
+
     const response = await axios.post(`${BASE_URL}/${endpoint}`, userData, {
       headers: {
         'Content-Type': 'application/json',
       }
     });
 
-    console.log("Registration response:", response.data)
     return response.data;
   } catch (error) {
-    console.error('Error during registration:', error)
-    if (error.response) {
-      console.error('Error response data:', error.response.data)
-      console.error('Error response status:', error.response.status)
-    }
+    console.error('Registration error:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      data: userData
+    });
     throw error;
   }
 };
@@ -96,6 +96,26 @@ export const resetPassword = async (email, otp, newPassword, userType) => {
     return response.data;
   } catch (error) {
     console.error('Error during password reset:', error);
+    throw error;
+  }
+};
+
+export const resendVerifyWorkerOtp = async (email) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/auth/worker/resend-otp`, { email });
+    return response.data;
+  } catch (error) {
+    console.error('Error resending OTP:', error);
+    throw error;
+  }
+};
+
+export const resendTaskProviderOtp = async (email) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/auth/task-provider/resend-otp`, { email });
+    return response.data;
+  } catch (error) {
+    console.error('Error resending OTP:', error);
     throw error;
   }
 };
