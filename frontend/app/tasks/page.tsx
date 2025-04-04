@@ -169,7 +169,7 @@ export default function TasksPage() {
                   <TabsTrigger value="highpaying">High Paying</TabsTrigger>
                 </TabsList>
                 <TabsContent value="all" className="space-y-4 mt-4">
-                  {currentTasks.map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; createdAt: string; }) => (
+                  {currentTasks.map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => (
                     <TaskCard
                       key={task.id}
                       id={task.id}
@@ -180,11 +180,18 @@ export default function TasksPage() {
                       difficulty={task.difficulty}
                       estimatedTime={task.estimatedTime}
                       createdAt={task.createdAt}
+                      stepByStepInstructions={task.stepByStepInstructions}
+                      taskStatus={task.taskStatus}
+                      requiredProof={task.requiredProof}
+                      numWorkersNeeded={task.numWorkersNeeded}
+                      totalAmount={task.totalAmount}
+                      taskProviderId={task.taskProviderId}
+                      updatedAt={task.updatedAt}
                     />
                   ))}
                 </TabsContent>
                 <TabsContent value="new" className="space-y-4 mt-4">
-                  {currentTasks.filter((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isNew: boolean; createdAt: string; }) => task.isNew).map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isNew: boolean; createdAt: string; }) => (
+                  {currentTasks.filter((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isNew: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => task.isNew).map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isNew: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => (
                     <TaskCard
                       key={task.id}
                       id={task.id}
@@ -195,11 +202,18 @@ export default function TasksPage() {
                       difficulty={task.difficulty}
                       estimatedTime={task.estimatedTime}
                       createdAt={task.createdAt}
+                      stepByStepInstructions={task.stepByStepInstructions}
+                      taskStatus={task.taskStatus}
+                      requiredProof={task.requiredProof}
+                      numWorkersNeeded={task.numWorkersNeeded}
+                      totalAmount={task.totalAmount}
+                      taskProviderId={task.taskProviderId}
+                      updatedAt={task.updatedAt}
                     />
                   ))}
                 </TabsContent>
                 <TabsContent value="popular" className="space-y-4 mt-4">
-                  {currentTasks.filter((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isPopular: boolean; createdAt: string; }) => task.isPopular).map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isPopular: boolean; createdAt: string; }) => (
+                  {currentTasks.filter((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isPopular: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => task.isPopular).map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isPopular: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => (
                     <TaskCard
                       key={task.id}
                       id={task.id}
@@ -210,11 +224,18 @@ export default function TasksPage() {
                       difficulty={task.difficulty}
                       estimatedTime={task.estimatedTime}
                       createdAt={task.createdAt}
+                      stepByStepInstructions={task.stepByStepInstructions}
+                      taskStatus={task.taskStatus}
+                      requiredProof={task.requiredProof}
+                      numWorkersNeeded={task.numWorkersNeeded}
+                      totalAmount={task.totalAmount}
+                      taskProviderId={task.taskProviderId}
+                      updatedAt={task.updatedAt}
                     />
                   ))}
                 </TabsContent>
                 <TabsContent value="highpaying" className="space-y-4 mt-4">
-                  {currentTasks.filter((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isHighPaying: boolean; createdAt: string; }) => task.isHighPaying).map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isHighPaying: boolean; createdAt: string; }) => (
+                  {currentTasks.filter((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isHighPaying: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => task.isHighPaying).map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isHighPaying: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => (
                     <TaskCard
                       key={task.id}
                       id={task.id}
@@ -225,6 +246,13 @@ export default function TasksPage() {
                       difficulty={task.difficulty}
                       estimatedTime={task.estimatedTime}
                       createdAt={task.createdAt}
+                      stepByStepInstructions={task.stepByStepInstructions}
+                      taskStatus={task.taskStatus}
+                      requiredProof={task.requiredProof}
+                      numWorkersNeeded={task.numWorkersNeeded}
+                      totalAmount={task.totalAmount}
+                      taskProviderId={task.taskProviderId}
+                      updatedAt={task.updatedAt}
                     />
                   ))}
                 </TabsContent>
