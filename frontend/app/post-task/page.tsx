@@ -25,17 +25,21 @@ export default function PostTaskPage() {
     setIsSubmitting(true)
 
     const formData = new FormData(e.target as HTMLFormElement)
+    const estimatedTime = `${formData.get("estimated-time")} ${formData.get("time-unit")}`
     const taskData = {
       title: formData.get("title"),
       description: formData.get("description"),
       category: formData.get("category"),
       price: parseFloat(formData.get("price") as string),
-      estimatedTime: parseInt(formData.get("estimated-time") as string),
+      estimatedTime,
       stepByStepInstructions: formData.get("instructions"),
       requiredProof: formData.get("proof"),
       numWorkersNeeded: parseInt(formData.get("quantity") as string),
       difficulty: formData.get("difficulty"),
     }
+
+    console.log("formData",taskData);
+    
 
     try {
       const authToken = cookie.get('token') // Retrieve the auth token from the cookie
@@ -112,9 +116,9 @@ export default function PostTaskPage() {
                           <SelectValue placeholder="Select difficulty" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="easy">Easy</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="hard">Hard</SelectItem>
+                          <SelectItem value="Easy">Easy</SelectItem>
+                          <SelectItem value="Medium">Medium</SelectItem>
+                          <SelectItem value="Hard">Hard</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
