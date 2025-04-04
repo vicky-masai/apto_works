@@ -1,5 +1,5 @@
 // Importing axios for making HTTP requests
-const axios = require('axios');
+import axios from 'axios';
 
 // Base URL for API requests, set via environment variable
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
@@ -24,19 +24,12 @@ const endpoints = {
 
 // Function to handle user login
 export const login = async (email, password, userType) => {
-  console.log("email, password, userType", email, password, userType);
-  
   try {
-    // Determine the correct endpoint based on userType
     const endpoint = endpoints[userType].login;
-    console.log("endpoint", BASE_URL + endpoint);
-    
-    // Make POST request to login endpoint
     const response = await axios.post(`${BASE_URL}/${endpoint}`, {
       email,
       password,
     });
-
     return response.data;
   } catch (error) {
     console.error('Error during login:', error);
@@ -47,42 +40,36 @@ export const login = async (email, password, userType) => {
 // Function to handle user registration
 export const register = async (userData, userType) => {
   try {
-    console.log("Registering user with data:", userData);
-    console.log("User type:", userType);
-    console.log("Base URL:", BASE_URL);
-    
-    // Determine the correct endpoint based on userType
     const endpoint = endpoints[userType].register;
-    console.log("Full endpoint URL:", `${BASE_URL}/${endpoint}`);
     
-    // Make POST request to register endpoint
+    console.log("Making registration request:", {
+      url: `${BASE_URL}/${endpoint}`,
+      data: userData
+    });
+
     const response = await axios.post(`${BASE_URL}/${endpoint}`, userData, {
       headers: {
         'Content-Type': 'application/json',
       }
     });
 
-    console.log("Registration response:", response.data);
     return response.data;
   } catch (error) {
-    console.error('Error during registration:', error);
-    if (error.response) {
-      console.error('Error response data:', error.response.data);
-      console.error('Error response status:', error.response.status);
-    }
+    console.error('Registration error:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      data: userData
+    });
     throw error;
   }
 };
 
-// Function to verify OTP for a user
+// Function to verify OTP
 export const verifyOTP = async (email, otp, userType) => {
   try {
-    // Determine the correct endpoint based on userType
     const endpoint = endpoints[userType].verifyOTP;
-    
-    // Make POST request to verify OTP endpoint
     const response = await axios.post(`${BASE_URL}/${endpoint}`, { email, otp });
-
     return response.data;
   } catch (error) {
     console.error('Error during OTP verification:', error);
@@ -90,15 +77,11 @@ export const verifyOTP = async (email, otp, userType) => {
   }
 };
 
-// Function to handle forgot password requests
+// Function to handle forgot password
 export const forgotPassword = async (email, userType) => {
   try {
-    // Determine the correct endpoint based on userType
     const endpoint = endpoints[userType].forgotPassword;
-    
-    // Make POST request to forgot password endpoint
     const response = await axios.post(`${BASE_URL}/${endpoint}`, { email });
-
     return response.data;
   } catch (error) {
     console.error('Error during password reset request:', error);
@@ -106,15 +89,11 @@ export const forgotPassword = async (email, userType) => {
   }
 };
 
-// Function to reset user password
+// Function to reset password
 export const resetPassword = async (email, otp, newPassword, userType) => {
   try {
-    // Determine the correct endpoint based on userType
     const endpoint = endpoints[userType].resetPassword;
-    
-    // Make POST request to reset password endpoint
     const response = await axios.post(`${BASE_URL}/${endpoint}`, { email, otp, newPassword });
-
     return response.data;
   } catch (error) {
     console.error('Error during password reset:', error);
@@ -122,23 +101,44 @@ export const resetPassword = async (email, otp, newPassword, userType) => {
   }
 };
 
-// Function to create a new task
+// Function to resend worker OTP
+export const resendVerifyWorkerOtp = async (email) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/auth/worker/resend-otp`, { email });
+    return response.data;
+  } catch (error) {
+    console.error('Error resending worker OTP:', error);
+    throw error;
+  }
+};
+
+// Function to resend task provider OTP
+export const resendTaskProviderOtp = async (email) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/auth/task-provider/resend-otp`, { email });
+    return response.data;
+  } catch (error) {
+    console.error('Error resending task provider OTP:', error);
+    throw error;
+  }
+};
+
+// Function to create task
 export const createTask = async (taskData, authToken) => {
   try {
-    // Make POST request to create task endpoint
     const response = await axios.post(`${BASE_URL}/tasks`, taskData, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${authToken}`
       }
     });
-
     return response.data;
   } catch (error) {
-    console.error('Error during task creation:', error);
+    console.error('Error creating task:', error);
     throw error;
   }
 };
+
 
 // Function to get all tasks without authentication token
 export const getAllTasks = async (params) => {
@@ -160,9 +160,11 @@ export const getAllTasks = async (params) => {
     // Make GET request to get all tasks endpoint with query params
     const response = await axios.get(`${BASE_URL}/tasks?${queryParams}`);
 
+
     return response.data;
   } catch (error) {
-    console.error('Error fetching all tasks:', error);
+    console.error('Error fetching tasks:', error);
     throw error;
   }
 };
+
