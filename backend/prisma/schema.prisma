@@ -87,7 +87,7 @@ model Task {
   estimatedTime         String
   stepByStepInstructions String
   taskStatus            TaskStatus        @default(NotPublished)
-  requiredProof         String[]
+  requiredProof         String?
   numWorkersNeeded      Int
   totalAmount           Float
   difficulty            Difficulty        @default(Medium)
