@@ -139,3 +139,16 @@ export const createTask = async (taskData, authToken) => {
     throw error;
   }
 };
+
+// Function to get all tasks without authentication token
+export const getAllTasks = async () => {
+  try {
+    // Make GET request to get all tasks endpoint
+    const response = await axios.get(`${BASE_URL}/tasks`);
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching all tasks:', error);
+    throw error;
+  }
+};

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Clock, DollarSign, Tag } from "lucide-react"
+import { Calendar, Clock, DollarSign, Tag } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,9 +25,10 @@ interface TaskCardProps {
   category: string
   difficulty: string
   estimatedTime: string
+  createdAt: string
 }
 
-export function TaskCard({ id, title, description, price, category, difficulty, estimatedTime }: TaskCardProps) {
+export function TaskCard({ id, title, description, price, category, difficulty, estimatedTime,createdAt }: TaskCardProps) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -65,6 +66,10 @@ export function TaskCard({ id, title, description, price, category, difficulty, 
           <Badge variant="outline" className="flex items-center gap-1 border-gray-200">
             <Clock className="h-3 w-3" />
             {estimatedTime}
+          </Badge>
+          <Badge variant="outline" className="flex items-center gap-1 border-gray-200">
+            <Calendar className="h-3 w-3" />
+            {createdAt}
           </Badge>
         </div>
       </CardContent>
