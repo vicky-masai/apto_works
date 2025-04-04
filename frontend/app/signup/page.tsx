@@ -6,6 +6,8 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Shield } from "lucide-react"
+import toast, { Toaster } from 'react-hot-toast';
+import { register } from "@/API/api"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,27 +21,121 @@ export default function SignupPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [userType, setUserType] = useState("worker")
+  const [error, setError] = useState("")
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
+    setError("")
 
-    // Simulate API call for registration
-    setTimeout(() => {
+    const formData = new FormData(e.currentTarget)
+    
+    // Get all required fields
+    const name = formData.get("name")?.toString() || formData.get("company-name")?.toString()
+    const email = formData.get("email")?.toString()
+    const password = formData.get("password")?.toString()
+    const confirmPassword = formData.get("confirm-password")?.toString()
+
+    // Validate required fields
+    if (!name || !email || !password || !confirmPassword) {
+      setError("All fields are required")
+      toast.error("Please fill in all required fields")
       setIsLoading(false)
-      // Store user info in localStorage for demo purposes
-      // In a real app, this would be handled by a proper auth system
-      localStorage.setItem("isLoggedIn", "true")
-      localStorage.setItem("userType", userType)
-      localStorage.setItem("userEmail", (e.currentTarget.elements.namedItem("email") as HTMLInputElement).value)
+      return
+    }
 
-      // Redirect to dashboard
-      router.push("/dashboard")
-    }, 1500)
+    if (password !== confirmPassword) {
+      setError("Passwords do not match")
+      toast.error("Passwords do not match")
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      let userData;
+      
+      if (userType === "worker") {
+        userData = {
+          fullName: name,
+          email: email,
+          password: password,
+          userType: "Worker",
+          skills: [] as string[]
+        }
+        // Add skills if selected
+        if (formData.get("social-media")) userData.skills.push("Social Media")
+        if (formData.get("content-writing")) userData.skills.push("Content Writing")
+        if (formData.get("testing")) userData.skills.push("Testing")
+        if (formData.get("data-entry")) userData.skills.push("Data Entry")
+      } else {
+        userData = {
+          name: name,
+          email: email,
+          password: password,
+          userType: "TaskProvider",
+          organizationType: formData.get("organization-type")?.toString() || "business"
+        }
+      }
+
+      console.log("Sending registration data:", userData)
+
+      // Show loading toast
+      const loadingToast = toast.loading("Creating your account...")
+
+      const response = await register(userData, userData.userType)
+      
+      // Update loading toast to success
+      toast.success("Registration successful! Please verify your email.", {
+        id: loadingToast
+      })
+      
+      // Redirect to OTP verification page
+      router.push(`/verify-otp?email=${encodeURIComponent(userData.email)}&userType=${userData.userType}`)
+
+    } catch (error: any) {
+      console.error("Registration error:", error)
+      console.log("Error response:", error.response)
+      console.log("Error message:", error.message)
+      console.log("Error config:", error.config)
+      
+      let errorMessage = "Registration failed. Please try again."
+      
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        errorMessage = error.response.data?.message || error.response.data?.error || errorMessage
+        console.log("Error response data:", error.response.data)
+        console.log("Error response status:", error.response.status)
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.log("Error request:", error.request)
+        errorMessage = "No response from server. Please check your connection."
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.log("Error message:", error.message)
+        errorMessage = error.message || errorMessage
+      }
+      
+      setError(errorMessage)
+      toast.error(errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#333',
+            color: '#fff',
+          },
+        }}
+      />
       <div className="container m-auto flex flex-1 flex-col items-center justify-center py-5">
         <Link
           href="/"
@@ -71,45 +167,46 @@ export default function SignupPage() {
                 </CardHeader>
                 <form onSubmit={handleSubmit}>
                   <CardContent className="space-y-4">
+                    {error && <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">{error}</div>}
                     <div className="space-y-2">
                       <Label htmlFor="name">Full Name</Label>
-                      <Input id="name" placeholder="John Doe" required />
+                      <Input id="name" name="name" placeholder="John Doe" required />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
-                      <Input id="email" type="email" placeholder="john@example.com" required />
+                      <Input id="email" name="email" type="email" placeholder="john@example.com" required />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="password">Password</Label>
-                      <Input id="password" type="password" required />
+                      <Input id="password" name="password" type="password" required />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="confirm-password">Confirm Password</Label>
-                      <Input id="confirm-password" type="password" required />
+                      <Input id="confirm-password" name="confirm-password" type="password" required />
                     </div>
                     <div className="space-y-1">
                       <Label>Skills (Optional)</Label>
                       <div className="grid grid-cols-2 gap-2">
                         <div className="flex items-center space-x-2">
-                          <input type="checkbox" id="social-media" className="rounded text-primary" />
+                          <input type="checkbox" id="social-media" name="social-media" className="rounded text-primary" />
                           <label htmlFor="social-media" className="text-sm">
                             Social Media
                           </label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <input type="checkbox" id="content-writing" className="rounded text-primary" />
+                          <input type="checkbox" id="content-writing" name="content-writing" className="rounded text-primary" />
                           <label htmlFor="content-writing" className="text-sm">
                             Content Writing
                           </label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <input type="checkbox" id="testing" className="rounded text-primary" />
+                          <input type="checkbox" id="testing" name="testing" className="rounded text-primary" />
                           <label htmlFor="testing" className="text-sm">
                             Testing
                           </label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <input type="checkbox" id="data-entry" className="rounded text-primary" />
+                          <input type="checkbox" id="data-entry" name="data-entry" className="rounded text-primary" />
                           <label htmlFor="data-entry" className="text-sm">
                             Data Entry
                           </label>
@@ -133,25 +230,26 @@ export default function SignupPage() {
                 </CardHeader>
                 <form onSubmit={handleSubmit}>
                   <CardContent className="space-y-4">
+                    {error && <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">{error}</div>}
                     <div className="space-y-2">
                       <Label htmlFor="company-name">Company/Organization Name</Label>
-                      <Input id="company-name" placeholder="Acme Inc." required />
+                      <Input id="company-name" name="company-name" placeholder="Acme Inc." required />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
-                      <Input id="email" type="email" placeholder="contact@acme.com" required />
+                      <Input id="email" name="email" type="email" placeholder="contact@acme.com" required />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="password">Password</Label>
-                      <Input id="password" type="password" required />
+                      <Input id="password" name="password" type="password" required />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="confirm-password">Confirm Password</Label>
-                      <Input id="confirm-password" type="password" required />
+                      <Input id="confirm-password" name="confirm-password" type="password" required />
                     </div>
                     <div className="space-y-2">
                       <Label>Organization Type</Label>
-                      <RadioGroup defaultValue="business">
+                      <RadioGroup name="organization-type" defaultValue="business">
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="business" id="business" />
                           <Label htmlFor="business">Business</Label>

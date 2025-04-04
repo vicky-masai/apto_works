@@ -39,12 +39,27 @@ export const login = async (email, password, userType) => {
 
 export const register = async (userData, userType) => {
   try {
+    console.log("Registering user with data:", userData)
+    console.log("User type:", userType)
+    console.log("Base URL:", BASE_URL)
+    
     const endpoint = endpoints[userType].register;
-    const response = await axios.post(`${BASE_URL}/${endpoint}`, userData);
+    console.log("Full endpoint URL:", `${BASE_URL}/${endpoint}`)
+    
+    const response = await axios.post(`${BASE_URL}/${endpoint}`, userData, {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
 
+    console.log("Registration response:", response.data)
     return response.data;
   } catch (error) {
-    console.error('Error during registration:', error);
+    console.error('Error during registration:', error)
+    if (error.response) {
+      console.error('Error response data:', error.response.data)
+      console.error('Error response status:', error.response.status)
+    }
     throw error;
   }
 };
