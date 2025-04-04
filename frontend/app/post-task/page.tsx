@@ -5,7 +5,9 @@ import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-
+import toast, { Toaster } from 'react-hot-toast'; 
+import { createTask } from "@/API/api"
+import cookie from 'js-cookie' // Import the cookie module
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -18,19 +20,41 @@ export default function PostTaskPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false)
+    const formData = new FormData(e.target as HTMLFormElement)
+    const taskData = {
+      title: formData.get("title"),
+      description: formData.get("description"),
+      category: formData.get("category"),
+      price: parseFloat(formData.get("price") as string),
+      estimatedTime: parseInt(formData.get("estimated-time") as string),
+      stepByStepInstructions: formData.get("instructions"),
+      requiredProof: formData.get("proof"),
+      numWorkersNeeded: parseInt(formData.get("quantity") as string),
+      difficulty: formData.get("difficulty"),
+    }
+
+    try {
+      const authToken = cookie.get('token') // Retrieve the auth token from the cookie
+      await createTask(taskData, authToken)
       setIsSuccess(true)
-    }, 2000)
+      toast.success("Task created successfully!")
+    } catch (error) {
+      toast.error("Failed to create task")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
+         <Toaster
+  position="top-center"
+  reverseOrder={false}
+/>
       <div className="container py-6 max-w-2xl m-auto flex-1">
         <div className="mb-6">
           <Link href="/" className="flex items-center text-sm text-muted-foreground hover:text-foreground">
@@ -50,13 +74,14 @@ export default function PostTaskPage() {
                 <div className="space-y-4">
                   <div className="grid gap-2">
                     <Label htmlFor="title">Task Title</Label>
-                    <Input id="title" placeholder="e.g., Website Registration Task" required />
+                    <Input id="title" name="title" placeholder="e.g., Website Registration Task" required />
                   </div>
 
                   <div className="grid gap-2">
                     <Label htmlFor="description">Task Description</Label>
                     <Textarea
                       id="description"
+                      name="description"
                       placeholder="Describe what the worker needs to do"
                       className="min-h-[100px]"
                       required
@@ -66,7 +91,7 @@ export default function PostTaskPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="category">Category</Label>
-                      <Select required>
+                      <Select name="category" required>
                         <SelectTrigger id="category">
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
@@ -82,7 +107,7 @@ export default function PostTaskPage() {
 
                     <div className="grid gap-2">
                       <Label htmlFor="difficulty">Difficulty</Label>
-                      <Select required>
+                      <Select name="difficulty" required>
                         <SelectTrigger id="difficulty">
                           <SelectValue placeholder="Select difficulty" />
                         </SelectTrigger>
@@ -98,14 +123,14 @@ export default function PostTaskPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="price">Price ($)</Label>
-                      <Input id="price" type="number" min="0.50" step="0.50" placeholder="5.00" required />
+                      <Input id="price" name="price" type="number" min="0.50" step="0.50" placeholder="5.00" required />
                     </div>
 
                     <div className="grid gap-2">
                       <Label htmlFor="estimated-time">Estimated Time</Label>
                       <div className="grid grid-cols-2 gap-2">
-                        <Input id="estimated-time" type="number" min="1" placeholder="5" required />
-                        <Select defaultValue="minutes">
+                        <Input id="estimated-time" name="estimated-time" type="number" min="1" placeholder="5" required />
+                        <Select name="time-unit" defaultValue="minutes">
                           <SelectTrigger id="time-unit">
                             <SelectValue placeholder="Unit" />
                           </SelectTrigger>
@@ -122,6 +147,7 @@ export default function PostTaskPage() {
                     <Label htmlFor="instructions">Step-by-Step Instructions</Label>
                     <Textarea
                       id="instructions"
+                      name="instructions"
                       placeholder="1. Go to example.com/register&#10;2. Create a new account&#10;3. Verify your email"
                       className="min-h-[150px]"
                       required
@@ -132,6 +158,7 @@ export default function PostTaskPage() {
                     <Label htmlFor="proof">Required Proof</Label>
                     <Textarea
                       id="proof"
+                      name="proof"
                       placeholder="Describe what proof the worker needs to submit (e.g., screenshots, links)"
                       className="min-h-[100px]"
                       required
@@ -140,7 +167,7 @@ export default function PostTaskPage() {
 
                   <div className="grid gap-2">
                     <Label htmlFor="quantity">Number of Workers Needed</Label>
-                    <Input id="quantity" type="number" min="1" defaultValue="1" required />
+                    <Input id="quantity" name="quantity" type="number" min="1" defaultValue="1" required />
                   </div>
                 </div>
 

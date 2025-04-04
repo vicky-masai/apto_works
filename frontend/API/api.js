@@ -99,3 +99,20 @@ export const resetPassword = async (email, otp, newPassword, userType) => {
     throw error;
   }
 };
+
+export const createTask = async (taskData, authToken) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/tasks`, taskData, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error during task creation:', error);
+    throw error;
+  }
+};
+
