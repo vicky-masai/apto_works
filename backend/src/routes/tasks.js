@@ -40,7 +40,7 @@ router.post('/:taskId/publish', taskProviderAuth, taskController.publishTask);
 router.post('/:taskId/unpublish', taskProviderAuth, taskController.unpublishTask);
 
 // Worker routes
-router.get('/', workerAuth, taskController.getAllTasks);
+router.get('/', taskController.getAllTasks);
 router.get('/:taskId', workerAuth, taskController.getTaskById);
 router.post('/:taskId/accept', workerAuth, taskController.acceptTask);
 router.put('/:taskId/status', workerAuth, taskController.updateTaskStatus);

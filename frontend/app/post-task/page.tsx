@@ -38,9 +38,6 @@ export default function PostTaskPage() {
       difficulty: formData.get("difficulty"),
     }
 
-    console.log("formData",taskData);
-    
-
     try {
       const authToken = cookie.get('token') // Retrieve the auth token from the cookie
       await createTask(taskData, authToken)
