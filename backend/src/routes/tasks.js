@@ -46,7 +46,6 @@ router.post('/:taskId/accept', workerAuth, taskController.acceptTask);
 router.put('/:taskId/status', workerAuth, taskController.updateTaskStatus);
 router.post('/:taskId/proof', workerAuth, upload.single('proof'), taskController.submitProof);
 
-// Public routes
-router.get('/categories', taskController.getCategories);
+
 
 module.exports = router; 
