@@ -18,6 +18,7 @@ enum OrganizationType {
 
 enum TaskStatus {
   Published
+  InReview
   NotPublished
 }
 

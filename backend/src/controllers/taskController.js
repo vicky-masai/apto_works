@@ -373,23 +373,129 @@ const unpublishTask = async (req, res) => {
 // Worker Methods
 const getAllTasks = async (req, res) => {
   try {
+    const {
+      category,
+      minPrice,
+      maxPrice,
+      difficulty,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+      page = 1,
+      search,
+      filter
+    } = req.query;
+
+    // Base query conditions
+    const where = {
+      taskStatus: 'Published'
+    };
+
+    // Add category filter
+    if (category) {
+      where.category = category;
+    }
+
+    // Add difficulty filter
+    if (difficulty) {
+      where.difficulty = difficulty;
+    }
+
+    // Add price range filter
+    if (minPrice || maxPrice) {
+      where.price = {};
+      if (minPrice) where.price.gte = parseFloat(minPrice);
+      if (maxPrice) where.price.lte = parseFloat(maxPrice);
+    }
+
+    // Add search filter for title and description
+    if (search) {
+      where.OR = [
+        { taskTitle: { contains: search, mode: 'insensitive' } },
+        { taskDescription: { contains: search, mode: 'insensitive' } }
+      ];
+    }
+
+    // Handle special filters
+    let orderBy = {};
+    if (filter === 'HighPaying') {
+      // Set minimum price for high paying tasks and sort by price
+      where.price = {
+        ...where.price,
+        gte: 50 // Minimum price for high paying tasks
+      };
+      orderBy = {
+        price: 'desc'
+      };
+    } else {
+      // Default sorting
+      switch (sortBy) {
+        case 'price':
+          orderBy.price = sortOrder;
+          break;
+        case 'title':
+          orderBy.taskTitle = sortOrder;
+          break;
+        default:
+          orderBy.createdAt = sortOrder;
+      }
+    }
+
+    // Calculate pagination
+    const pageSize = 10;
+    const skip = (parseInt(page) - 1) * pageSize;
+
+    // Get total count for pagination
+    const totalCount = await prisma.task.count({ where });
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    // Get tasks with filters, sorting and pagination
     const tasks = await prisma.task.findMany({
-      where: {
-        taskStatus: 'Published'
-      },
+      where,
       include: {
         taskProvider: {
           select: {
             name: true,
             organizationType: true
           }
+        },
+        _count: {
+          select: {
+            acceptedWorkers: true
+          }
         }
-      }
+      },
+      orderBy,
+      skip,
+      take: pageSize
     });
 
-    res.json(tasks);
+    // If filter is Popular, sort by accepted workers count in memory
+    let formattedTasks = tasks.map(task => ({
+      ...task,
+      acceptedCount: task._count.acceptedWorkers,
+      _count: undefined
+    }));
+
+    if (filter === 'Popular') {
+      formattedTasks.sort((a, b) => b.acceptedCount - a.acceptedCount);
+    }
+
+    res.json({
+      tasks: formattedTasks,
+      filters: {
+        isPopular: filter === 'Popular',
+        isHighPaying: filter === 'HighPaying'
+      },
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages,
+        totalItems: totalCount,
+        pageSize
+      }
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch tasks' });
+    console.error('Get All Tasks Error:', error);
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -568,15 +674,7 @@ const submitProof = async (req, res) => {
   }
 };
 
-// Public Methods
-const getCategories = async (req, res) => {
-  try {
-    const categories = await prisma.category.findMany();
-    res.json(categories);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch categories' });
-  }
-};
+
 
 module.exports = {
   createTask,
@@ -592,5 +690,4 @@ module.exports = {
   acceptTask,
   updateTaskStatus,
   submitProof,
-  getCategories
 }; 
