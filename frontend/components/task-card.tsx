@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Clock, DollarSign, Tag } from "lucide-react"
+import { Calendar, Clock, DollarSign, IndianRupee, Tag, Users } from "lucide-react"
+import { formatDistanceToNow } from "date-fns"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,10 +26,21 @@ interface TaskCardProps {
   category: string
   difficulty: string
   estimatedTime: string
+  createdAt: string
+  stepByStepInstructions: string
+  taskStatus: string
+  requiredProof: string | null
+  numWorkersNeeded: number
+  totalAmount: number
+  taskProviderId: string
+  updatedAt: string
 }
 
-export function TaskCard({ id, title, description, price, category, difficulty, estimatedTime }: TaskCardProps) {
+export function TaskCard({ id, title, description, price, category, difficulty, estimatedTime, createdAt, stepByStepInstructions, taskStatus, requiredProof, numWorkersNeeded, totalAmount, taskProviderId, updatedAt }: TaskCardProps) {
   const [open, setOpen] = useState(false)
+
+  // Convert createdAt to a more readable format
+  const timeAgo = formatDistanceToNow(new Date(createdAt), { addSuffix: true })
 
   return (
     <Card className="bg-white border shadow-sm">
@@ -39,7 +51,7 @@ export function TaskCard({ id, title, description, price, category, difficulty, 
             <CardDescription className="mt-1">{description}</CardDescription>
           </div>
           <div className="flex items-center text-lg font-semibold text-green-600">
-            <DollarSign className="h-5 w-5 mr-1" />
+            <IndianRupee className="h-5 w-5 mr-1" />
             {price.toFixed(2)}
           </div>
         </div>
@@ -66,6 +78,14 @@ export function TaskCard({ id, title, description, price, category, difficulty, 
             <Clock className="h-3 w-3" />
             {estimatedTime}
           </Badge>
+          <Badge variant="outline" className="flex items-center gap-1 border-gray-200">
+            <Users className="h-3 w-3" />
+            {numWorkersNeeded} workers needed
+          </Badge>
+          <Badge variant="outline" className="flex items-center gap-1 border-gray-200">
+            <Calendar className="h-3 w-3" />
+            {timeAgo}
+          </Badge>
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
@@ -83,7 +103,7 @@ export function TaskCard({ id, title, description, price, category, difficulty, 
                 <div>
                   <h4 className="text-sm font-medium">Price</h4>
                   <p className="text-sm text-gray-500 flex items-center mt-1">
-                    <DollarSign className="h-4 w-4 mr-1" />
+                    <IndianRupee className="h-4 w-4 mr-1" />
                     {price.toFixed(2)}
                   </p>
                 </div>
@@ -98,18 +118,17 @@ export function TaskCard({ id, title, description, price, category, difficulty, 
               <div>
                 <h4 className="text-sm font-medium">Requirements</h4>
                 <ul className="text-sm text-gray-500 list-disc list-inside mt-1">
-                  <li>Create an account on the specified platform</li>
-                  <li>Verify your email address</li>
-                  <li>Complete your profile with required information</li>
-                  <li>Take a screenshot as proof of completion</li>
+                  <li>{stepByStepInstructions}</li>
                 </ul>
               </div>
+
+              { requiredProof &&
               <div>
                 <h4 className="text-sm font-medium">Proof Required</h4>
                 <p className="text-sm text-gray-500 mt-1">
-                  Screenshot of completed profile page showing username and verification status
+                  {requiredProof || ""}
                 </p>
-              </div>
+              </div>}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>
@@ -128,4 +147,3 @@ export function TaskCard({ id, title, description, price, category, difficulty, 
     </Card>
   )
 }
-

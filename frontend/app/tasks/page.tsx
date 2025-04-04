@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { SetStateAction, useEffect, useState } from "react"
 import { ArrowUpDown, Search } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -11,8 +12,75 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TaskCard } from "@/components/task-card"
 import { Footer } from "@/components/Footer"
 import { Header } from "@/components/Header"
+import { getAllTasks } from "@/API/api"
 
 export default function TasksPage() {
+  const [tasks, setTasks] = useState([])
+  const [filteredTasks, setFilteredTasks] = useState([])
+  const [searchTerm, setSearchTerm] = useState("")
+  const [sortOrder, setSortOrder] = useState("asc")
+  const [currentPage, setCurrentPage] = useState(1)
+  const tasksPerPage = 5
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        setIsLoading(true)
+        const data = await getAllTasks()
+        setTasks(data.tasks)
+        setFilteredTasks(data.tasks)
+      } catch (error) {
+        console.error("Error fetching tasks:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchTasks()
+  }, [])
+
+  useEffect(() => {
+    let filtered = tasks?.filter((task: { taskTitle: string }) =>
+      task.taskTitle.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    if (sortOrder === "asc") {
+      filtered.sort((a: { taskTitle: string }, b: { taskTitle: string }) => a.taskTitle.localeCompare(b.taskTitle))
+    } else {
+      filtered.sort((a: { taskTitle: string }, b: { taskTitle: string }) => b.taskTitle.localeCompare(a.taskTitle))
+    }
+
+    setFilteredTasks(filtered)
+  }, [searchTerm, sortOrder, tasks])
+
+  const handleSearch = (e: { target: { value: SetStateAction<string> } }) => {
+    setSearchTerm(e.target.value)
+  }
+
+  const handleSort = () => {
+    setSortOrder(prevOrder => (prevOrder === "asc" ? "desc" : "asc"))
+  }
+
+  const indexOfLastTask = currentPage * tasksPerPage
+  const indexOfFirstTask = indexOfLastTask - tasksPerPage
+  const currentTasks = Array.isArray(filteredTasks) ? filteredTasks?.slice(indexOfFirstTask, indexOfLastTask) : []
+
+  const paginate = (pageNumber: SetStateAction<number>) => setCurrentPage(pageNumber)
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen flex-col bg-white">
+        <Header isLoggedIn={true} />
+        <main className="flex-1 container py-6 m-auto">
+          <div className="flex justify-center items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <Header isLoggedIn={true} />
@@ -103,9 +171,9 @@ export default function TasksPage() {
                 <div className="flex items-center gap-2">
                   <div className="relative">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                    <Input type="search" placeholder="Search tasks..." className="w-[200px] md:w-[300px] pl-8" />
+                    <Input type="search" placeholder="Search tasks..." className="w-[200px] md:w-[300px] pl-8" value={searchTerm} onChange={handleSearch} />
                   </div>
-                  <Button variant="outline" size="sm" className="gap-1">
+                  <Button variant="outline" size="sm" className="gap-1" onClick={handleSort}>
                     <ArrowUpDown className="h-4 w-4" />
                     Sort
                   </Button>
@@ -119,111 +187,92 @@ export default function TasksPage() {
                   <TabsTrigger value="highpaying">High Paying</TabsTrigger>
                 </TabsList>
                 <TabsContent value="all" className="space-y-4 mt-4">
-                  <TaskCard
-                    id="1"
-                    title="Website Registration Task"
-                    description="Complete registration on platform and verify email"
-                    price={5.0}
-                    category="Registration"
-                    difficulty="Easy"
-                    estimatedTime="5 min"
-                  />
-                  <TaskCard
-                    id="2"
-                    title="Social Media Post Engagement"
-                    description="Like, comment and share a post on specified social media platform"
-                    price={2.5}
-                    category="Social Media"
-                    difficulty="Easy"
-                    estimatedTime="3 min"
-                  />
-                  <TaskCard
-                    id="3"
-                    title="Mobile App Testing"
-                    description="Test new mobile application and provide detailed feedback"
-                    price={15.0}
-                    category="Testing"
-                    difficulty="Medium"
-                    estimatedTime="30 min"
-                  />
-                  <TaskCard
-                    id="4"
-                    title="Write Product Review"
-                    description="Write a 300-word review for an e-commerce product"
-                    price={8.0}
-                    category="Content Creation"
-                    difficulty="Medium"
-                    estimatedTime="20 min"
-                  />
-                  <TaskCard
-                    id="5"
-                    title="Telegram Bot Testing"
-                    description="Test functionality of a new Telegram bot and report issues"
-                    price={10.0}
-                    category="Testing"
-                    difficulty="Easy"
-                    estimatedTime="15 min"
-                  />
+                  {currentTasks?.map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => (
+                    <TaskCard
+                      key={task.id}
+                      id={task.id}
+                      title={task.taskTitle}
+                      description={task.taskDescription}
+                      price={task.price}
+                      category={task.category}
+                      difficulty={task.difficulty}
+                      estimatedTime={task.estimatedTime}
+                      createdAt={task.createdAt}
+                      stepByStepInstructions={task.stepByStepInstructions}
+                      taskStatus={task.taskStatus}
+                      requiredProof={task.requiredProof}
+                      numWorkersNeeded={task.numWorkersNeeded}
+                      totalAmount={task.totalAmount}
+                      taskProviderId={task.taskProviderId}
+                      updatedAt={task.updatedAt}
+                    />
+                  ))}
                 </TabsContent>
                 <TabsContent value="new" className="space-y-4 mt-4">
-                  <TaskCard
-                    id="3"
-                    title="Mobile App Testing"
-                    description="Test new mobile application and provide detailed feedback"
-                    price={15.0}
-                    category="Testing"
-                    difficulty="Medium"
-                    estimatedTime="30 min"
-                  />
-                  <TaskCard
-                    id="5"
-                    title="Telegram Bot Testing"
-                    description="Test functionality of a new Telegram bot and report issues"
-                    price={10.0}
-                    category="Testing"
-                    difficulty="Easy"
-                    estimatedTime="15 min"
-                  />
+                  {currentTasks?.filter((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isNew: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => task.isNew).map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isNew: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => (
+                    <TaskCard
+                      key={task.id}
+                      id={task.id}
+                      title={task.taskTitle}
+                      description={task.taskDescription}
+                      price={task.price}
+                      category={task.category}
+                      difficulty={task.difficulty}
+                      estimatedTime={task.estimatedTime}
+                      createdAt={task.createdAt}
+                      stepByStepInstructions={task.stepByStepInstructions}
+                      taskStatus={task.taskStatus}
+                      requiredProof={task.requiredProof}
+                      numWorkersNeeded={task.numWorkersNeeded}
+                      totalAmount={task.totalAmount}
+                      taskProviderId={task.taskProviderId}
+                      updatedAt={task.updatedAt}
+                    />
+                  ))}
                 </TabsContent>
                 <TabsContent value="popular" className="space-y-4 mt-4">
-                  <TaskCard
-                    id="1"
-                    title="Website Registration Task"
-                    description="Complete registration on platform and verify email"
-                    price={5.0}
-                    category="Registration"
-                    difficulty="Easy"
-                    estimatedTime="5 min"
-                  />
-                  <TaskCard
-                    id="2"
-                    title="Social Media Post Engagement"
-                    description="Like, comment and share a post on specified social media platform"
-                    price={2.5}
-                    category="Social Media"
-                    difficulty="Easy"
-                    estimatedTime="3 min"
-                  />
+                  {currentTasks?.filter((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isPopular: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => task.isPopular).map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isPopular: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => (
+                    <TaskCard
+                      key={task.id}
+                      id={task.id}
+                      title={task.taskTitle}
+                      description={task.taskDescription}
+                      price={task.price}
+                      category={task.category}
+                      difficulty={task.difficulty}
+                      estimatedTime={task.estimatedTime}
+                      createdAt={task.createdAt}
+                      stepByStepInstructions={task.stepByStepInstructions}
+                      taskStatus={task.taskStatus}
+                      requiredProof={task.requiredProof}
+                      numWorkersNeeded={task.numWorkersNeeded}
+                      totalAmount={task.totalAmount}
+                      taskProviderId={task.taskProviderId}
+                      updatedAt={task.updatedAt}
+                    />
+                  ))}
                 </TabsContent>
                 <TabsContent value="highpaying" className="space-y-4 mt-4">
-                  <TaskCard
-                    id="3"
-                    title="Mobile App Testing"
-                    description="Test new mobile application and provide detailed feedback"
-                    price={15.0}
-                    category="Testing"
-                    difficulty="Medium"
-                    estimatedTime="30 min"
-                  />
-                  <TaskCard
-                    id="4"
-                    title="Write Product Review"
-                    description="Write a 300-word review for an e-commerce product"
-                    price={8.0}
-                    category="Content Creation"
-                    difficulty="Medium"
-                    estimatedTime="20 min"
-                  />
+                  {currentTasks?.filter((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isHighPaying: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => task.isHighPaying).map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isHighPaying: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => (
+                    <TaskCard
+                      key={task.id}
+                      id={task.id}
+                      title={task.taskTitle}
+                      description={task.taskDescription}
+                      price={task.price}
+                      category={task.category}
+                      difficulty={task.difficulty}
+                      estimatedTime={task.estimatedTime}
+                      createdAt={task.createdAt}
+                      stepByStepInstructions={task.stepByStepInstructions}
+                      taskStatus={task.taskStatus}
+                      requiredProof={task.requiredProof}
+                      numWorkersNeeded={task.numWorkersNeeded}
+                      totalAmount={task.totalAmount}
+                      taskProviderId={task.taskProviderId}
+                      updatedAt={task.updatedAt}
+                    />
+                  ))}
                 </TabsContent>
               </Tabs>
             </div>
