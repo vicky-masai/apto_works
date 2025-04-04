@@ -21,6 +21,12 @@ enum TaskStatus {
   NotPublished
 }
 
+enum Difficulty {
+  Easy
+  Medium
+  Hard
+}
+
 enum TransactionType {
   Add
   Withdraw
@@ -84,7 +90,9 @@ model Task {
   requiredProof         String[]
   numWorkersNeeded      Int
   totalAmount           Float
+  difficulty            Difficulty        @default(Medium)
   acceptedWorkers       AcceptedTask[]
+
   taskProviderId        String            @db.ObjectId
   taskProvider          TaskProvider      @relation(fields: [taskProviderId], references: [id])
   createdAt             DateTime          @default(now())

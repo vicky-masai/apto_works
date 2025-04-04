@@ -11,15 +11,16 @@ const createTask = async (req, res) => {
       estimatedTime,
       stepByStepInstructions,
       requiredProof,
-      numWorkersNeeded
+      numWorkersNeeded,
+      difficulty
     } = req.body;
 
     const totalAmount = price * numWorkersNeeded;
 
     const task = await prisma.task.create({
       data: {
-        taskTitle :title,
-        taskDescription:description,
+        taskTitle: title,
+        taskDescription: description,
         category,
         price,
         estimatedTime,
@@ -27,15 +28,15 @@ const createTask = async (req, res) => {
         requiredProof,
         numWorkersNeeded,
         totalAmount,
+        difficulty: difficulty || 'Medium',
         taskProviderId: req.user.id,
         taskStatus: 'NotPublished'
       }
     });
 
     res.status(201).json({ task, message: 'Task created successfully' });
-
   } catch (error) {
-    console.log(error.message);
+    console.error('Create Task Error:', error);
     res.status(500).json({ error: 'Failed to create task' });
   }
 };
@@ -130,21 +131,122 @@ const updateTask = async (req, res) => {
     const { taskId } = req.params;
     const updateData = req.body;
 
-    if (updateData.price && updateData.numWorkersNeeded) {
-      updateData.totalAmount = updateData.price * updateData.numWorkersNeeded;
-    }
-
-    const task = await prisma.task.update({
+    // First get the current task details
+    const currentTask = await prisma.task.findUnique({
       where: {
         id: taskId,
         taskProviderId: req.user.id
-      },
-      data: updateData
+      }
     });
 
-    res.json(task);
+    if (!currentTask) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    // Calculate new total amount if price or numWorkersNeeded is being updated
+    let newTotalAmount = currentTask.totalAmount;
+    if (updateData.price || updateData.numWorkersNeeded) {
+      const newPrice = updateData.price || currentTask.price;
+      const newNumWorkers = updateData.numWorkersNeeded || currentTask.numWorkersNeeded;
+      newTotalAmount = newPrice * newNumWorkers;
+    }
+
+    // If task is published, handle balance adjustments
+    if (currentTask.taskStatus === 'Published') {
+      const currentTotalAmount = currentTask.price * currentTask.numWorkersNeeded;
+      
+      if (newTotalAmount > currentTotalAmount) {
+        // Need to add more balance
+        const additionalAmount = newTotalAmount - currentTotalAmount;
+        
+        if (req.user.balance < additionalAmount) {
+          return res.status(400).json({ 
+            error: 'Insufficient balance for update',
+            required: additionalAmount,
+            current: req.user.balance
+          });
+        }
+
+        // Use transaction to ensure all operations succeed or fail together
+        await prisma.$transaction(async (prisma) => {
+          // Update task provider's balance
+          await prisma.taskProvider.update({
+            where: { id: req.user.id },
+            data: {
+              balance: {
+                decrement: additionalAmount
+              },
+              currentAssignedBalance: {
+                increment: additionalAmount
+              }
+            }
+          });
+
+          // Update task
+          await prisma.task.update({
+            where: { id: taskId },
+            data: {
+              ...updateData,
+              totalAmount: newTotalAmount,
+              difficulty: updateData.difficulty || currentTask.difficulty
+            }
+          });
+        });
+
+        return res.json({ 
+          message: 'Task updated successfully',
+          additionalAmountDeducted: additionalAmount
+        });
+      } else if (newTotalAmount < currentTotalAmount) {
+        // Need to refund excess balance
+        const refundAmount = currentTotalAmount - newTotalAmount;
+
+        // Use transaction to ensure all operations succeed or fail together
+        await prisma.$transaction(async (prisma) => {
+          // Update task provider's balance
+          await prisma.taskProvider.update({
+            where: { id: req.user.id },
+            data: {
+              balance: {
+                increment: refundAmount
+              },
+              currentAssignedBalance: {
+                decrement: refundAmount
+              }
+            }
+          });
+
+          // Update task
+          await prisma.task.update({
+            where: { id: taskId },
+            data: {
+              ...updateData,
+              totalAmount: newTotalAmount,
+              difficulty: updateData.difficulty || currentTask.difficulty
+            }
+          });
+        });
+
+        return res.json({ 
+          message: 'Task updated successfully',
+          refundAmount: refundAmount
+        });
+      }
+    }
+
+    // For unpublished tasks or when no balance adjustment is needed
+    const updatedTask = await prisma.task.update({
+      where: { id: taskId },
+      data: {
+        ...updateData,
+        totalAmount: newTotalAmount,
+        difficulty: updateData.difficulty || currentTask.difficulty
+      }
+    });
+
+    res.json(updatedTask);
   } catch (error) {
-    console.log(error.message);
+    console.error('Update Task Error:', error);
     res.status(500).json({ error: 'Failed to update task' });
   }
 };
@@ -333,6 +435,11 @@ const acceptTask = async (req, res) => {
       return res.status(400).json({ error: 'Task not available' });
     }
 
+    // Check if task has available slots (numWorkersNeeded >= 1)
+    if (task.numWorkersNeeded < 1) {
+      return res.status(400).json({ error: 'No more workers needed for this task' });
+    }
+
     // Check if worker has already accepted this task
     const existingAcceptance = await prisma.acceptedTask.findFirst({
       where: {
@@ -345,19 +452,7 @@ const acceptTask = async (req, res) => {
       return res.status(400).json({ error: 'You have already accepted this task' });
     }
 
-    // Check if task has available slots
-    const acceptedCount = await prisma.acceptedTask.count({
-      where: {
-        taskId,
-        status: { not: 'Cancelled' }
-      }
-    });
-
-    if (acceptedCount >= task.numWorkersNeeded) {
-      return res.status(400).json({ error: 'Task is full' });
-    }
-
-    // Use transaction to ensure both operations succeed or fail together
+    // Use transaction to ensure all operations succeed or fail together
     const result = await prisma.$transaction(async (prisma) => {
       // Create accepted task
       const acceptedTask = await prisma.acceptedTask.create({
@@ -374,6 +469,16 @@ const acceptTask = async (req, res) => {
         data: {
           inProgress: {
             increment: 1
+          }
+        }
+      });
+
+      // Reduce the number of workers needed for the task
+      await prisma.task.update({
+        where: { id: taskId },
+        data: {
+          numWorkersNeeded: {
+            decrement: 1
           }
         }
       });
