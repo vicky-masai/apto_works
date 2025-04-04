@@ -21,15 +21,19 @@ export default function TasksPage() {
   const [sortOrder, setSortOrder] = useState("asc")
   const [currentPage, setCurrentPage] = useState(1)
   const tasksPerPage = 5
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const fetchTasks = async () => {
       try {
+        setIsLoading(true)
         const data = await getAllTasks()
-        setTasks(data)
-        setFilteredTasks(data)
+        setTasks(data.tasks)
+        setFilteredTasks(data.tasks)
       } catch (error) {
         console.error("Error fetching tasks:", error)
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -37,7 +41,7 @@ export default function TasksPage() {
   }, [])
 
   useEffect(() => {
-    let filtered = tasks.filter((task: { taskTitle: string }) =>
+    let filtered = tasks?.filter((task: { taskTitle: string }) =>
       task.taskTitle.toLowerCase().includes(searchTerm.toLowerCase())
     )
     if (sortOrder === "asc") {
@@ -59,9 +63,23 @@ export default function TasksPage() {
 
   const indexOfLastTask = currentPage * tasksPerPage
   const indexOfFirstTask = indexOfLastTask - tasksPerPage
-  const currentTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask)
+  const currentTasks = Array.isArray(filteredTasks) ? filteredTasks?.slice(indexOfFirstTask, indexOfLastTask) : []
 
   const paginate = (pageNumber: SetStateAction<number>) => setCurrentPage(pageNumber)
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen flex-col bg-white">
+        <Header isLoggedIn={true} />
+        <main className="flex-1 container py-6 m-auto">
+          <div className="flex justify-center items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
@@ -169,7 +187,7 @@ export default function TasksPage() {
                   <TabsTrigger value="highpaying">High Paying</TabsTrigger>
                 </TabsList>
                 <TabsContent value="all" className="space-y-4 mt-4">
-                  {currentTasks.map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => (
+                  {currentTasks?.map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => (
                     <TaskCard
                       key={task.id}
                       id={task.id}
@@ -191,7 +209,7 @@ export default function TasksPage() {
                   ))}
                 </TabsContent>
                 <TabsContent value="new" className="space-y-4 mt-4">
-                  {currentTasks.filter((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isNew: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => task.isNew).map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isNew: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => (
+                  {currentTasks?.filter((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isNew: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => task.isNew).map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isNew: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => (
                     <TaskCard
                       key={task.id}
                       id={task.id}
@@ -213,7 +231,7 @@ export default function TasksPage() {
                   ))}
                 </TabsContent>
                 <TabsContent value="popular" className="space-y-4 mt-4">
-                  {currentTasks.filter((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isPopular: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => task.isPopular).map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isPopular: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => (
+                  {currentTasks?.filter((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isPopular: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => task.isPopular).map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isPopular: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => (
                     <TaskCard
                       key={task.id}
                       id={task.id}
@@ -235,7 +253,7 @@ export default function TasksPage() {
                   ))}
                 </TabsContent>
                 <TabsContent value="highpaying" className="space-y-4 mt-4">
-                  {currentTasks.filter((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isHighPaying: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => task.isHighPaying).map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isHighPaying: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => (
+                  {currentTasks?.filter((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isHighPaying: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => task.isHighPaying).map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isHighPaying: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => (
                     <TaskCard
                       key={task.id}
                       id={task.id}
@@ -257,14 +275,6 @@ export default function TasksPage() {
                   ))}
                 </TabsContent>
               </Tabs>
-              {/* <div className="flex justify-center mt-4">
-                <Button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1}>
-                  Previous
-                </Button>
-                <Button onClick={() => paginate(currentPage + 1)} disabled={indexOfLastTask >= filteredTasks.length}>
-                  Next
-                </Button>
-              </div> */}
             </div>
           </div>
         </div>
