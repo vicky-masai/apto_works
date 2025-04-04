@@ -139,10 +139,28 @@ export const createTask = async (taskData, authToken) => {
   }
 };
 
-// Function to get all tasks
-export const getAllTasks = async () => {
+
+// Function to get all tasks without authentication token
+export const getAllTasks = async (params) => {
   try {
-    const response = await axios.get(`${BASE_URL}/tasks`);
+    // Convert params to query string
+    const queryParams = new URLSearchParams({
+      category: params?.category || '',
+      minPrice: params?.minPrice?.toString() || '',
+      maxPrice: params?.maxPrice?.toString() || '',
+      difficulty: params?.difficulty || '',
+      sortBy: params?.sortBy || 'createdAt',
+      sortOrder: params?.sortOrder || 'desc',
+      page: params?.page?.toString() || '1',
+      search: params?.search || '',
+      filter: params?.filter || '',
+      status: params?.status || 'Published'
+    }).toString();
+
+    // Make GET request to get all tasks endpoint with query params
+    const response = await axios.get(`${BASE_URL}/tasks?${queryParams}`);
+
+
     return response.data;
   } catch (error) {
     console.error('Error fetching tasks:', error);

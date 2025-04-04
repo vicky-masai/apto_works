@@ -18,16 +18,75 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState([])
   const [filteredTasks, setFilteredTasks] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
-  const [sortOrder, setSortOrder] = useState("asc")
+  const [sortOrder, setSortOrder] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const tasksPerPage = 5
+  const [category, setCategory] = useState("")
+  const [minPrice, setMinPrice] = useState(0)
+  const [maxPrice, setMaxPrice] = useState(0)
+  const [difficulty, setDifficulty] = useState("")
+  const [sortBy, setSortBy] = useState("")
+
+  const [page, setPage] = useState(1)
+  const [search, setSearch] = useState("")
+  const [filter, setFilter] = useState("")
+  const [status, setStatus] = useState("")
   const [isLoading, setIsLoading] = useState(true)
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+  const [selectedDifficulties, setSelectedDifficulties] = useState<string[]>([])
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 0 })
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategories(prev => {
+      if (prev.includes(category)) {
+        return prev.filter(c => c !== category)
+      } else {
+        return [...prev, category]
+      }
+    })
+  }
+
+  const handleDifficultyChange = (difficulty: string) => {
+    setSelectedDifficulties(prev => {
+      if (prev.includes(difficulty)) {
+        return prev.filter(d => d !== difficulty)
+      } else {
+        return [...prev, difficulty]
+      }
+    })
+  }
+
+  const handlePriceRangeChange = (type: 'min' | 'max', value: string) => {
+    setPriceRange(prev => ({
+      ...prev,
+      [type]: parseInt(value) || 0
+    }))
+  }
+
+  const handleApplyFilters = () => {
+    setCategory(selectedCategories.join(','))
+    setDifficulty(selectedDifficulties.join(','))
+    setMinPrice(priceRange.min)
+    setMaxPrice(priceRange.max)
+    setPage(1) // Reset to first page when filters change
+  }
 
   useEffect(() => {
     const fetchTasks = async () => {
       try {
         setIsLoading(true)
-        const data = await getAllTasks()
+        const data = await getAllTasks({
+          ...(category && { category }),
+          ...(minPrice && { minPrice }),
+          ...(maxPrice && { maxPrice }),
+          ...(difficulty && { difficulty }),
+          ...(sortBy && { sortBy }),
+          ...(sortOrder && { sortOrder }),
+          ...(page && { page }),
+          ...(search && { search }),
+          ...(filter && { filter }),
+          status: "Published"
+        })
         setTasks(data.tasks)
         setFilteredTasks(data.tasks)
       } catch (error) {
@@ -38,7 +97,7 @@ export default function TasksPage() {
     }
 
     fetchTasks()
-  }, [])
+  }, [category, minPrice, maxPrice, difficulty, sortBy, sortOrder, page, search, filter])
 
   useEffect(() => {
     let filtered = tasks?.filter((task: { taskTitle: string }) =>
@@ -97,31 +156,61 @@ export default function TasksPage() {
                   <div className="font-medium text-sm">Categories</div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <input type="checkbox" id="registration" className="rounded text-primary" />
+                      <input 
+                        type="checkbox" 
+                        id="registration" 
+                        className="rounded text-primary" 
+                        checked={selectedCategories.includes('registration')}
+                        onChange={() => handleCategoryChange('registration')}
+                      />
                       <label htmlFor="registration" className="text-sm">
                         Registration
                       </label>
                     </div>
                     <div className="flex items-center gap-2">
-                      <input type="checkbox" id="social" className="rounded text-primary" />
+                      <input 
+                        type="checkbox" 
+                        id="social" 
+                        className="rounded text-primary"
+                        checked={selectedCategories.includes('social')}
+                        onChange={() => handleCategoryChange('social')}
+                      />
                       <label htmlFor="social" className="text-sm">
                         Social Media
                       </label>
                     </div>
                     <div className="flex items-center gap-2">
-                      <input type="checkbox" id="testing" className="rounded text-primary" />
+                      <input 
+                        type="checkbox" 
+                        id="testing" 
+                        className="rounded text-primary"
+                        checked={selectedCategories.includes('testing')}
+                        onChange={() => handleCategoryChange('testing')}
+                      />
                       <label htmlFor="testing" className="text-sm">
                         Testing
                       </label>
                     </div>
                     <div className="flex items-center gap-2">
-                      <input type="checkbox" id="content" className="rounded text-primary" />
+                      <input 
+                        type="checkbox" 
+                        id="content" 
+                        className="rounded text-primary"
+                        checked={selectedCategories.includes('content')}
+                        onChange={() => handleCategoryChange('content')}
+                      />
                       <label htmlFor="content" className="text-sm">
                         Content Creation
                       </label>
                     </div>
                     <div className="flex items-center gap-2">
-                      <input type="checkbox" id="other" className="rounded text-primary" />
+                      <input 
+                        type="checkbox" 
+                        id="other" 
+                        className="rounded text-primary"
+                        checked={selectedCategories.includes('other')}
+                        onChange={() => handleCategoryChange('other')}
+                      />
                       <label htmlFor="other" className="text-sm">
                         Other
                       </label>
@@ -132,8 +221,20 @@ export default function TasksPage() {
                 <div className="space-y-2">
                   <div className="font-medium text-sm">Price Range</div>
                   <div className="grid grid-cols-2 gap-2">
-                    <Input type="number" placeholder="Min" min={0} />
-                    <Input type="number" placeholder="Max" min={0} />
+                    <Input 
+                      type="number" 
+                      placeholder="Min" 
+                      min={0} 
+                      value={priceRange.min || ''}
+                      onChange={(e) => handlePriceRangeChange('min', e.target.value)}
+                    />
+                    <Input 
+                      type="number" 
+                      placeholder="Max" 
+                      min={0} 
+                      value={priceRange.max || ''}
+                      onChange={(e) => handlePriceRangeChange('max', e.target.value)}
+                    />
                   </div>
                 </div>
                 <Separator />
@@ -141,26 +242,44 @@ export default function TasksPage() {
                   <div className="font-medium text-sm">Difficulty</div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <input type="checkbox" id="easy" className="rounded text-primary" />
+                      <input 
+                        type="checkbox" 
+                        id="easy" 
+                        className="rounded text-primary"
+                        checked={selectedDifficulties.includes('Easy')}
+                        onChange={() => handleDifficultyChange('Easy')}
+                      />
                       <label htmlFor="easy" className="text-sm">
                         Easy
                       </label>
                     </div>
                     <div className="flex items-center gap-2">
-                      <input type="checkbox" id="medium" className="rounded text-primary" />
+                      <input 
+                        type="checkbox" 
+                        id="medium" 
+                        className="rounded text-primary"
+                        checked={selectedDifficulties.includes('Medium')}
+                        onChange={() => handleDifficultyChange('Medium')}
+                      />
                       <label htmlFor="medium" className="text-sm">
                         Medium
                       </label>
                     </div>
                     <div className="flex items-center gap-2">
-                      <input type="checkbox" id="hard" className="rounded text-primary" />
+                      <input 
+                        type="checkbox" 
+                        id="hard" 
+                        className="rounded text-primary"
+                        checked={selectedDifficulties.includes('Hard')}
+                        onChange={() => handleDifficultyChange('Hard')}
+                      />
                       <label htmlFor="hard" className="text-sm">
                         Hard
                       </label>
                     </div>
                   </div>
                 </div>
-                <Button className="w-full">Apply Filters</Button>
+                <Button className="w-full" onClick={handleApplyFilters}>Apply Filters</Button>
               </CardContent>
             </Card>
           </div>
