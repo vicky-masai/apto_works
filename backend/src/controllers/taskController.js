@@ -382,13 +382,19 @@ const getAllTasks = async (req, res) => {
       sortOrder = 'desc',
       page = 1,
       search,
-      filter
+      filter,
+      status
     } = req.query;
 
     // Base query conditions
-    const where = {
-      taskStatus: 'Published'
-    };
+    const where = {};
+
+    // Add status filter
+    if (status) {
+      where.taskStatus = status; // Published, InReview, NotPublished
+    } else {
+      where.taskStatus = 'Published'; // Default to Published tasks
+    }
 
     // Add category filter
     if (category) {
@@ -484,7 +490,8 @@ const getAllTasks = async (req, res) => {
       tasks: formattedTasks,
       filters: {
         isPopular: filter === 'Popular',
-        isHighPaying: filter === 'HighPaying'
+        isHighPaying: filter === 'HighPaying',
+        status: status || 'Published'
       },
       pagination: {
         currentPage: parseInt(page),
