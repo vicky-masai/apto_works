@@ -168,3 +168,17 @@ export const getAllTasks = async (params) => {
   }
 };
 
+// Function to accept a task
+export const acceptTask = async (taskId, authToken) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/tasks/${taskId}/accept`, {}, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error accepting task:', error);
+    throw error;
+  }
+};

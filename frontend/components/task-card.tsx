@@ -17,6 +17,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { acceptTask } from "@/API/api"
+import Cookies from "js-cookie"
+import { useRouter } from "next/navigation"
 
 interface TaskCardProps {
   id: string
@@ -38,10 +41,18 @@ interface TaskCardProps {
 
 export function TaskCard({ id, title, description, price, category, difficulty, estimatedTime, createdAt, stepByStepInstructions, taskStatus, requiredProof, numWorkersNeeded, totalAmount, taskProviderId, updatedAt }: TaskCardProps) {
   const [open, setOpen] = useState(false)
-
+  const router = useRouter();
+const token = Cookies.get("token");
   // Convert createdAt to a more readable format
   const timeAgo = formatDistanceToNow(new Date(createdAt), { addSuffix: true })
-
+  const acceptTaskData = async () => {
+    try {
+      const data = await acceptTask(id, token);
+      router.push(`/tasks/${id}/accept`);
+    } catch (error) {
+      console.error("Error accepting task:", error);
+    }
+  };
   return (
     <Card className="bg-white border shadow-sm">
       <CardHeader className="pb-3">
@@ -134,9 +145,7 @@ export function TaskCard({ id, title, description, price, category, difficulty, 
               <Button variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-              <Link href={`/tasks/${id}/accept`}>
                 <Button>Accept Task</Button>
-              </Link>
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -1,8 +1,8 @@
 "use client"
 
-import type React from "react"
+import React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ArrowLeft, CheckCircle, Clock, DollarSign, Upload } from "lucide-react"
 
@@ -11,17 +11,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-
-export default function TaskAcceptPage({ params }: { params: { id: string } }) {
+import { acceptTask } from "@/API/api"
+import Cookies from "js-cookie"
+export default function TaskAcceptPage({ params }: { params: Promise<{ id: string }> }) {
   const [step, setStep] = useState(1)
   const [proofText, setProofText] = useState("")
   const [file, setFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isCompleted, setIsCompleted] = useState(false)
+  const token = Cookies.get("token");
+  const { id: Id } = React.use(params);
+
+  useEffect(() => {
+  }, [Id, token]);
 
   // Mock task data - in a real app, this would be fetched from an API
   const task = {
-    id: params.id,
+    id: Id,
     title: "Website Registration Task",
     description: "Complete registration on platform and verify email",
     price: 5.0,
