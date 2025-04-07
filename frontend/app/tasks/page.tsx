@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { SetStateAction, useEffect, useState, useRef, useCallback } from "react"
-import { ArrowUpDown, Search } from "lucide-react"
+import { Search } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -40,7 +40,6 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([])
   const [searchTerm, setSearchTerm] = useState("")
-  const [sortOrder, setSortOrder] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const tasksPerPage = 5
   const [category, setCategory] = useState("")
@@ -106,7 +105,6 @@ export default function TasksPage() {
         ...(priceRange.max > 0 && { maxPrice: priceRange.max }),
         ...(selectedDifficulties.length > 0 && { difficulty: selectedDifficulties.join(',') }),
         ...(sortBy && { sortBy }),
-        ...(sortOrder && { sortOrder }),
         page: 1,
         ...(searchTerm && { search: searchTerm }),
         status: "Published"
@@ -134,37 +132,8 @@ export default function TasksPage() {
         ...(priceRange.max > 0 && { maxPrice: priceRange.max }),
         ...(selectedDifficulties.length > 0 && { difficulty: selectedDifficulties.join(',') }),
         ...(sortBy && { sortBy }),
-        ...(sortOrder && { sortOrder }),
         page: 1,
         ...(searchValue && { search: searchValue }),
-        status: "Published"
-      };
-
-      const data = await getAllTasks(filterParams);
-      
-      setTasks(data.tasks);
-      setFilteredTasks(data.tasks);
-      setCurrentPage(1);
-      setHasMoreTasks(data.tasks.length >= tasksPerPage);
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
-    }
-  };
-
-  const handleSort = async () => {
-    try {
-      const newSortOrder = sortOrder === "asc" ? "desc" : "asc";
-      setSortOrder(newSortOrder);
-      
-      const filterParams = {
-        ...(selectedCategories.length > 0 && { category: selectedCategories.join(',') }),
-        ...(priceRange.min > 0 && { minPrice: priceRange.min }),
-        ...(priceRange.max > 0 && { maxPrice: priceRange.max }),
-        ...(selectedDifficulties.length > 0 && { difficulty: selectedDifficulties.join(',') }),
-        sortBy: "taskTitle",
-        sortOrder: newSortOrder,
-        page: 1,
-        ...(searchTerm && { search: searchTerm }),
         status: "Published"
       };
 
@@ -204,7 +173,6 @@ export default function TasksPage() {
         ...(priceRange.max > 0 && { maxPrice: priceRange.max }),
         ...(selectedDifficulties.length > 0 && { difficulty: selectedDifficulties.join(',') }),
         ...(sortBy && { sortBy }),
-        ...(sortOrder && { sortOrder }),
         page: 1,
         ...(searchTerm && { search: searchTerm }),
         ...(filterParam && { filter: filterParam }),
@@ -236,7 +204,6 @@ export default function TasksPage() {
           ...(priceRange.max > 0 && { maxPrice: priceRange.max }),
           ...(selectedDifficulties.length > 0 && { difficulty: selectedDifficulties.join(',') }),
           ...(sortBy && { sortBy }),
-          ...(sortOrder && { sortOrder }),
           page: currentPage,
           ...(searchTerm && { search: searchTerm }),
           status: "Published"
@@ -434,10 +401,6 @@ export default function TasksPage() {
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                     <Input type="search" placeholder="Search tasks..." className="w-[200px] md:w-[300px] pl-8" value={searchTerm} onChange={handleSearch} />
                   </div>
-                  <Button variant="outline" size="sm" className="gap-1" onClick={handleSort}>
-                    <ArrowUpDown className="h-4 w-4" />
-                    Sort
-                  </Button>
                 </div>
               </div>
               <Tabs defaultValue="all" onValueChange={handleTabChange}>
