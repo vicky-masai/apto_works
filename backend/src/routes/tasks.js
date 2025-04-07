@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const taskController = require('../controllers/taskController');
-const { taskProviderAuth, workerAuth } = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
@@ -33,19 +33,17 @@ const upload = multer({
 });
 
 // Task Provider routes
-router.post('/', taskProviderAuth, taskController.createTask);
-router.get('/provider', taskProviderAuth, taskController.getProviderTasks);
-router.put('/:taskId', taskProviderAuth, taskController.updateTask);
-router.post('/:taskId/publish', taskProviderAuth, taskController.publishTask);
-router.post('/:taskId/unpublish', taskProviderAuth, taskController.unpublishTask);
+router.post('/', auth, taskController.createTask);
+router.get('/provider', auth, taskController.getProviderTasks);
+router.put('/:taskId', auth, taskController.updateTask);
+router.post('/:taskId/publish', auth, taskController.publishTask);
+router.post('/:taskId/unpublish', auth, taskController.unpublishTask);
 
 // Worker routes
 router.get('/', taskController.getAllTasks);
-router.get('/:taskId', workerAuth, taskController.getTaskById);
-router.post('/:taskId/accept', workerAuth, taskController.acceptTask);
-router.put('/:taskId/status', workerAuth, taskController.updateTaskStatus);
-router.post('/:taskId/proof', workerAuth, upload.single('proof'), taskController.submitProof);
-
-
+router.get('/:taskId', auth, taskController.getTaskById);
+router.post('/:taskId/accept', auth, taskController.acceptTask);
+router.put('/:taskId/status', auth, taskController.updateTaskStatus);
+router.post('/:taskId/proof', auth, upload.single('proof'), taskController.submitProof);
 
 module.exports = router; 

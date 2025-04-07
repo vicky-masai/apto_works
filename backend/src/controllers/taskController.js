@@ -41,15 +41,14 @@ const createTask = async (req, res) => {
   }
 };
 
-
 const getAllPublishedTasks = async (req, res) => {
   try {
     const publishedTasks = await prisma.task.findMany({
       where: {
-        status: "published", // Only fetch published tasks
+        status: "published",
       },
       include: {
-        taskProvider: true, // Include task provider details (optional)
+        taskProvider: true,
       },
     });
 
@@ -59,16 +58,15 @@ const getAllPublishedTasks = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch published tasks" });
   }
 };
-
 
 const getUnPublishedTasks = async (req, res) => {
   try {
     const publishedTasks = await prisma.task.findMany({
       where: {
-        status: "unpublished", // Only fetch published tasks
+        status: "unpublished",
       },
       include: {
-        taskProvider: true, // Include task provider details (optional)
+        taskProvider: true,
       },
     });
 
@@ -78,16 +76,15 @@ const getUnPublishedTasks = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch published tasks" });
   }
 };
-
 
 const getAllTask = async (req, res) => {
   try {
     const publishedTasks = await prisma.task.findMany({
       where: {
-        status: "published", // Only fetch published tasks
+        status: "published",
       },
       include: {
-        taskProvider: true, // Include task provider details (optional)
+        taskProvider: true,
       },
     });
 
@@ -97,13 +94,6 @@ const getAllTask = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch published tasks" });
   }
 };
-
-
-
-
-
-
-
 
 const getProviderTasks = async (req, res) => {
   try {
@@ -169,8 +159,8 @@ const updateTask = async (req, res) => {
 
         // Use transaction to ensure all operations succeed or fail together
         await prisma.$transaction(async (prisma) => {
-          // Update task provider's balance
-          await prisma.taskProvider.update({
+          // Update user's balance
+          await prisma.user.update({
             where: { id: req.user.id },
             data: {
               balance: {
@@ -197,44 +187,10 @@ const updateTask = async (req, res) => {
           message: 'Task updated successfully',
           additionalAmountDeducted: additionalAmount
         });
-      } else if (newTotalAmount < currentTotalAmount) {
-        // Need to refund excess balance
-        const refundAmount = currentTotalAmount - newTotalAmount;
-
-        // Use transaction to ensure all operations succeed or fail together
-        await prisma.$transaction(async (prisma) => {
-          // Update task provider's balance
-          await prisma.taskProvider.update({
-            where: { id: req.user.id },
-            data: {
-              balance: {
-                increment: refundAmount
-              },
-              currentAssignedBalance: {
-                decrement: refundAmount
-              }
-            }
-          });
-
-          // Update task
-          await prisma.task.update({
-            where: { id: taskId },
-            data: {
-              ...updateData,
-              totalAmount: newTotalAmount,
-              difficulty: updateData.difficulty || currentTask.difficulty
-            }
-          });
-        });
-
-        return res.json({ 
-          message: 'Task updated successfully',
-          refundAmount: refundAmount
-        });
       }
     }
 
-    // For unpublished tasks or when no balance adjustment is needed
+    // Update task without balance adjustment
     const updatedTask = await prisma.task.update({
       where: { id: taskId },
       data: {
@@ -244,7 +200,10 @@ const updateTask = async (req, res) => {
       }
     });
 
-    res.json(updatedTask);
+    res.json({ 
+      message: 'Task updated successfully',
+      task: updatedTask
+    });
   } catch (error) {
     console.error('Update Task Error:', error);
     res.status(500).json({ error: 'Failed to update task' });
@@ -283,8 +242,8 @@ const publishTask = async (req, res) => {
 
     // Use transaction to ensure both operations succeed or fail together
     await prisma.$transaction(async (prisma) => {
-      // Update task provider's balance
-      await prisma.taskProvider.update({
+      // Update user's balance
+      await prisma.user.update({
         where: { id: req.user.id },
         data: {
           balance: {
@@ -340,8 +299,8 @@ const unpublishTask = async (req, res) => {
 
     // Use transaction to ensure both operations succeed or fail together
     await prisma.$transaction(async (prisma) => {
-      // Update task provider's balance
-      await prisma.taskProvider.update({
+      // Update user's balance
+      await prisma.user.update({
         where: { id: req.user.id },
         data: {
           balance: {
@@ -370,67 +329,16 @@ const unpublishTask = async (req, res) => {
   }
 };
 
-// Worker Methods
 const getAllTasks = async (req, res) => {
   try {
-    const {
-      category,
-      minPrice,
-      maxPrice,
-      difficulty,
-      sortBy = 'createdAt',
-      sortOrder = 'desc',
-      page = 1,
-      search,
-      filter,
-      status
-    } = req.query;
+    const { filter, sortBy = 'createdAt', sortOrder = 'desc', page = 1, status = 'Published' } = req.query;
 
-    console.log(category, minPrice, maxPrice, difficulty, sortBy, sortOrder, page, search, filter, status)
+    let where = {
+      taskStatus: status
+    };
 
-    // Base query conditions
-    const where = {};
-
-    // Add status filter
-    if (status) {
-      where.taskStatus = status; // Published, InReview, NotPublished
-    } else {
-      where.taskStatus = 'Published'; // Default to Published tasks
-    }
-
-    // Add category filter - handle multiple categories
-    if (category) {
-      const categories = category.split(',').map(cat => cat.trim());
-      where.category = {
-        in: categories
-      };
-    }
-
-    // Add difficulty filter - handle multiple difficulties
-    if (difficulty) {
-      const difficulties = difficulty.split(',').map(diff => diff.trim());
-      where.difficulty = {
-        in: difficulties
-      };
-    }
-
-    // Add price range filter
-    if (minPrice || maxPrice) {
-      where.price = {};
-      if (minPrice) where.price.gte = parseFloat(minPrice);
-      if (maxPrice) where.price.lte = parseFloat(maxPrice);
-    }
-
-    // Add search filter for title and description
-    if (search) {
-      where.OR = [
-        { taskTitle: { contains: search, mode: 'insensitive' } },
-        { taskDescription: { contains: search, mode: 'insensitive' } }
-      ];
-    }
-
-    // Handle special filters
     let orderBy = {};
+
     if (filter === 'HighPaying') {
       // Set minimum price for high paying tasks and sort by price
       where.price = {
@@ -493,7 +401,7 @@ const getAllTasks = async (req, res) => {
     if (filter === 'Popular') {
       formattedTasks.sort((a, b) => b.acceptedCount - a.acceptedCount);
     }
-    console.log(formattedTasks)
+
     res.json({
       tasks: formattedTasks,
       filters: {
@@ -510,7 +418,7 @@ const getAllTasks = async (req, res) => {
     });
   } catch (error) {
     console.error('Get All Tasks Error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to fetch tasks' });
   }
 };
 
@@ -584,8 +492,8 @@ const acceptTask = async (req, res) => {
         }
       });
 
-      // Update worker's inProgress count
-      await prisma.worker.update({
+      // Update user's inProgress count
+      await prisma.user.update({
         where: { id: req.user.id },
         data: {
           inProgress: {
@@ -621,8 +529,8 @@ const updateTaskStatus = async (req, res) => {
 
     const acceptedTask = await prisma.acceptedTask.findFirst({
       where: {
-        workerId: req.user.id,
-        taskId
+        taskId,
+        workerId: req.user.id
       }
     });
 
@@ -644,52 +552,32 @@ const updateTaskStatus = async (req, res) => {
 const submitProof = async (req, res) => {
   try {
     const { taskId } = req.params;
-    const proofFile = req.file;
+    const { proof } = req.body;
 
-    if (!proofFile) {
-      return res.status(400).json({ error: 'No proof file uploaded' });
-    }
-
-    // Find the accepted task
     const acceptedTask = await prisma.acceptedTask.findFirst({
       where: {
-        workerId: req.user.id,
-        taskId
+        taskId,
+        workerId: req.user.id
       }
     });
 
     if (!acceptedTask) {
-      return res.status(404).json({ error: 'Task not found or not accepted by you' });
+      return res.status(404).json({ error: 'Task not found' });
     }
 
-    // Store the relative path to the file
-    const filePath = `/uploads/${proofFile.filename}`;
-
-    // Update the task with proof and change status to Review
     const updatedTask = await prisma.acceptedTask.update({
       where: { id: acceptedTask.id },
       data: {
-        submittedProof: filePath,
-        status: 'Review'
+        proof,
+        status: 'PENDING_REVIEW'
       }
     });
 
-    // Generate the full URL for the response
-    const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 4000}`;
-    const fullUrl = `${baseUrl}${filePath}`;
-
-    res.json({
-      message: 'Proof submitted successfully',
-      task: updatedTask,
-      proofUrl: fullUrl
-    });
+    res.json(updatedTask);
   } catch (error) {
-    console.error('Submit Proof Error:', error);
     res.status(500).json({ error: 'Failed to submit proof' });
   }
 };
-
-
 
 module.exports = {
   createTask,
@@ -704,5 +592,5 @@ module.exports = {
   getTaskById,
   acceptTask,
   updateTaskStatus,
-  submitProof,
+  submitProof
 }; 
