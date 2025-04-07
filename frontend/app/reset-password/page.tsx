@@ -4,7 +4,7 @@ import type React from "react"
 import toast, { Toaster } from 'react-hot-toast'
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowLeft, Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,12 +14,14 @@ import { Footer } from "@/components/Footer"
 
 export default function ResetPasswordPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [email, setEmail] = useState("")
   const [otp, setOtp] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [userType, setUserType] = useState("worker") // Default to worker
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -33,7 +35,12 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      const response = await fetch('/api/reset-password', {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'
+      const endpoint = userType === "worker" 
+        ? `${baseUrl}/api/auth/worker/reset-password`
+        : `${baseUrl}/api/auth/task-provider/reset-password`
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -45,14 +52,17 @@ export default function ResetPasswordPage() {
         }),
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        throw new Error('Failed to reset password')
+        throw new Error(data.error || 'Failed to reset password')
       }
 
-      toast.success("Password reset successful")
+      toast.success(data.message || "Password reset successful")
       router.push("/login")
-    } catch (error) {
-      setError("Failed to reset password. Please try again.")
+    } catch (error: any) {
+      console.error('Reset password error:', error)
+      setError(error.message || "Failed to reset password. Please try again.")
       toast.error("Reset failed")
     } finally {
       setIsLoading(false)
@@ -95,6 +105,34 @@ export default function ResetPasswordPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {error && <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">{error}</div>}
+
+                <div className="space-y-2">
+                  <Label htmlFor="userType">I am a</Label>
+                  <div className="flex space-x-4">
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        name="userType"
+                        value="worker"
+                        checked={userType === "worker"}
+                        onChange={(e) => setUserType(e.target.value)}
+                        className="h-4 w-4"
+                      />
+                      <span>Worker</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        name="userType"
+                        value="taskProvider"
+                        checked={userType === "taskProvider"}
+                        onChange={(e) => setUserType(e.target.value)}
+                        className="h-4 w-4"
+                      />
+                      <span>Task Provider</span>
+                    </label>
+                  </div>
+                </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
