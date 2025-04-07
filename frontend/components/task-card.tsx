@@ -54,12 +54,12 @@ const token = Cookies.get("token");
     }
   };
   return (
-    <Card className="bg-white border shadow-sm">
+    <Card className="bg-white border shadow-sm my-3">
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
           <div>
-            <CardTitle>{title}</CardTitle>
-            <CardDescription className="mt-1">{description}</CardDescription>
+            <CardTitle className="text-base sm:text-lg">{title}</CardTitle>
+            <CardDescription className="mt-1 text-sm sm:text-base">{description}</CardDescription>
           </div>
           <div className="flex items-center text-lg font-semibold text-green-600">
             <IndianRupee className="h-5 w-5 mr-1" />
@@ -69,7 +69,7 @@ const token = Cookies.get("token");
       </CardHeader>
       <CardContent className="pb-3">
         <div className="flex flex-wrap gap-2">
-          <Badge variant="outline" className="flex items-center gap-1 border-gray-200">
+          <Badge variant="outline" className="flex items-center gap-1 border-gray-200 text-xs sm:text-sm">
             <Tag className="h-3 w-3" />
             {category}
           </Badge>
@@ -77,23 +77,23 @@ const token = Cookies.get("token");
             variant="outline"
             className={
               difficulty === "Easy"
-                ? "bg-green-50 text-green-700 border-green-200"
+                ? "bg-green-50 text-green-700 border-green-200 text-xs sm:text-sm"
                 : difficulty === "Medium"
-                  ? "bg-yellow-50 text-yellow-700 border-yellow-200"
-                  : "bg-red-50 text-red-700 border-red-200"
+                  ? "bg-yellow-50 text-yellow-700 border-yellow-200 text-xs sm:text-sm"
+                  : "bg-red-50 text-red-700 border-red-200 text-xs sm:text-sm"
             }
           >
             {difficulty}
           </Badge>
-          <Badge variant="outline" className="flex items-center gap-1 border-gray-200">
+          <Badge variant="outline" className="flex items-center gap-1 border-gray-200 text-xs sm:text-sm">
             <Clock className="h-3 w-3" />
             {estimatedTime}
           </Badge>
-          <Badge variant="outline" className="flex items-center gap-1 border-gray-200">
+          <Badge variant="outline" className="flex items-center gap-1 border-gray-200 text-xs sm:text-sm">
             <Users className="h-3 w-3" />
             {numWorkersNeeded} workers needed
           </Badge>
-          <Badge variant="outline" className="flex items-center gap-1 border-gray-200">
+          <Badge variant="outline" className="flex items-center gap-1 border-gray-200 text-xs sm:text-sm">
             <Calendar className="h-3 w-3" />
             {timeAgo}
           </Badge>
@@ -106,8 +106,8 @@ const token = Cookies.get("token");
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px] bg-white">
             <DialogHeader>
-              <DialogTitle>{title}</DialogTitle>
-              <DialogDescription>{description}</DialogDescription>
+              <DialogTitle className="text-base sm:text-lg">{title}</DialogTitle>
+              <DialogDescription className="text-sm sm:text-base">{description}</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
