@@ -386,7 +386,7 @@ const getAllTasks = async (req, res) => {
       status
     } = req.query;
 
-    console.log(filter, status)
+    console.log(category, minPrice, maxPrice, difficulty, sortBy, sortOrder, page, search, filter, status)
 
     // Base query conditions
     const where = {};
@@ -493,7 +493,7 @@ const getAllTasks = async (req, res) => {
     if (filter === 'Popular') {
       formattedTasks.sort((a, b) => b.acceptedCount - a.acceptedCount);
     }
-
+    console.log(formattedTasks)
     res.json({
       tasks: formattedTasks,
       filters: {

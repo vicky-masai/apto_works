@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { SetStateAction, useEffect, useState } from "react"
+import { SetStateAction, useEffect, useState, useRef, useCallback } from "react"
 import { ArrowUpDown, Search } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -14,9 +14,31 @@ import { Footer } from "@/components/Footer"
 import { Header } from "@/components/Header"
 import { getAllTasks } from "@/API/api"
 
+interface Task {
+  id: string
+  taskTitle: string
+  taskDescription: string
+  price: number
+  category: string
+  difficulty: string
+  estimatedTime: string
+  createdAt: string
+  stepByStepInstructions: string
+  taskStatus: string
+  requiredProof: string | null
+  numWorkersNeeded: number
+  totalAmount: number
+  taskProviderId: string
+  updatedAt: string
+  isNew?: boolean
+  isPopular?: boolean
+  isHighPaying?: boolean
+  acceptedCount?: number
+}
+
 export default function TasksPage() {
-  const [tasks, setTasks] = useState([])
-  const [filteredTasks, setFilteredTasks] = useState([])
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [sortOrder, setSortOrder] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
@@ -32,9 +54,22 @@ export default function TasksPage() {
   const [filter, setFilter] = useState("")
   const [status, setStatus] = useState("")
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [selectedDifficulties, setSelectedDifficulties] = useState<string[]>([])
   const [priceRange, setPriceRange] = useState({ min: 0, max: 0 })
+  const [hasMoreTasks, setHasMoreTasks] = useState(true)
+  const observer = useRef<IntersectionObserver | null>(null)
+  const lastTaskElementRef = useCallback((node: HTMLDivElement | null) => {
+    if (isLoading) return
+    if (observer.current) observer.current.disconnect()
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMoreTasks) {
+        handleLoadMore()
+      }
+    })
+    if (node) observer.current.observe(node)
+  }, [isLoading, hasMoreTasks])
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategories(prev => {
@@ -63,68 +98,175 @@ export default function TasksPage() {
     }))
   }
 
-  const handleApplyFilters = () => {
-    setCategory(selectedCategories.join(','))
-    setDifficulty(selectedDifficulties.join(','))
-    setMinPrice(priceRange.min)
-    setMaxPrice(priceRange.max)
-    setPage(1) // Reset to first page when filters change
-  }
+  const handleApplyFilters = async () => {
+    try {
+      const filterParams = {
+        ...(selectedCategories.length > 0 && { category: selectedCategories.join(',') }),
+        ...(priceRange.min > 0 && { minPrice: priceRange.min }),
+        ...(priceRange.max > 0 && { maxPrice: priceRange.max }),
+        ...(selectedDifficulties.length > 0 && { difficulty: selectedDifficulties.join(',') }),
+        ...(sortBy && { sortBy }),
+        ...(sortOrder && { sortOrder }),
+        page: 1,
+        ...(searchTerm && { search: searchTerm }),
+        status: "Published"
+      };
+
+      const data = await getAllTasks(filterParams);
+      
+      setTasks(data.tasks);
+      setFilteredTasks(data.tasks);
+      setCurrentPage(1);
+      setHasMoreTasks(data.tasks.length >= tasksPerPage);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    }
+  };
+
+  const handleSearch = async (e: { target: { value: SetStateAction<string> } }) => {
+    const searchValue = e.target.value;
+    setSearchTerm(searchValue);
+    
+    try {
+      const filterParams = {
+        ...(selectedCategories.length > 0 && { category: selectedCategories.join(',') }),
+        ...(priceRange.min > 0 && { minPrice: priceRange.min }),
+        ...(priceRange.max > 0 && { maxPrice: priceRange.max }),
+        ...(selectedDifficulties.length > 0 && { difficulty: selectedDifficulties.join(',') }),
+        ...(sortBy && { sortBy }),
+        ...(sortOrder && { sortOrder }),
+        page: 1,
+        ...(searchValue && { search: searchValue }),
+        status: "Published"
+      };
+
+      const data = await getAllTasks(filterParams);
+      
+      setTasks(data.tasks);
+      setFilteredTasks(data.tasks);
+      setCurrentPage(1);
+      setHasMoreTasks(data.tasks.length >= tasksPerPage);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    }
+  };
+
+  const handleSort = async () => {
+    try {
+      const newSortOrder = sortOrder === "asc" ? "desc" : "asc";
+      setSortOrder(newSortOrder);
+      
+      const filterParams = {
+        ...(selectedCategories.length > 0 && { category: selectedCategories.join(',') }),
+        ...(priceRange.min > 0 && { minPrice: priceRange.min }),
+        ...(priceRange.max > 0 && { maxPrice: priceRange.max }),
+        ...(selectedDifficulties.length > 0 && { difficulty: selectedDifficulties.join(',') }),
+        sortBy: "taskTitle",
+        sortOrder: newSortOrder,
+        page: 1,
+        ...(searchTerm && { search: searchTerm }),
+        status: "Published"
+      };
+
+      const data = await getAllTasks(filterParams);
+      
+      setTasks(data.tasks);
+      setFilteredTasks(data.tasks);
+      setCurrentPage(1);
+      setHasMoreTasks(data.tasks.length >= tasksPerPage);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    }
+  };
+
+  const handleTabChange = async (value: string) => {
+    try {
+      let filterParam = '';
+      
+      switch (value) {
+        case 'new':
+          filterParam = 'New';
+          break;
+        case 'popular':
+          filterParam = 'Popular';
+          break;
+        case 'highpaying':
+          filterParam = 'HighPaying';
+          break;
+        default:
+          filterParam = '';
+          break;
+      }
+
+      const filterParams = {
+        ...(selectedCategories.length > 0 && { category: selectedCategories.join(',') }),
+        ...(priceRange.min > 0 && { minPrice: priceRange.min }),
+        ...(priceRange.max > 0 && { maxPrice: priceRange.max }),
+        ...(selectedDifficulties.length > 0 && { difficulty: selectedDifficulties.join(',') }),
+        ...(sortBy && { sortBy }),
+        ...(sortOrder && { sortOrder }),
+        page: 1,
+        ...(searchTerm && { search: searchTerm }),
+        ...(filterParam && { filter: filterParam }),
+        status: "Published"
+      };
+
+      const data = await getAllTasks(filterParams);
+      
+      setTasks(data.tasks);
+      setFilteredTasks(data.tasks);
+      setCurrentPage(1);
+      setHasMoreTasks(data.tasks.length >= tasksPerPage);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    }
+  };
 
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        setIsLoading(true)
-        const data = await getAllTasks({
-          ...(category && { category }),
-          ...(minPrice && { minPrice }),
-          ...(maxPrice && { maxPrice }),
-          ...(difficulty && { difficulty }),
+        if (currentPage === 1) {
+          setIsLoading(true);
+        } else {
+          setIsLoadingMore(true);
+        }
+        const filterParams = {
+          ...(selectedCategories.length > 0 && { category: selectedCategories.join(',') }),
+          ...(priceRange.min > 0 && { minPrice: priceRange.min }),
+          ...(priceRange.max > 0 && { maxPrice: priceRange.max }),
+          ...(selectedDifficulties.length > 0 && { difficulty: selectedDifficulties.join(',') }),
           ...(sortBy && { sortBy }),
           ...(sortOrder && { sortOrder }),
-          ...(page && { page }),
-          ...(search && { search }),
-          ...(filter && { filter }),
+          page: currentPage,
+          ...(searchTerm && { search: searchTerm }),
           status: "Published"
-        })
-        setTasks(data.tasks)
-        setFilteredTasks(data.tasks)
+        };
+
+        const data = await getAllTasks(filterParams);
+        
+        if (currentPage === 1) {
+          setTasks(data.tasks);
+          setFilteredTasks(data.tasks);
+        } else {
+          setTasks(prevTasks => [...prevTasks, ...data.tasks]);
+          setFilteredTasks(prevTasks => [...prevTasks, ...data.tasks]);
+        }
+        
+        setHasMoreTasks(data.tasks.length >= tasksPerPage);
       } catch (error) {
-        console.error("Error fetching tasks:", error)
+        console.error("Error fetching tasks:", error);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
+        setIsLoadingMore(false);
       }
-    }
+    };
 
-    fetchTasks()
-  }, [category, minPrice, maxPrice, difficulty, sortBy, sortOrder, page, search, filter])
+    fetchTasks();
+  }, [currentPage]);
 
-  useEffect(() => {
-    let filtered = tasks?.filter((task: { taskTitle: string }) =>
-      task.taskTitle.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    if (sortOrder === "asc") {
-      filtered.sort((a: { taskTitle: string }, b: { taskTitle: string }) => a.taskTitle.localeCompare(b.taskTitle))
-    } else {
-      filtered.sort((a: { taskTitle: string }, b: { taskTitle: string }) => b.taskTitle.localeCompare(a.taskTitle))
-    }
-
-    setFilteredTasks(filtered)
-  }, [searchTerm, sortOrder, tasks])
-
-  const handleSearch = (e: { target: { value: SetStateAction<string> } }) => {
-    setSearchTerm(e.target.value)
+  const handleLoadMore = () => {
+    setCurrentPage(prevPage => prevPage + 1)
   }
-
-  const handleSort = () => {
-    setSortOrder(prevOrder => (prevOrder === "asc" ? "desc" : "asc"))
-  }
-
-  const indexOfLastTask = currentPage * tasksPerPage
-  const indexOfFirstTask = indexOfLastTask - tasksPerPage
-  const currentTasks = Array.isArray(filteredTasks) ? filteredTasks?.slice(indexOfFirstTask, indexOfLastTask) : []
-
-  const paginate = (pageNumber: SetStateAction<number>) => setCurrentPage(pageNumber)
 
   if (isLoading) {
     return (
@@ -298,7 +440,7 @@ export default function TasksPage() {
                   </Button>
                 </div>
               </div>
-              <Tabs defaultValue="all">
+              <Tabs defaultValue="all" onValueChange={handleTabChange}>
                 <TabsList>
                   <TabsTrigger value="all">All Tasks</TabsTrigger>
                   <TabsTrigger value="new">New</TabsTrigger>
@@ -306,92 +448,136 @@ export default function TasksPage() {
                   <TabsTrigger value="highpaying">High Paying</TabsTrigger>
                 </TabsList>
                 <TabsContent value="all" className="space-y-4 mt-4">
-                  {currentTasks?.map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => (
-                    <TaskCard
-                      key={task.id}
-                      id={task.id}
-                      title={task.taskTitle}
-                      description={task.taskDescription}
-                      price={task.price}
-                      category={task.category}
-                      difficulty={task.difficulty}
-                      estimatedTime={task.estimatedTime}
-                      createdAt={task.createdAt}
-                      stepByStepInstructions={task.stepByStepInstructions}
-                      taskStatus={task.taskStatus}
-                      requiredProof={task.requiredProof}
-                      numWorkersNeeded={task.numWorkersNeeded}
-                      totalAmount={task.totalAmount}
-                      taskProviderId={task.taskProviderId}
-                      updatedAt={task.updatedAt}
-                    />
-                  ))}
+                  <div className="max-h-[600px] overflow-y-auto pr-4">
+                    {filteredTasks?.map((task, index) => (
+                      <div
+                        key={task.id}
+                        ref={index === filteredTasks.length - 1 ? lastTaskElementRef : null}
+                      >
+                        <TaskCard
+                          id={task.id}
+                          title={task.taskTitle}
+                          description={task.taskDescription}
+                          price={task.price}
+                          category={task.category}
+                          difficulty={task.difficulty}
+                          estimatedTime={task.estimatedTime}
+                          createdAt={task.createdAt}
+                          stepByStepInstructions={task.stepByStepInstructions}
+                          taskStatus={task.taskStatus}
+                          requiredProof={task.requiredProof}
+                          numWorkersNeeded={task.numWorkersNeeded}
+                          totalAmount={task.totalAmount}
+                          taskProviderId={task.taskProviderId}
+                          updatedAt={task.updatedAt}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  {isLoadingMore && (
+                    <div className="flex justify-center mt-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    </div>
+                  )}
                 </TabsContent>
                 <TabsContent value="new" className="space-y-4 mt-4">
-                  {currentTasks?.filter((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isNew: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => task.isNew).map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isNew: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => (
-                    <TaskCard
-                      key={task.id}
-                      id={task.id}
-                      title={task.taskTitle}
-                      description={task.taskDescription}
-                      price={task.price}
-                      category={task.category}
-                      difficulty={task.difficulty}
-                      estimatedTime={task.estimatedTime}
-                      createdAt={task.createdAt}
-                      stepByStepInstructions={task.stepByStepInstructions}
-                      taskStatus={task.taskStatus}
-                      requiredProof={task.requiredProof}
-                      numWorkersNeeded={task.numWorkersNeeded}
-                      totalAmount={task.totalAmount}
-                      taskProviderId={task.taskProviderId}
-                      updatedAt={task.updatedAt}
-                    />
-                  ))}
+                  <div className="max-h-[600px] overflow-y-auto pr-4">
+                    {filteredTasks?.map((task, index) => (
+                      <div
+                        key={task.id}
+                        ref={index === filteredTasks.length - 1 ? lastTaskElementRef : null}
+                      >
+                        <TaskCard
+                          id={task.id}
+                          title={task.taskTitle}
+                          description={task.taskDescription}
+                          price={task.price}
+                          category={task.category}
+                          difficulty={task.difficulty}
+                          estimatedTime={task.estimatedTime}
+                          createdAt={task.createdAt}
+                          stepByStepInstructions={task.stepByStepInstructions}
+                          taskStatus={task.taskStatus}
+                          requiredProof={task.requiredProof}
+                          numWorkersNeeded={task.numWorkersNeeded}
+                          totalAmount={task.totalAmount}
+                          taskProviderId={task.taskProviderId}
+                          updatedAt={task.updatedAt}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  {isLoadingMore && (
+                    <div className="flex justify-center mt-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    </div>
+                  )}
                 </TabsContent>
                 <TabsContent value="popular" className="space-y-4 mt-4">
-                  {currentTasks?.filter((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isPopular: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => task.isPopular).map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isPopular: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => (
-                    <TaskCard
-                      key={task.id}
-                      id={task.id}
-                      title={task.taskTitle}
-                      description={task.taskDescription}
-                      price={task.price}
-                      category={task.category}
-                      difficulty={task.difficulty}
-                      estimatedTime={task.estimatedTime}
-                      createdAt={task.createdAt}
-                      stepByStepInstructions={task.stepByStepInstructions}
-                      taskStatus={task.taskStatus}
-                      requiredProof={task.requiredProof}
-                      numWorkersNeeded={task.numWorkersNeeded}
-                      totalAmount={task.totalAmount}
-                      taskProviderId={task.taskProviderId}
-                      updatedAt={task.updatedAt}
-                    />
-                  ))}
+                  <div className="max-h-[600px] overflow-y-auto pr-4">
+                    {filteredTasks?.map((task, index) => (
+                      <div
+                        key={task.id}
+                        ref={index === filteredTasks.length - 1 ? lastTaskElementRef : null}
+                      >
+                        <TaskCard
+                          id={task.id}
+                          title={task.taskTitle}
+                          description={task.taskDescription}
+                          price={task.price}
+                          category={task.category}
+                          difficulty={task.difficulty}
+                          estimatedTime={task.estimatedTime}
+                          createdAt={task.createdAt}
+                          stepByStepInstructions={task.stepByStepInstructions}
+                          taskStatus={task.taskStatus}
+                          requiredProof={task.requiredProof}
+                          numWorkersNeeded={task.numWorkersNeeded}
+                          totalAmount={task.totalAmount}
+                          taskProviderId={task.taskProviderId}
+                          updatedAt={task.updatedAt}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  {isLoadingMore && (
+                    <div className="flex justify-center mt-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    </div>
+                  )}
                 </TabsContent>
                 <TabsContent value="highpaying" className="space-y-4 mt-4">
-                  {currentTasks?.filter((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isHighPaying: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => task.isHighPaying).map((task: { id: string; taskTitle: string; taskDescription: string; price: number; category: string; difficulty: string; estimatedTime: string; isHighPaying: boolean; createdAt: string; stepByStepInstructions: string; taskStatus: string; requiredProof: string | null; numWorkersNeeded: number; totalAmount: number; taskProviderId: string; updatedAt: string; }) => (
-                    <TaskCard
-                      key={task.id}
-                      id={task.id}
-                      title={task.taskTitle}
-                      description={task.taskDescription}
-                      price={task.price}
-                      category={task.category}
-                      difficulty={task.difficulty}
-                      estimatedTime={task.estimatedTime}
-                      createdAt={task.createdAt}
-                      stepByStepInstructions={task.stepByStepInstructions}
-                      taskStatus={task.taskStatus}
-                      requiredProof={task.requiredProof}
-                      numWorkersNeeded={task.numWorkersNeeded}
-                      totalAmount={task.totalAmount}
-                      taskProviderId={task.taskProviderId}
-                      updatedAt={task.updatedAt}
-                    />
-                  ))}
+                  <div className="max-h-[600px] overflow-y-auto pr-4">
+                    {filteredTasks?.map((task, index) => (
+                      <div
+                        key={task.id}
+                        ref={index === filteredTasks.length - 1 ? lastTaskElementRef : null}
+                      >
+                        <TaskCard
+                          id={task.id}
+                          title={task.taskTitle}
+                          description={task.taskDescription}
+                          price={task.price}
+                          category={task.category}
+                          difficulty={task.difficulty}
+                          estimatedTime={task.estimatedTime}
+                          createdAt={task.createdAt}
+                          stepByStepInstructions={task.stepByStepInstructions}
+                          taskStatus={task.taskStatus}
+                          requiredProof={task.requiredProof}
+                          numWorkersNeeded={task.numWorkersNeeded}
+                          totalAmount={task.totalAmount}
+                          taskProviderId={task.taskProviderId}
+                          updatedAt={task.updatedAt}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  {isLoadingMore && (
+                    <div className="flex justify-center mt-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    </div>
+                  )}
                 </TabsContent>
               </Tabs>
             </div>
