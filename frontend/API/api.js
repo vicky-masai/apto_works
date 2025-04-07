@@ -4,29 +4,20 @@ import axios from 'axios';
 // Base URL for API requests, set via environment variable
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
-// Define API endpoints for Worker and TaskProvider
+// Define API endpoints
 const endpoints = {
-  Worker: {
-    login: 'auth/worker/login',
-    register: 'auth/worker/register',
-    verifyOTP: 'auth/worker/verify-otp',
-    forgotPassword: 'auth/worker/forgot-password',
-    resetPassword: 'auth/worker/reset-password',
-  },
-  TaskProvider: {
-    login: 'auth/task-provider/login',
-    register: 'auth/task-provider/register',
-    verifyOTP: 'auth/task-provider/verify-otp',
-    forgotPassword: 'auth/task-provider/forgot-password',
-    resetPassword: 'auth/task-provider/reset-password',
-  },
+  login: 'auth/login',
+  register: 'auth/register',
+  verifyOTP: 'auth/verify-otp',
+  forgotPassword: 'auth/forgot-password',
+  resetPassword: 'auth/reset-password',
+  resendOtp: 'auth/resend-otp',
 };
 
 // Function to handle user login
-export const login = async (email, password, userType) => {
+export const login = async (email, password) => {
   try {
-    const endpoint = endpoints[userType].login;
-    const response = await axios.post(`${BASE_URL}/${endpoint}`, {
+    const response = await axios.post(`${BASE_URL}/${endpoints.login}`, {
       email,
       password,
     });
@@ -38,16 +29,14 @@ export const login = async (email, password, userType) => {
 };
 
 // Function to handle user registration
-export const register = async (userData, userType) => {
+export const register = async (userData) => {
   try {
-    const endpoint = endpoints[userType].register;
-    
     console.log("Making registration request:", {
-      url: `${BASE_URL}/${endpoint}`,
+      url: `${BASE_URL}/${endpoints.register}`,
       data: userData
     });
 
-    const response = await axios.post(`${BASE_URL}/${endpoint}`, userData, {
+    const response = await axios.post(`${BASE_URL}/${endpoints.register}`, userData, {
       headers: {
         'Content-Type': 'application/json',
       }
@@ -66,10 +55,9 @@ export const register = async (userData, userType) => {
 };
 
 // Function to verify OTP
-export const verifyOTP = async (email, otp, userType) => {
+export const verifyOTP = async (email, otp) => {
   try {
-    const endpoint = endpoints[userType].verifyOTP;
-    const response = await axios.post(`${BASE_URL}/${endpoint}`, { email, otp });
+    const response = await axios.post(`${BASE_URL}/${endpoints.verifyOTP}`, { email, otp });
     return response.data;
   } catch (error) {
     console.error('Error during OTP verification:', error);
@@ -78,10 +66,9 @@ export const verifyOTP = async (email, otp, userType) => {
 };
 
 // Function to handle forgot password
-export const forgotPassword = async (email, userType) => {
+export const forgotPassword = async (email) => {
   try {
-    const endpoint = endpoints[userType].forgotPassword;
-    const response = await axios.post(`${BASE_URL}/${endpoint}`, { email });
+    const response = await axios.post(`${BASE_URL}/${endpoints.forgotPassword}`, { email });
     return response.data;
   } catch (error) {
     console.error('Error during password reset request:', error);
@@ -90,10 +77,9 @@ export const forgotPassword = async (email, userType) => {
 };
 
 // Function to reset password
-export const resetPassword = async (email, otp, newPassword, userType) => {
+export const resetPassword = async (email, otp, newPassword) => {
   try {
-    const endpoint = endpoints[userType].resetPassword;
-    const response = await axios.post(`${BASE_URL}/${endpoint}`, { email, otp, newPassword });
+    const response = await axios.post(`${BASE_URL}/${endpoints.resetPassword}`, { email, otp, newPassword });
     return response.data;
   } catch (error) {
     console.error('Error during password reset:', error);
@@ -101,24 +87,13 @@ export const resetPassword = async (email, otp, newPassword, userType) => {
   }
 };
 
-// Function to resend worker OTP
-export const resendVerifyWorkerOtp = async (email) => {
+// Function to resend OTP
+export const resendVerifyOtp = async (email) => {
   try {
-    const response = await axios.post(`${BASE_URL}/auth/worker/resend-otp`, { email });
+    const response = await axios.post(`${BASE_URL}/${endpoints.resendOtp}`, { email });
     return response.data;
   } catch (error) {
-    console.error('Error resending worker OTP:', error);
-    throw error;
-  }
-};
-
-// Function to resend task provider OTP
-export const resendTaskProviderOtp = async (email) => {
-  try {
-    const response = await axios.post(`${BASE_URL}/auth/task-provider/resend-otp`, { email });
-    return response.data;
-  } catch (error) {
-    console.error('Error resending task provider OTP:', error);
+    console.error('Error resending OTP:', error);
     throw error;
   }
 };
@@ -139,7 +114,6 @@ export const createTask = async (taskData, authToken) => {
   }
 };
 
-
 // Function to get all tasks without authentication token
 export const getAllTasks = async (params) => {
   try {
@@ -159,7 +133,6 @@ export const getAllTasks = async (params) => {
 
     // Make GET request to get all tasks endpoint with query params
     const response = await axios.get(`${BASE_URL}/tasks?${queryParams}`);
-
 
     return response.data;
   } catch (error) {

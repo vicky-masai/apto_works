@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { verifyOTP, resendVerifyWorkerOtp, resendTaskProviderOtp } from "@/API/api"
+import { verifyOTP, resendVerifyOtp } from "@/API/api"
 
 export default function VerifyOTPPage() {
   const router = useRouter()
@@ -22,10 +22,9 @@ export default function VerifyOTPPage() {
   const [countdown, setCountdown] = useState(0)
 
   const email = searchParams.get("email")
-  const userType = searchParams.get("userType")
 
   useEffect(() => {
-    let timer: NodeJS.Timeout
+    let timer: ReturnType<typeof setInterval>
     if (countdown > 0) {
       timer = setInterval(() => {
         setCountdown(prev => prev - 1)
@@ -42,12 +41,12 @@ export default function VerifyOTPPage() {
     setError("")
 
     try {
-      if (!email || !userType) {
-        throw new Error("Missing email or user type")
+      if (!email) {
+        throw new Error("Missing email")
       }
 
-      await verifyOTP(email, otp, userType)
-      toast.success("Email verified successfully!")
+      const response = await verifyOTP(email, otp)
+      toast.success(response.message || "Email verified successfully!")
       
       // Redirect to login page after successful verification
       setTimeout(() => {
@@ -68,14 +67,12 @@ export default function VerifyOTPPage() {
       setResendDisabled(true)
       setCountdown(30) // Disable resend for 30 seconds
 
-      if (!email || !userType) {
-        throw new Error("Missing email or user type")
+      if (!email) {
+        throw new Error("Missing email")
       }
 
-      const resendFunction = userType === "Worker" ? resendVerifyWorkerOtp : resendTaskProviderOtp
-      await resendFunction(email)
-      
-      toast.success("OTP resent successfully!")
+      const response = await resendVerifyOtp(email)
+      toast.success(response.message || "OTP resent successfully!")
     } catch (error: any) {
       console.error("Resend error:", error)
       const errorMessage = error.response?.data?.error || "Failed to resend OTP"
@@ -83,7 +80,7 @@ export default function VerifyOTPPage() {
     }
   }
 
-  if (!email || !userType) {
+  if (!email) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center">
         <p className="text-red-600">Invalid verification link</p>

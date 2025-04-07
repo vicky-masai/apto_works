@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isLoading) {
-      const publicRoutes = ["/", "/login", "/signup", "/tasks"]
+      const publicRoutes = ["/", "/login", "/signup", "/tasks", "/reset-password", "/about", "/contact", "/privacy-policy","/forgot-password", "/verify-otp"]
 
       if (!publicRoutes.includes(pathname) && !pathname.startsWith("/_next")) {
         if (!Cookies.get("token")) {

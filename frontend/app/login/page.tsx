@@ -19,7 +19,6 @@ export default function LoginPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [userType, setUserType] = useState<"Worker" | "TaskProvider">("Worker")
   const [rememberMe, setRememberMe] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -36,11 +35,9 @@ export default function LoginPage() {
   useEffect(() => {
     const savedEmail = localStorage.getItem("savedEmail")
     const savedPassword = localStorage.getItem("savedPassword")
-    const savedUserType = localStorage.getItem("savedUserType")
-    if (savedEmail && savedPassword && savedUserType) {
+    if (savedEmail && savedPassword) {
       setEmail(savedEmail)
       setPassword(savedPassword)
-      setUserType(savedUserType as "Worker" | "TaskProvider")
       setRememberMe(true)
     }
   }, [])
@@ -54,11 +51,10 @@ export default function LoginPage() {
     const password = (e.currentTarget.elements.namedItem("password") as HTMLInputElement).value
 
     try {
-      const response = await login(email, password, userType)
+      const response = await login(email, password)
       // Store login state in localStorage
       localStorage.setItem("isLoggedIn", "true")
       localStorage.setItem("userEmail", email)
-      localStorage.setItem("userType", userType)
       toast.success("Login success")
       // Set token in cookie with 24h expiry
       cookie.set('token', response.token, { expires: 1 })
@@ -66,11 +62,9 @@ export default function LoginPage() {
       if (rememberMe) {
         localStorage.setItem("savedEmail", email)
         localStorage.setItem("savedPassword", password)
-        localStorage.setItem("savedUserType", userType)
       } else {
         localStorage.removeItem("savedEmail")
         localStorage.removeItem("savedPassword")
-        localStorage.removeItem("savedUserType")
       }
 
       // Redirect to dashboard
@@ -108,31 +102,11 @@ export default function LoginPage() {
           </div>
 
           <Card>
-            <div className="flex w-full rounded-t-lg overflow-hidden">
-              <button
-                className={`flex-1 px-4 py-3 text-center ${
-                  userType === "Worker" ? "bg-primary text-white" : "bg-gray-100"
-                }`}
-                onClick={() => setUserType("Worker")}
-              >
-                Worker
-              </button>
-              <button
-                className={`flex-1 px-4 py-3 text-center ${
-                  userType === "TaskProvider" ? "bg-primary text-white" : "bg-gray-100"
-                }`}
-                onClick={() => setUserType("TaskProvider")}
-              >
-                Task Provider
-              </button>
-            </div>
             <form onSubmit={handleSubmit}>
               <CardHeader className="space-y-1">
-                <CardTitle className="text-xl">Sign in as {userType}</CardTitle>
+                <CardTitle className="text-xl">Sign in</CardTitle>
                 <CardDescription>
-                  {userType === "Worker" 
-                    ? "Sign in to complete tasks and earn money" 
-                    : "Sign in to post tasks and find workers"}
+                  Sign in to access your account
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">

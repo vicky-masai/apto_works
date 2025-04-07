@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Footer } from "@/components/Footer"
+import { resetPassword } from "@/API/api"
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -21,7 +22,6 @@ export default function ResetPasswordPage() {
   const [otp, setOtp] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [userType, setUserType] = useState("worker") // Default to worker
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -35,28 +35,7 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'
-      const endpoint = userType === "worker" 
-        ? `${baseUrl}/api/auth/worker/reset-password`
-        : `${baseUrl}/api/auth/task-provider/reset-password`
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email,
-          otp,
-          newPassword 
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to reset password')
-      }
+      const data = await resetPassword(email, otp, newPassword)
 
       toast.success(data.message || "Password reset successful")
       router.push("/login")
@@ -105,34 +84,6 @@ export default function ResetPasswordPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {error && <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">{error}</div>}
-
-                <div className="space-y-2">
-                  <Label htmlFor="userType">I am a</Label>
-                  <div className="flex space-x-4">
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        name="userType"
-                        value="worker"
-                        checked={userType === "worker"}
-                        onChange={(e) => setUserType(e.target.value)}
-                        className="h-4 w-4"
-                      />
-                      <span>Worker</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        name="userType"
-                        value="taskProvider"
-                        checked={userType === "taskProvider"}
-                        onChange={(e) => setUserType(e.target.value)}
-                        className="h-4 w-4"
-                      />
-                      <span>Task Provider</span>
-                    </label>
-                  </div>
-                </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>

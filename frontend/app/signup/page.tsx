@@ -14,13 +14,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Footer } from "@/components/Footer"
 
 export default function SignupPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
-  const [userType, setUserType] = useState("worker")
   const [error, setError] = useState("")
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -35,9 +33,11 @@ export default function SignupPage() {
     const email = formData.get("email")?.toString()
     const password = formData.get("password")?.toString()
     const confirmPassword = formData.get("confirm-password")?.toString()
+    const userType = formData.get("user-type")?.toString()
+    const skills = formData.get("skills")?.toString().split(",").map(skill => skill.trim())
 
     // Validate required fields
-    if (!name || !email || !password || !confirmPassword) {
+    if (!name || !email || !password || !confirmPassword || !userType || !skills) {
       setError("All fields are required")
       toast.error("Please fill in all required fields")
       setIsLoading(false)
@@ -54,49 +54,27 @@ export default function SignupPage() {
     try {
       let userData;
       
-      if (userType === "worker") {
-        userData = {
-          fullName: name,
-          email: email,
-          password: password,
-          userType: "Worker",
-          skills: [] as string[]
-        }
-        // Add skills if selected
-        if (formData.get("social-media")) userData.skills.push("Social Media")
-        if (formData.get("content-writing")) userData.skills.push("Content Writing")
-        if (formData.get("testing")) userData.skills.push("Testing")
-        if (formData.get("data-entry")) userData.skills.push("Data Entry")
-      } else {
-        // Task Provider data
-        const organizationType = formData.get("organization-type")?.toString() || "Business"
-        userData = {
-          name: name,
-          email: email,
-          password: password,
-          organizationType: organizationType === "business" ? "Business" : 
-                          organizationType === "nonprofit" ? "Non-profit" : "Individual"
-        }
+      const organizationType = formData.get("organization-type")?.toString() || "Business"
+      userData = {
+        name: name,
+        email: email,
+        password: password,
+        userType: userType,
+        organizationType: organizationType === "business" ? "Business" : 
+                        organizationType === "nonprofit" ? "Non-profit" : "Individual",
+        skills: skills
       }
 
-      console.log("Sending registration data:", {
-        data: userData,
-        type: userType === "worker" ? "Worker" : "TaskProvider",
-        url: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/${userType === "worker" ? "worker" : "task-provider"}/register`
-      });
-
       // Show loading toast
-      const loadingToast = toast.loading("Creating your account...")
+      // const loadingToast = toast.loading("Creating your account...")
 
-      const response = await register(userData, userType === "worker" ? "Worker" : "TaskProvider")
+      const response = await register(userData)
       
       // Update loading toast to success
-      toast.success("Registration successful! Please verify your email.", {
-        id: loadingToast
-      })
+      toast.success("Registration successful! Please verify your email.")
       
       // Redirect to OTP verification page
-      router.push(`/verify-otp?email=${encodeURIComponent(email)}&userType=${userType === "worker" ? "Worker" : "TaskProvider"}`)
+      router.push(`/verify-otp?email=${encodeURIComponent(email)}`)
 
     } catch (error: any) {
       console.error("Registration error:", error)
@@ -160,126 +138,72 @@ export default function SignupPage() {
             <p className="text-sm text-muted-foreground">Enter your details below to create your account</p>
           </div>
 
-          <Tabs defaultValue="worker" className="w-full" onValueChange={setUserType}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="worker">Worker</TabsTrigger>
-              <TabsTrigger value="provider">Task Provider</TabsTrigger>
-            </TabsList>
-            <TabsContent value="worker">
-              <Card>
-                <CardHeader className="space-y-1">
-                  <CardTitle className="text-xl">Sign up as a Worker</CardTitle>
-                  <CardDescription>Complete tasks and earn money</CardDescription>
-                </CardHeader>
-                <form onSubmit={handleSubmit}>
-                  <CardContent className="space-y-4">
-                    {error && <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">{error}</div>}
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Full Name</Label>
-                      <Input id="name" name="name" placeholder="John Doe" required />
+          <Card>
+            <CardHeader className="space-y-1">
+              <CardTitle className="text-xl">Sign up</CardTitle>
+              <CardDescription>Complete tasks and earn money or post tasks and find workers</CardDescription>
+            </CardHeader>
+            <form onSubmit={handleSubmit}>
+              <CardContent className="space-y-4">
+                {error && <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">{error}</div>}
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input id="name" name="name" placeholder="John Doe" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" name="email" type="email" placeholder="john@example.com" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input id="password" name="password" type="password" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">Confirm Password</Label>
+                  <Input id="confirm-password" name="confirm-password" type="password" required />
+                </div>
+                <div className="space-y-2">
+                  <Label>User Type</Label>
+                  <RadioGroup name="user-type" defaultValue="TaskProvider">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="TaskProvider" id="task-provider" />
+                      <Label htmlFor="task-provider">Task Provider</Label>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input id="email" name="email" type="email" placeholder="john@example.com" required />
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="Worker" id="task-worker" />
+                      <Label htmlFor="task-worker">Worker</Label>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <Input id="password" name="password" type="password" required />
+                  </RadioGroup>
+                </div>
+                <div className="space-y-2">
+                  <Label>Organization Type</Label>
+                  <RadioGroup name="organization-type" defaultValue="business">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="business" id="business" />
+                      <Label htmlFor="business">Business</Label>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="confirm-password">Confirm Password</Label>
-                      <Input id="confirm-password" name="confirm-password" type="password" required />
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="nonprofit" id="nonprofit" />
+                      <Label htmlFor="nonprofit">Non-profit</Label>
                     </div>
-                    <div className="space-y-1">
-                      <Label>Skills (Optional)</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="flex items-center space-x-2">
-                          <input type="checkbox" id="social-media" name="social-media" className="rounded text-primary" />
-                          <label htmlFor="social-media" className="text-sm">
-                            Social Media
-                          </label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <input type="checkbox" id="content-writing" name="content-writing" className="rounded text-primary" />
-                          <label htmlFor="content-writing" className="text-sm">
-                            Content Writing
-                          </label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <input type="checkbox" id="testing" name="testing" className="rounded text-primary" />
-                          <label htmlFor="testing" className="text-sm">
-                            Testing
-                          </label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <input type="checkbox" id="data-entry" name="data-entry" className="rounded text-primary" />
-                          <label htmlFor="data-entry" className="text-sm">
-                            Data Entry
-                          </label>
-                        </div>
-                      </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="individual" id="individual" />
+                      <Label htmlFor="individual">Individual</Label>
                     </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? "Creating account..." : "Create account"}
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Card>
-            </TabsContent>
-            <TabsContent value="provider">
-              <Card>
-                <CardHeader className="space-y-1">
-                  <CardTitle className="text-xl">Sign up as a Task Provider</CardTitle>
-                  <CardDescription>Post tasks and find workers</CardDescription>
-                </CardHeader>
-                <form onSubmit={handleSubmit}>
-                  <CardContent className="space-y-4">
-                    {error && <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">{error}</div>}
-                    <div className="space-y-2">
-                      <Label htmlFor="company-name">Company/Organization Name</Label>
-                      <Input id="company-name" name="company-name" placeholder="Acme Inc." required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input id="email" name="email" type="email" placeholder="contact@acme.com" required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <Input id="password" name="password" type="password" required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="confirm-password">Confirm Password</Label>
-                      <Input id="confirm-password" name="confirm-password" type="password" required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Organization Type</Label>
-                      <RadioGroup name="organization-type" defaultValue="business">
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="business" id="business" />
-                          <Label htmlFor="business">Business</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="nonprofit" id="nonprofit" />
-                          <Label htmlFor="nonprofit">Non-profit</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="individual" id="individual" />
-                          <Label htmlFor="individual">Individual</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? "Creating account..." : "Create account"}
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                  </RadioGroup>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="skills">Skills (comma separated)</Label>
+                  <Input id="skills" name="skills" placeholder="e.g. JavaScript, React, Node.js" required />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Creating account..." : "Create account"}
+                </Button>
+              </CardFooter>
+            </form>
+          </Card>
 
           <div className="text-center text-sm">
             Already have an account?{" "}
