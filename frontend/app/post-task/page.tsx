@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import toast, { Toaster } from 'react-hot-toast'; 
@@ -15,8 +15,18 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Footer } from "@/components/Footer"
-
+import Cookies from "js-cookie"
+import { useRouter } from "next/navigation"
 export default function PostTaskPage() {
+  const router = useRouter();
+  const token = Cookies.get("token");
+
+  useEffect(() => {
+    if (!token) {
+      router.push("/login");
+    }
+  }, [token, router]); 
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
 
@@ -51,7 +61,7 @@ export default function PostTaskPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+<div className="flex min-h-screen flex-col bg-white">
          <Toaster
   position="top-center"
   reverseOrder={false}

@@ -3,6 +3,7 @@
 import React from "react"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, CheckCircle, Clock, DollarSign, Upload } from "lucide-react"
 
@@ -13,6 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { acceptTask } from "@/API/api"
 import Cookies from "js-cookie"
+
 export default function TaskAcceptPage({ params }: { params: Promise<{ id: string }> }) {
   const [step, setStep] = useState(1)
   const [proofText, setProofText] = useState("")
@@ -20,10 +22,14 @@ export default function TaskAcceptPage({ params }: { params: Promise<{ id: strin
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isCompleted, setIsCompleted] = useState(false)
   const token = Cookies.get("token");
+  const router = useRouter();
   const { id: Id } = React.use(params);
 
   useEffect(() => {
-  }, [Id, token]);
+    if (!token) {
+      router.push("/login");
+    }
+  }, [token, router]);
 
   // Mock task data - in a real app, this would be fetched from an API
   const task = {

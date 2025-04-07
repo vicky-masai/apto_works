@@ -1,9 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Camera, CreditCard, LogOut, Shield, User } from "lucide-react"
+import { Camera, CreditCard, Shield } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,28 +14,19 @@ import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Footer } from "@/components/Footer"
+import { Header } from "@/components/Header"
 
 export default function ProfilePage() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [userEmail, setUserEmail] = useState("")
 
   useEffect(() => {
-    // Check if user is logged in
-    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true"
-
-    if (!isLoggedIn) {
-      router.push("/login")
-      return
-    }
-
     // Get user email from localStorage
     const email = localStorage.getItem("userEmail")
     if (email) {
       setUserEmail(email)
     }
-  }, [router])
+  }, [])
 
   const handleSaveProfile = () => {
     setIsSaving(true)
@@ -48,65 +37,13 @@ export default function ProfilePage() {
     }, 1500)
   }
 
-  const handleLogout = () => {
-    setIsLoading(true)
-
-    // Clear localStorage
-    localStorage.removeItem("isLoggedIn")
-    localStorage.removeItem("userEmail")
-    localStorage.removeItem("userType")
-
-    // Redirect to home page
-    setTimeout(() => {
-      setIsLoading(false)
-      router.push("/")
-    }, 1000)
-  }
-
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2 font-bold text-xl text-primary">
-            <Link href="/">TaskHub</Link>
-          </div>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link
-              href="/dashboard"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/tasks"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Tasks
-            </Link>
-            <Link
-              href="/earnings"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Earnings
-            </Link>
-          </nav>
-          <div className="flex items-center gap-4">
-            <Link href="/profile">
-              <Button variant="ghost" size="sm" className="font-medium">
-                Profile
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+    <Header />
       <main className="flex-1 container py-6 m-auto">
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">Profile Settings</h1>
-            <Button variant="outline" size="sm" onClick={handleLogout} disabled={isLoading}>
-              {isLoading ? "Logging out..." : "Log out"}
-              <LogOut className="ml-2 h-4 w-4" />
-            </Button>
           </div>
 
           <div className="flex flex-col md:flex-row gap-6">
@@ -131,10 +68,6 @@ export default function ProfilePage() {
                     <p className="text-sm text-muted-foreground">{userEmail}</p>
                   </div>
                   <div className="w-full mt-6 space-y-2">
-                    <div className="flex items-center gap-2 p-2 rounded-md hover:bg-muted">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">Personal Information</span>
-                    </div>
                     <div className="flex items-center gap-2 p-2 rounded-md hover:bg-muted">
                       <Shield className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">Security</span>
