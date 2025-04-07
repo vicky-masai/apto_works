@@ -22,9 +22,12 @@ enum OrganizationType {
 }
 
 enum TaskStatus {
-  Published
-  InReview
   NotPublished
+  Published
+  Active
+  PENDING_REVIEW
+  COMPLETED
+  REJECTED
 }
 
 enum Difficulty {
@@ -48,61 +51,71 @@ enum AcceptedTaskStatus {
 }
 
 model User {
-  id                    String    @id @default(auto()) @map("_id") @db.ObjectId
+  id                    String         @id @default(auto()) @map("_id") @db.ObjectId
   name                  String
-  email                 String    @unique
+  email                 String         @unique
   password              String
-  userType              UserType
+  userType              UserType       @default(Worker)
   organizationType      OrganizationType?
   skills                String[]
-  balance               Float     @default(0)
-  currentAssignedBalance Float    @default(0)
-  totalUsedBalance      Float     @default(0)
-  totalEarnings         Float     @default(0)
-  inProgress            Int       @default(0)
-  completedTasks        Int       @default(0)
-  isVerified            Boolean   @default(false)
+  balance               Float          @default(0)
+  currentAssignedBalance Float        @default(0)
+  totalUsedBalance      Float          @default(0)
+  totalEarnings         Float          @default(0)
+  inProgress            Int            @default(0)
+  completedTasks        Int            @default(0)
+  isEmailVerified       Boolean        @default(false)
   otp                   String?
   otpExpiry             DateTime?
-  tasks                 Task[]
-  acceptedTasks         AcceptedTask[]
+  resetToken            String?
+  resetTokenExpiry      DateTime?
+  tasks                 Task[]         @relation("TaskProvider")
+  acceptedTasks         AcceptedTask[] @relation("Worker")
   balanceHistory        BalanceHistory[]
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  @@index([userType])
 }
 
 model Task {
-  id                    String            @id @default(auto()) @map("_id") @db.ObjectId
+  id                    String         @id @default(auto()) @map("_id") @db.ObjectId
   taskTitle             String
   taskDescription       String
   category              String
   price                 Float
   estimatedTime         String
   stepByStepInstructions String
-  taskStatus            TaskStatus        @default(NotPublished)
   requiredProof         String?
   numWorkersNeeded      Int
   totalAmount           Float
-  difficulty            Difficulty        @default(Medium)
-  acceptedWorkers       AcceptedTask[]
+  difficulty            String         @default("Medium")
+  taskStatus            TaskStatus     @default(NotPublished)
+  userId                String         @db.ObjectId
+  user                  User           @relation("TaskProvider", fields: [userId], references: [id])
+  acceptedUsers         AcceptedTask[]
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
 
-  taskProviderId        String            @db.ObjectId
-  taskProvider          User              @relation(fields: [taskProviderId], references: [id])
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
+  @@index([userId])
+  @@index([taskStatus])
+  @@index([category])
 }
 
 model AcceptedTask {
-  id                String              @id @default(auto()) @map("_id") @db.ObjectId
-  workerId          String              @db.ObjectId
-  taskId            String              @db.ObjectId
-  status            AcceptedTaskStatus  @default(Pending)
-  submittedProof    String?
-  verifiedByProvider Boolean             @default(false)
-  worker            User                @relation(fields: [workerId], references: [id])
-  task              Task                @relation(fields: [taskId], references: [id])
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
+  id                    String         @id @default(auto()) @map("_id") @db.ObjectId
+  taskId                String         @db.ObjectId
+  task                  Task           @relation(fields: [taskId], references: [id])
+  userId                String         @db.ObjectId
+  user                  User           @relation("Worker", fields: [userId], references: [id])
+  status                TaskStatus     @default(Active)
+  proof                 String?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  @@index([taskId])
+  @@index([userId])
+  @@index([status])
 }
 
 model BalanceHistory {
@@ -112,4 +125,7 @@ model BalanceHistory {
   type      TransactionType
   user      User            @relation(fields: [userId], references: [id])
   createdAt DateTime        @default(now())
+
+  @@index([userId])
+  @@index([type])
 } 

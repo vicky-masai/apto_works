@@ -29,7 +29,7 @@ const createTask = async (req, res) => {
         numWorkersNeeded,
         totalAmount,
         difficulty: difficulty || 'Medium',
-        taskProviderId: req.user.id,
+        userId: req.user.id,
         taskStatus: 'NotPublished'
       }
     });
@@ -99,12 +99,12 @@ const getProviderTasks = async (req, res) => {
   try {
     const tasks = await prisma.task.findMany({
       where: {
-        taskProviderId: req.user.id
+        userId: req.user.id
       },
       include: {
-        acceptedWorkers: {
+        acceptedUsers: {
           include: {
-            worker: true
+            user: true
           }
         }
       }
@@ -125,7 +125,7 @@ const updateTask = async (req, res) => {
     const currentTask = await prisma.task.findUnique({
       where: {
         id: taskId,
-        taskProviderId: req.user.id
+        userId: req.user.id
       }
     });
 
@@ -217,7 +217,7 @@ const publishTask = async (req, res) => {
     const task = await prisma.task.findUnique({
       where: {
         id: taskId,
-        taskProviderId: req.user.id
+        userId: req.user.id
       }
     });
 
@@ -282,7 +282,7 @@ const unpublishTask = async (req, res) => {
     const task = await prisma.task.findUnique({
       where: {
         id: taskId,
-        taskProviderId: req.user.id
+        userId: req.user.id
       }
     });
 
@@ -374,7 +374,7 @@ const getAllTasks = async (req, res) => {
     const tasks = await prisma.task.findMany({
       where,
       include: {
-        taskProvider: {
+        user: {
           select: {
             name: true,
             organizationType: true
@@ -382,7 +382,7 @@ const getAllTasks = async (req, res) => {
         },
         _count: {
           select: {
-            acceptedWorkers: true
+            acceptedUsers: true
           }
         }
       },
@@ -391,10 +391,10 @@ const getAllTasks = async (req, res) => {
       take: pageSize
     });
 
-    // If filter is Popular, sort by accepted workers count in memory
+    // If filter is Popular, sort by accepted users count in memory
     let formattedTasks = tasks.map(task => ({
       ...task,
-      acceptedCount: task._count.acceptedWorkers,
+      acceptedCount: task._count.acceptedUsers,
       _count: undefined
     }));
 
@@ -429,15 +429,15 @@ const getTaskById = async (req, res) => {
     const task = await prisma.task.findUnique({
       where: { id: taskId },
       include: {
-        taskProvider: {
+        user: {
           select: {
             name: true,
             organizationType: true
           }
         },
-        acceptedWorkers: {
+        acceptedUsers: {
           include: {
-            worker: true
+            user: true
           }
         }
       }
@@ -472,7 +472,7 @@ const acceptTask = async (req, res) => {
     // Check if worker has already accepted this task
     const existingAcceptance = await prisma.acceptedTask.findFirst({
       where: {
-        workerId: req.user.id,
+        userId: req.user.id,
         taskId
       }
     });
@@ -486,7 +486,7 @@ const acceptTask = async (req, res) => {
       // Create accepted task
       const acceptedTask = await prisma.acceptedTask.create({
         data: {
-          workerId: req.user.id,
+          userId: req.user.id,
           taskId,
           status: 'Active'
         }
@@ -524,13 +524,13 @@ const acceptTask = async (req, res) => {
 
 const updateTaskStatus = async (req, res) => {
   try {
-    const { taskId } = req.params;
+    const { acceptedTaskId } = req.params;
     const { status } = req.body;
 
-    const acceptedTask = await prisma.acceptedTask.findFirst({
-      where: {
-        taskId,
-        workerId: req.user.id
+    const acceptedTask = await prisma.acceptedTask.findUnique({
+      where: { id: acceptedTaskId },
+      include: {
+        task: true
       }
     });
 
@@ -538,8 +538,13 @@ const updateTaskStatus = async (req, res) => {
       return res.status(404).json({ error: 'Task not found' });
     }
 
+    // Ensure the task belongs to the current user
+    if (acceptedTask.userId !== req.user.id) {
+      return res.status(403).json({ error: 'Unauthorized to update this task' });
+    }
+
     const updatedTask = await prisma.acceptedTask.update({
-      where: { id: acceptedTask.id },
+      where: { id: acceptedTaskId },
       data: { status }
     });
 
@@ -551,13 +556,13 @@ const updateTaskStatus = async (req, res) => {
 
 const submitProof = async (req, res) => {
   try {
-    const { taskId } = req.params;
+    const { acceptedTaskId } = req.params;
     const { proof } = req.body;
 
-    const acceptedTask = await prisma.acceptedTask.findFirst({
-      where: {
-        taskId,
-        workerId: req.user.id
+    const acceptedTask = await prisma.acceptedTask.findUnique({
+      where: { id: acceptedTaskId },
+      include: {
+        task: true
       }
     });
 
@@ -565,8 +570,13 @@ const submitProof = async (req, res) => {
       return res.status(404).json({ error: 'Task not found' });
     }
 
+    // Ensure the task belongs to the current user
+    if (acceptedTask.userId !== req.user.id) {
+      return res.status(403).json({ error: 'Unauthorized to submit proof for this task' });
+    }
+
     const updatedTask = await prisma.acceptedTask.update({
-      where: { id: acceptedTask.id },
+      where: { id: acceptedTaskId },
       data: {
         proof,
         status: 'PENDING_REVIEW'
