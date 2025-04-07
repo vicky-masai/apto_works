@@ -2,22 +2,22 @@ const prisma = require('../config/database');
 
 const getProfile = async (req, res) => {
   try {
-    const worker = await prisma.worker.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: req.user.id },
       select: {
         id: true,
-        fullName: true,
+        name: true,
         email: true,
         skills: true,
         balance: true,
         createdAt: true,
-        totalEarnings:true,
-        inProgress:true,
-        completedTasks:true
+        totalEarnings: true,
+        inProgress: true,
+        completedTasks: true
       }
     });
 
-    res.json(worker);
+    res.json(user);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch profile' });
   }
@@ -25,25 +25,28 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { fullName, skills } = req.body;
+    const { name, skills } = req.body;
 
-    const updatedWorker = await prisma.worker.update({
+    const user = await prisma.user.update({
       where: { id: req.user.id },
       data: {
-        fullName,
+        name,
         skills
       },
       select: {
         id: true,
-        fullName: true,
+        name: true,
         email: true,
         skills: true,
         balance: true,
-        createdAt: true
+        createdAt: true,
+        totalEarnings: true,
+        inProgress: true,
+        completedTasks: true
       }
     });
 
-    res.json(updatedWorker);
+    res.json(user);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update profile' });
   }
@@ -76,14 +79,15 @@ const getAcceptedTasks = async (req, res) => {
 
 const getBalance = async (req, res) => {
   try {
-    const worker = await prisma.worker.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: req.user.id },
       select: {
-        balance: true
+        balance: true,
+        totalEarnings: true
       }
     });
 
-    res.json({ balance: worker.balance });
+    res.json(user);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch balance' });
   }

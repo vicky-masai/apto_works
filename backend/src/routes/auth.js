@@ -2,20 +2,18 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 
-// Task Provider routes
-router.post('/task-provider/register', authController.registerTaskProvider);
-router.post('/task-provider/login', authController.loginTaskProvider);
-router.post('/task-provider/verify-otp', authController.verifyTaskProviderOTP);
-router.post('/task-provider/forgot-password', authController.forgotPasswordTaskProvider);
-router.post('/task-provider/reset-password', authController.resetPasswordTaskProvider);
-router.post('/task-provider/resend-otp', authController.resendTaskProviderOtp);
+// Registration
+router.post('/register', authController.register);
 
-// Worker routes
-router.post('/worker/register', authController.registerWorker);
-router.post('/worker/login', authController.loginWorker);
-router.post('/worker/verify-otp', authController.verifyWorkerOTP);
-router.post('/worker/forgot-password', authController.forgotPasswordWorker);
-router.post('/worker/reset-password', authController.resetPasswordWorker);
-router.post('/worker/resend-otp', authController.resendVerifyWorkerOtp);
+// Login
+router.post('/login', authController.login);
+
+// Email Verification
+router.post('/verify-otp', authController.verifyOTP);
+router.post('/resend-otp', authController.resendOTP);
+
+// Password Reset
+router.post('/forgot-password', authController.forgotPassword);
+router.post('/reset-password', authController.resetPassword);
 
 module.exports = router; 

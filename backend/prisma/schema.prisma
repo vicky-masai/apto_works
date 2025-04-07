@@ -10,6 +10,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserType {
+  TaskProvider
+  Worker
+}
+
 enum OrganizationType {
   Business
   NonProfit
@@ -42,41 +47,28 @@ enum AcceptedTaskStatus {
   Cancelled
 }
 
-model TaskProvider {
+model User {
   id                    String    @id @default(auto()) @map("_id") @db.ObjectId
   name                  String
   email                 String    @unique
   password              String
+  userType              UserType
   organizationType      OrganizationType?
+  skills                String[]
   balance               Float     @default(0)
   currentAssignedBalance Float    @default(0)
   totalUsedBalance      Float     @default(0)
+  totalEarnings         Float     @default(0)
+  inProgress            Int       @default(0)
+  completedTasks        Int       @default(0)
+  isVerified            Boolean   @default(false)
+  otp                   String?
+  otpExpiry             DateTime?
   tasks                 Task[]
-  isVerified      Boolean         @default(false)
-  otp             String?
-  otpExpiry       DateTime?
+  acceptedTasks         AcceptedTask[]
   balanceHistory        BalanceHistory[]
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
-}
-
-model Worker {
-  id              String          @id @default(auto()) @map("_id") @db.ObjectId
-  fullName        String
-  email           String          @unique
-  password        String
-  skills          String[]
-  balance         Float           @default(0)
-  totalEarnings   Float           @default(0)
-  inProgress      Int          @default(0)
-  completedTasks  Int          @default(0)
-  isVerified      Boolean         @default(false)
-  acceptedTasks   AcceptedTask[]
-  balanceHistory  BalanceHistory[]
-  otp             String?
-  otpExpiry       DateTime?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
 }
 
 model Task {
@@ -95,7 +87,7 @@ model Task {
   acceptedWorkers       AcceptedTask[]
 
   taskProviderId        String            @db.ObjectId
-  taskProvider          TaskProvider      @relation(fields: [taskProviderId], references: [id])
+  taskProvider          User              @relation(fields: [taskProviderId], references: [id])
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
 }
@@ -107,7 +99,7 @@ model AcceptedTask {
   status            AcceptedTaskStatus  @default(Pending)
   submittedProof    String?
   verifiedByProvider Boolean             @default(false)
-  worker            Worker              @relation(fields: [workerId], references: [id])
+  worker            User                @relation(fields: [workerId], references: [id])
   task              Task                @relation(fields: [taskId], references: [id])
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
@@ -118,7 +110,6 @@ model BalanceHistory {
   userId    String          @db.ObjectId
   amount    Float
   type      TransactionType
-  taskProvider TaskProvider? @relation(fields: [userId], references: [id])
-  worker      Worker?       @relation(fields: [userId], references: [id])
-  createdAt   DateTime      @default(now())
+  user      User            @relation(fields: [userId], references: [id])
+  createdAt DateTime        @default(now())
 } 

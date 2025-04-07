@@ -2,7 +2,7 @@ const prisma = require('../config/database');
 
 const getProfile = async (req, res) => {
   try {
-    const taskProvider = await prisma.taskProvider.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: req.user.id },
       select: {
         id: true,
@@ -14,7 +14,7 @@ const getProfile = async (req, res) => {
       }
     });
 
-    res.json(taskProvider);
+    res.json(user);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch profile' });
   }
@@ -24,7 +24,7 @@ const updateProfile = async (req, res) => {
   try {
     const { name, organizationType } = req.body;
 
-    const updatedTaskProvider = await prisma.taskProvider.update({
+    const user = await prisma.user.update({
       where: { id: req.user.id },
       data: {
         name,
@@ -40,23 +40,23 @@ const updateProfile = async (req, res) => {
       }
     });
 
-    res.json(updatedTaskProvider);
+    res.json(user);
   } catch (error) {
-    console.log(error.message);
     res.status(500).json({ error: 'Failed to update profile' });
   }
 };
 
 const getBalance = async (req, res) => {
   try {
-    const taskProvider = await prisma.taskProvider.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: req.user.id },
       select: {
-        balance: true
+        balance: true,
+        currentAssignedBalance: true
       }
     });
 
-    res.json({ balance: taskProvider.balance });
+    res.json(user);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch balance' });
   }
@@ -64,8 +64,9 @@ const getBalance = async (req, res) => {
 
 const getWorkers = async (req, res) => {
   try {
-    const workers = await prisma.worker.findMany({
+    const workers = await prisma.user.findMany({
       where: {
+        userType: 'Worker',
         acceptedTasks: {
           some: {
             task: {
@@ -76,7 +77,7 @@ const getWorkers = async (req, res) => {
       },
       select: {
         id: true,
-        fullName: true,
+        name: true,
         email: true,
         skills: true,
         createdAt: true
@@ -93,12 +94,6 @@ const verifyProof = async (req, res) => {
   try {
     const { taskId, workerId } = req.params;
     const { isApproved } = req.body;
-    console.log(taskId, workerId);
-
-    const tasks = await prisma.acceptedTask.findMany();
-    console.log(tasks);
-
-
 
     // Fetch the task along with its provider ID
     const acceptedTask = await prisma.acceptedTask.findFirst({
@@ -138,7 +133,7 @@ const verifyProof = async (req, res) => {
     if (isApproved) {
       // Transfer payment to worker
       await prisma.$transaction([
-        prisma.taskProvider.update({
+        prisma.user.update({
           where: { id: req.user.id },
           data: {
             balance: {
@@ -146,7 +141,7 @@ const verifyProof = async (req, res) => {
             }
           }
         }),
-        prisma.worker.update({
+        prisma.user.update({
           where: { id: workerId },
           data: {
             balance: {
@@ -163,7 +158,6 @@ const verifyProof = async (req, res) => {
     res.status(500).json({ error: 'Failed to verify proof' });
   }
 };
-
 
 module.exports = {
   getProfile,
