@@ -386,7 +386,7 @@ const getAllTasks = async (req, res) => {
       status
     } = req.query;
 
-    console.log(category, minPrice, maxPrice, difficulty, sortBy, sortOrder, page, search, filter, status)
+    console.log(filter, status)
 
     // Base query conditions
     const where = {};
@@ -398,19 +398,21 @@ const getAllTasks = async (req, res) => {
       where.taskStatus = 'Published'; // Default to Published tasks
     }
 
-    console.log(where)
-
-    // Add category filter
+    // Add category filter - handle multiple categories
     if (category) {
-      where.category = category;
+      const categories = category.split(',').map(cat => cat.trim());
+      where.category = {
+        in: categories
+      };
     }
 
-    // Add difficulty filter
+    // Add difficulty filter - handle multiple difficulties
     if (difficulty) {
-      where.difficulty = difficulty;
+      const difficulties = difficulty.split(',').map(diff => diff.trim());
+      where.difficulty = {
+        in: difficulties
+      };
     }
-
-    console.log("suraj pandey",where)
 
     // Add price range filter
     if (minPrice || maxPrice) {
@@ -461,26 +463,6 @@ const getAllTasks = async (req, res) => {
     const totalPages = Math.ceil(totalCount / pageSize);
 
     // Get tasks with filters, sorting and pagination
-    console.log("suraj pandey 2",where)
-    const taskss = await prisma.task.findMany({
-      where,
-      include: {
-        taskProvider: {
-          select: {
-            name: true,
-            organizationType: true
-          }
-        },
-        _count: {
-          select: {
-            acceptedWorkers: true
-          }
-        }
-      },
-      orderBy,
-      skip,
-      take: pageSize
-    });
     const tasks = await prisma.task.findMany({
       where,
       include: {
