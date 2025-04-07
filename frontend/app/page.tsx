@@ -1,13 +1,15 @@
+
 import Link from "next/link"
 import { ArrowRight, CheckCircle, DollarSign, Search, Shield } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Footer } from "@/components/Footer"
+import { Header } from "@/components/Header"
 
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      <header className="sticky top-0 z-50 w-full border-b bg-white">
+      {/* <header className="sticky top-0 z-50 w-full border-b bg-white">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-2 font-bold text-xl text-primary">
             <Shield className="h-6 w-6" />
@@ -38,7 +40,8 @@ export default function Home() {
             </Link>
           </div>
         </div>
-      </header>
+      </header> */}
+      <Header />
       <main className="flex-1 m-auto">
         <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-white to-gray-50">
           <div className="container px-4 md:px-6 m-auto">

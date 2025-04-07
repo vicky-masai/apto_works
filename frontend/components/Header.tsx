@@ -1,13 +1,43 @@
+"use client"
 import Link from "next/link"
-import { Shield } from "lucide-react"
-
+import { DollarSign, Home, LogIn, LogOut, Shield, Upload, User, UserPlus, Wallet } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
+import Cookies from "js-cookie"
+import { useRouter } from "next/navigation"
 
 interface HeaderProps {
   isLoggedIn?: boolean
 }
 
-export function Header({ isLoggedIn = false }: HeaderProps) {
+export function Header({ isLoggedIn = true }: HeaderProps) {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const token = Cookies.get("token");
+  const router = useRouter();
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  const handleLogout = () => {
+    Cookies.remove("token");
+    router.push("/");
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white">
       <div className="container flex h-16 items-center justify-between">
@@ -24,19 +54,72 @@ export function Header({ isLoggedIn = false }: HeaderProps) {
               <Link href="/tasks" className="text-sm font-medium text-gray-600 hover:text-gray-900">
                 Tasks
               </Link>
-              <Link href="/earnings" className="text-sm font-medium text-gray-600 hover:text-gray-900">
-                Earnings
-              </Link>
-              <Link href="/wallet" className="text-sm font-medium text-gray-600 hover:text-gray-900">
-                Wallet
-              </Link>
             </nav>
-            <div className="flex items-center gap-4">
-              <Link href="/profile">
-                <Button variant="ghost" size="sm">
-                  Profile
-                </Button>
-              </Link>
+            <div className="relative flex items-center gap-4" ref={dropdownRef}>
+              <button onClick={toggleDropdown} className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200">
+                <User className="h-5 w-5 text-gray-600" />
+              </button>
+              {isDropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200">
+                  <div className="py-1">
+                    {token ? (
+                      <>
+                        <Link href="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          <span className="flex items-center">
+                            <Home className="h-4 w-4 mr-2" />
+                            Dashboard
+                          </span>
+                        </Link>
+                        <Link href="/post-task" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          <span className="flex items-center">
+                            <Upload className="h-4 w-4 mr-2" />
+                            Post a Task
+                          </span>
+                        </Link>
+                        <Link href="/earnings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          <span className="flex items-center">
+                            <DollarSign className="h-4 w-4 mr-2" />
+                            Earnings
+                          </span>
+                        </Link>
+                        <Link href="/wallet" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          <span className="flex items-center">
+                            <Wallet className="h-4 w-4 mr-2" />
+                            Wallet
+                          </span>
+                        </Link>
+                        <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          <span className="flex items-center">
+                            <User className="h-4 w-4 mr-2" />
+                            Profile
+                          </span>
+                        </Link>
+                        <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          <span className="flex items-center">
+                            <LogOut className="h-4 w-4 mr-2" />
+                            Logout
+                          </span>
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Link href="/login" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          <span className="flex items-center">
+                            <LogIn className="h-4 w-4 mr-2" />
+                            Login
+                          </span>
+                        </Link>
+                        <Link href="/signup" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          <span className="flex items-center">
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Signup
+                          </span>
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </>
         ) : (
