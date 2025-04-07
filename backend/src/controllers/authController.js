@@ -71,8 +71,10 @@ const login = async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    console.log(user);
+
     // Check if email is verified
-    if (!user.isVerified) {
+    if (!user.isEmailVerified) {
       return res.status(401).json({ error: 'Please verify your email first' });
     }
 
@@ -118,7 +120,7 @@ const verifyOTP = async (req, res) => {
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        isVerified: true,
+        isEmailVerified: true,
         otp: null,
         otpExpiry: null
       }
@@ -126,6 +128,7 @@ const verifyOTP = async (req, res) => {
 
     res.json({ message: 'Email verified successfully' });
   } catch (error) {
+    console.log(error.message)
     res.status(500).json({ error: 'Verification failed' });
   }
 };

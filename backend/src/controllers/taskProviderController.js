@@ -70,7 +70,7 @@ const getWorkers = async (req, res) => {
         acceptedTasks: {
           some: {
             task: {
-              taskProviderId: req.user.id
+              userId: req.user.id
             }
           }
         }
@@ -92,17 +92,15 @@ const getWorkers = async (req, res) => {
 
 const verifyProof = async (req, res) => {
   try {
-    const { taskId, workerId } = req.params;
+    const { acceptedTaskId } = req.params;
     const { isApproved } = req.body;
 
-    // Fetch the task along with its provider ID
-    const acceptedTask = await prisma.acceptedTask.findFirst({
-      where: {
-        taskId,
-        workerId
-      },
+    // Fetch the accepted task along with its task details
+    const acceptedTask = await prisma.acceptedTask.findUnique({
+      where: { id: acceptedTaskId },
       include: {
-        task: true
+        task: true,
+        user: true
       }
     });
 
@@ -111,7 +109,7 @@ const verifyProof = async (req, res) => {
     }
 
     // Ensure the task belongs to the currently authenticated provider
-    if (acceptedTask.task.taskProviderId !== req.user.id) {
+    if (acceptedTask.task.userId !== req.user.id) {
       return res.status(403).json({ error: 'Unauthorized to verify this task' });
     }
 
@@ -120,13 +118,13 @@ const verifyProof = async (req, res) => {
     }
 
     const updatedTask = await prisma.acceptedTask.update({
-      where: { id: acceptedTask.id },
+      where: { id: acceptedTaskId },
       data: {
         status: isApproved ? 'COMPLETED' : 'REJECTED'
       },
       include: {
         task: true,
-        worker: true
+        user: true
       }
     });
 
@@ -142,10 +140,19 @@ const verifyProof = async (req, res) => {
           }
         }),
         prisma.user.update({
-          where: { id: workerId },
+          where: { id: acceptedTask.userId },
           data: {
             balance: {
               increment: updatedTask.task.amount
+            },
+            totalEarnings: {
+              increment: updatedTask.task.amount
+            },
+            completedTasks: {
+              increment: 1
+            },
+            inProgress: {
+              decrement: 1
             }
           }
         })

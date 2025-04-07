@@ -55,11 +55,11 @@ const updateProfile = async (req, res) => {
 const getAcceptedTasks = async (req, res) => {
   try {
     const acceptedTasks = await prisma.acceptedTask.findMany({
-      where: { workerId: req.user.id },
+      where: { userId: req.user.id },
       include: {
         task: {
           include: {
-            taskProvider: {
+            user: {
               select: {
                 name: true,
                 organizationType: true
