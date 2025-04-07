@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Footer } from "@/components/Footer"
 import Cookies from "js-cookie"
 import { useRouter } from "next/navigation"
+import { Header } from "@/components/Header"
 export default function PostTaskPage() {
   const router = useRouter();
   const token = Cookies.get("token");
@@ -61,6 +62,7 @@ export default function PostTaskPage() {
   }
 
   return (
+    <> <Header />
 <div className="flex min-h-screen flex-col bg-white">
          <Toaster
   position="top-center"
@@ -133,7 +135,7 @@ export default function PostTaskPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
-                      <Label htmlFor="price">Price ($)</Label>
+                      <Label htmlFor="price">Price (₹)</Label>
                       <Input id="price" name="price" type="number" min="0.50" step="0.50" placeholder="5.00" required />
                     </div>
 
@@ -216,6 +218,7 @@ export default function PostTaskPage() {
       </div>
       <Footer />
     </div>
+    </>
   )
 }
 

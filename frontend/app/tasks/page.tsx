@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { SetStateAction, useEffect, useState, useRef, useCallback } from "react"
-import { Search } from "lucide-react"
+import { Search, Filter, UserCheck, Wallet, Upload, DollarSign } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,6 +13,7 @@ import { TaskCard } from "@/components/task-card"
 import { Footer } from "@/components/Footer"
 import { Header } from "@/components/Header"
 import { getAllTasks } from "@/API/api"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
 interface Task {
   id: string
@@ -257,138 +258,28 @@ export default function TasksPage() {
           <div className="md:w-1/4">
             <Card className="bg-white border shadow-sm">
               <CardHeader>
-                <CardTitle>Filters</CardTitle>
-                <CardDescription>Narrow down tasks by category</CardDescription>
+                <CardTitle>Navigation</CardTitle>
+                <CardDescription>Quick links to navigate</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="font-medium text-sm">Categories</div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="checkbox" 
-                        id="registration" 
-                        className="rounded text-primary" 
-                        checked={selectedCategories.includes('registration')}
-                        onChange={() => handleCategoryChange('registration')}
-                      />
-                      <label htmlFor="registration" className="text-sm">
-                        Registration
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="checkbox" 
-                        id="social" 
-                        className="rounded text-primary"
-                        checked={selectedCategories.includes('social')}
-                        onChange={() => handleCategoryChange('social')}
-                      />
-                      <label htmlFor="social" className="text-sm">
-                        Social Media
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="checkbox" 
-                        id="testing" 
-                        className="rounded text-primary"
-                        checked={selectedCategories.includes('testing')}
-                        onChange={() => handleCategoryChange('testing')}
-                      />
-                      <label htmlFor="testing" className="text-sm">
-                        Testing
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="checkbox" 
-                        id="content" 
-                        className="rounded text-primary"
-                        checked={selectedCategories.includes('content')}
-                        onChange={() => handleCategoryChange('content')}
-                      />
-                      <label htmlFor="content" className="text-sm">
-                        Content Creation
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="checkbox" 
-                        id="other" 
-                        className="rounded text-primary"
-                        checked={selectedCategories.includes('other')}
-                        onChange={() => handleCategoryChange('other')}
-                      />
-                      <label htmlFor="other" className="text-sm">
-                        Other
-                      </label>
-                    </div>
-                  </div>
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <div className="font-medium text-sm">Price Range</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input 
-                      type="number" 
-                      placeholder="Min" 
-                      min={0} 
-                      value={priceRange.min || ''}
-                      onChange={(e) => handlePriceRangeChange('min', e.target.value)}
-                    />
-                    <Input 
-                      type="number" 
-                      placeholder="Max" 
-                      min={0} 
-                      value={priceRange.max || ''}
-                      onChange={(e) => handlePriceRangeChange('max', e.target.value)}
-                    />
-                  </div>
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <div className="font-medium text-sm">Difficulty</div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="checkbox" 
-                        id="easy" 
-                        className="rounded text-primary"
-                        checked={selectedDifficulties.includes('Easy')}
-                        onChange={() => handleDifficultyChange('Easy')}
-                      />
-                      <label htmlFor="easy" className="text-sm">
-                        Easy
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="checkbox" 
-                        id="medium" 
-                        className="rounded text-primary"
-                        checked={selectedDifficulties.includes('Medium')}
-                        onChange={() => handleDifficultyChange('Medium')}
-                      />
-                      <label htmlFor="medium" className="text-sm">
-                        Medium
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="checkbox" 
-                        id="hard" 
-                        className="rounded text-primary"
-                        checked={selectedDifficulties.includes('Hard')}
-                        onChange={() => handleDifficultyChange('Hard')}
-                      />
-                      <label htmlFor="hard" className="text-sm">
-                        Hard
-                      </label>
-                    </div>
-                  </div>
-                </div>
-                <Button className="w-full" onClick={handleApplyFilters}>Apply Filters</Button>
+                <Link href="/wallet">
+                  <Button className="w-full flex items-center gap-2 text-white">
+                    <Wallet className="h-4 w-4" />
+                    Wallet: $100
+                  </Button>
+                </Link>
+                <Link href="/post-task">
+                  <Button className="w-full mt-2 flex items-center gap-2 text-white">
+                    <Upload className="h-4 w-4" />
+                    Post Task
+                  </Button>
+                </Link>
+                <Link href="/tasks">
+                  <Button className="w-full mt-2 flex items-center gap-2 text-white">
+                    <DollarSign className="h-4 w-4" />
+                    Earn Money
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </div>
@@ -401,6 +292,149 @@ export default function TasksPage() {
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                     <Input type="search" placeholder="Search tasks..." className="w-[200px] md:w-[300px] pl-8" value={searchTerm} onChange={handleSearch} />
                   </div>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="ml-2">
+                        <Filter className="h-4 w-4 mr-2" />
+                        Filters
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Filters</DialogTitle>
+                      </DialogHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <div className="font-medium text-sm">Categories</div>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                id="registration" 
+                                className="rounded text-primary" 
+                                checked={selectedCategories.includes('registration')}
+                                onChange={() => handleCategoryChange('registration')}
+                              />
+                              <label htmlFor="registration" className="text-sm">
+                                Registration
+                              </label>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                id="social" 
+                                className="rounded text-primary"
+                                checked={selectedCategories.includes('social')}
+                                onChange={() => handleCategoryChange('social')}
+                              />
+                              <label htmlFor="social" className="text-sm">
+                                Social Media
+                              </label>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                id="testing" 
+                                className="rounded text-primary"
+                                checked={selectedCategories.includes('testing')}
+                                onChange={() => handleCategoryChange('testing')}
+                              />
+                              <label htmlFor="testing" className="text-sm">
+                                Testing
+                              </label>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                id="content" 
+                                className="rounded text-primary"
+                                checked={selectedCategories.includes('content')}
+                                onChange={() => handleCategoryChange('content')}
+                              />
+                              <label htmlFor="content" className="text-sm">
+                                Content Creation
+                              </label>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                id="other" 
+                                className="rounded text-primary"
+                                checked={selectedCategories.includes('other')}
+                                onChange={() => handleCategoryChange('other')}
+                              />
+                              <label htmlFor="other" className="text-sm">
+                                Other
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                        <Separator />
+                        <div className="space-y-2">
+                          <div className="font-medium text-sm">Price Range</div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input 
+                              type="number" 
+                              placeholder="Min" 
+                              min={0} 
+                              value={priceRange.min || ''}
+                              onChange={(e) => handlePriceRangeChange('min', e.target.value)}
+                            />
+                            <Input 
+                              type="number" 
+                              placeholder="Max" 
+                              min={0} 
+                              value={priceRange.max || ''}
+                              onChange={(e) => handlePriceRangeChange('max', e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        <Separator />
+                        <div className="space-y-2">
+                          <div className="font-medium text-sm">Difficulty</div>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                id="easy" 
+                                className="rounded text-primary"
+                                checked={selectedDifficulties.includes('Easy')}
+                                onChange={() => handleDifficultyChange('Easy')}
+                              />
+                              <label htmlFor="easy" className="text-sm">
+                                Easy
+                              </label>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                id="medium" 
+                                className="rounded text-primary"
+                                checked={selectedDifficulties.includes('Medium')}
+                                onChange={() => handleDifficultyChange('Medium')}
+                              />
+                              <label htmlFor="medium" className="text-sm">
+                                Medium
+                              </label>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                id="hard" 
+                                className="rounded text-primary"
+                                checked={selectedDifficulties.includes('Hard')}
+                                onChange={() => handleDifficultyChange('Hard')}
+                              />
+                              <label htmlFor="hard" className="text-sm">
+                                Hard
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                        <Button className="w-full" onClick={handleApplyFilters}>Apply Filters</Button>
+                      </CardContent>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
               <Tabs defaultValue="all" onValueChange={handleTabChange}>
@@ -541,6 +575,144 @@ export default function TasksPage() {
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
                     </div>
                   )}
+                </TabsContent>
+                <TabsContent value="filters" className="space-y-4 mt-4">
+                  <Card className="bg-white border shadow-sm">
+                    <CardHeader>
+                      <CardTitle>Filters</CardTitle>
+                      <CardDescription>Narrow down tasks by category</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="font-medium text-sm">Categories</div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <input 
+                              type="checkbox" 
+                              id="registration" 
+                              className="rounded text-primary" 
+                              checked={selectedCategories.includes('registration')}
+                              onChange={() => handleCategoryChange('registration')}
+                            />
+                            <label htmlFor="registration" className="text-sm">
+                              Registration
+                            </label>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input 
+                              type="checkbox" 
+                              id="social" 
+                              className="rounded text-primary"
+                              checked={selectedCategories.includes('social')}
+                              onChange={() => handleCategoryChange('social')}
+                            />
+                            <label htmlFor="social" className="text-sm">
+                              Social Media
+                            </label>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input 
+                              type="checkbox" 
+                              id="testing" 
+                              className="rounded text-primary"
+                              checked={selectedCategories.includes('testing')}
+                              onChange={() => handleCategoryChange('testing')}
+                            />
+                            <label htmlFor="testing" className="text-sm">
+                              Testing
+                            </label>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input 
+                              type="checkbox" 
+                              id="content" 
+                              className="rounded text-primary"
+                              checked={selectedCategories.includes('content')}
+                              onChange={() => handleCategoryChange('content')}
+                            />
+                            <label htmlFor="content" className="text-sm">
+                              Content Creation
+                            </label>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input 
+                              type="checkbox" 
+                              id="other" 
+                              className="rounded text-primary"
+                              checked={selectedCategories.includes('other')}
+                              onChange={() => handleCategoryChange('other')}
+                            />
+                            <label htmlFor="other" className="text-sm">
+                              Other
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                      <Separator />
+                      <div className="space-y-2">
+                        <div className="font-medium text-sm">Price Range</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input 
+                            type="number" 
+                            placeholder="Min" 
+                            min={0} 
+                            value={priceRange.min || ''}
+                            onChange={(e) => handlePriceRangeChange('min', e.target.value)}
+                          />
+                          <Input 
+                            type="number" 
+                            placeholder="Max" 
+                            min={0} 
+                            value={priceRange.max || ''}
+                            onChange={(e) => handlePriceRangeChange('max', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <Separator />
+                      <div className="space-y-2">
+                        <div className="font-medium text-sm">Difficulty</div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <input 
+                              type="checkbox" 
+                              id="easy" 
+                              className="rounded text-primary"
+                              checked={selectedDifficulties.includes('Easy')}
+                              onChange={() => handleDifficultyChange('Easy')}
+                            />
+                            <label htmlFor="easy" className="text-sm">
+                              Easy
+                            </label>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input 
+                              type="checkbox" 
+                              id="medium" 
+                              className="rounded text-primary"
+                              checked={selectedDifficulties.includes('Medium')}
+                              onChange={() => handleDifficultyChange('Medium')}
+                            />
+                            <label htmlFor="medium" className="text-sm">
+                              Medium
+                            </label>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input 
+                              type="checkbox" 
+                              id="hard" 
+                              className="rounded text-primary"
+                              checked={selectedDifficulties.includes('Hard')}
+                              onChange={() => handleDifficultyChange('Hard')}
+                            />
+                            <label htmlFor="hard" className="text-sm">
+                              Hard
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                      <Button className="w-full" onClick={handleApplyFilters}>Apply Filters</Button>
+                    </CardContent>
+                  </Card>
                 </TabsContent>
               </Tabs>
             </div>
