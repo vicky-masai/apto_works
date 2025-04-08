@@ -7,5 +7,6 @@ const { auth } = require('../middleware/auth');
 router.post('/add', auth, balanceController.addBalance);
 router.post('/withdraw', auth, balanceController.withdrawBalance);
 router.get('/history', auth, balanceController.getBalanceHistory);
+router.get('/', auth, balanceController.getBalance);
 
 module.exports = router; 

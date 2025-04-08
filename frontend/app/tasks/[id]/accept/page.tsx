@@ -28,8 +28,20 @@ export default function TaskAcceptPage({ params }: { params: Promise<{ id: strin
   useEffect(() => {
     if (!token) {
       router.push("/login");
+    } else {
+      // Accept the task when component mounts
+      const acceptTaskHandler = async () => {
+        try {
+          await acceptTask(Id, token);
+          // Task accepted successfully
+        } catch (error) {
+          console.error("Error accepting task:", error);
+          // Handle error appropriately
+        }
+      };
+      acceptTaskHandler();
     }
-  }, [token, router]);
+  }, [token, router, Id]);
 
   // Mock task data - in a real app, this would be fetched from an API
   const task = {
