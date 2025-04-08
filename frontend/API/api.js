@@ -141,6 +141,22 @@ export const getAllTasks = async (params) => {
   }
 };
 
+// Function to get task by ID
+export const getAcceptedTaskById = async (taskId, authToken) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/tasks/accepted/${taskId}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    console.log(response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching task:', error);
+    throw error;
+  }
+};
+
 // Function to accept a task
 export const acceptTask = async (taskId, authToken) => {
   try {
@@ -152,6 +168,30 @@ export const acceptTask = async (taskId, authToken) => {
     return response.data;
   } catch (error) {
     console.error('Error accepting task:', error);
+    throw error;
+  }
+};
+
+// Function to submit proof for a task
+export const submitProof = async (acceptedTaskId, file, describe, authToken) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('describe', describe);
+
+    const response = await axios.post(
+      `${BASE_URL}/tasks/${acceptedTaskId}/proof`,
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error submitting proof:', error);
     throw error;
   }
 };

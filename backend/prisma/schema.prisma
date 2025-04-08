@@ -110,6 +110,7 @@ model AcceptedTask {
   user                  User           @relation("Worker", fields: [userId], references: [id])
   status                TaskStatus     @default(Active)
   proof                 String?
+  describe              String?
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
 
