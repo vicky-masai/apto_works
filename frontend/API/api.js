@@ -172,19 +172,26 @@ export const acceptTask = async (taskId, authToken) => {
   }
 };
 
-export default submitProof = async(acceptedTaskId,authToken,file,describe) => {
+// Function to submit proof for a task
+export const submitProof = async (acceptedTaskId, file, describe, authToken) => {
   try {
-    const response = await axios.post(`${BASE_URL}/tasks/${acceptedTaskId}/proof`,{
-      file,
-      describe
-    },{
-      headers: {
-        'Authorization': `Bearer ${authToken}`
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('describe', describe);
+
+    const response = await axios.post(
+      `${BASE_URL}/tasks/${acceptedTaskId}/proof`,
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'multipart/form-data'
+        }
       }
-    })
+    );
     return response.data;
   } catch (error) {
     console.error('Error submitting proof:', error);
     throw error;
   }
-}
+};

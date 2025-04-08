@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { acceptTask, getAcceptedTaskById } from "@/API/api"
+import { acceptTask, getAcceptedTaskById, submitProof } from "@/API/api"
 import Cookies from "js-cookie"
 
 export default function TaskAcceptPage({ params }: { params: Promise<{ id: string }> }) {
@@ -52,14 +52,22 @@ export default function TaskAcceptPage({ params }: { params: Promise<{ id: strin
     }
   }
 
-  const handleSubmit = () => {
-    setIsSubmitting(true)
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false)
-      setIsCompleted(true)
-      setStep(3)
-    }, 2000)
+  const handleSubmit = async () => {
+    if (!file || !proofText) return;
+    
+    setIsSubmitting(true);
+    try {
+      const response = await submitProof(Id, file, proofText, token);
+      if (response.data) {
+        setIsCompleted(true);
+        setStep(3);
+      }
+    } catch (error) {
+      console.error('Error submitting proof:', error);
+      // Handle error appropriately
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   if (isLoading) {
