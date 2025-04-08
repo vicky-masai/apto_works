@@ -557,10 +557,19 @@ const updateTaskStatus = async (req, res) => {
 const submitProof = async (req, res) => {
   try {
     const { acceptedTaskId } = req.params;
-    const { proof } = req.body;
+    const { describe } = req.body;
+    const file = req.file;
+
+    console.log('Request body:', req.body);
+    console.log('File:', file);
+    console.log('AcceptedTaskId:', acceptedTaskId);
+    console.log('User ID:', req.user.id);
 
     const acceptedTask = await prisma.acceptedTask.findUnique({
-      where: { id: acceptedTaskId },
+      where: { 
+        id: acceptedTaskId,
+        userId: req.user.id
+      },
       include: {
         task: true
       }
@@ -575,18 +584,62 @@ const submitProof = async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized to submit proof for this task' });
     }
 
+    // Construct file URL if file exists
+    const fileUrl = file ? `${process.env.BACKEND_URL}/uploads/${file.filename}` : null;
+
     const updatedTask = await prisma.acceptedTask.update({
-      where: { id: acceptedTaskId },
+      where: { 
+        id: acceptedTaskId,
+        userId: req.user.id
+      },
       data: {
-        proof,
+        describe,
+        proof: fileUrl,
         status: 'PENDING_REVIEW'
       }
     });
 
-    res.json(updatedTask);
+    res.json({data:{
+      ...updatedTask,
+      fileUrl
+    },message:"Proof submitted successfully"});
   } catch (error) {
     console.error('Submit Proof Error:', error);
     res.status(500).json({ error: 'Failed to submit proof' });
+  }
+};
+
+const getAcceptedTaskById = async (req, res) => {
+  try {
+    const { acceptedTaskId } = req.params;
+
+    // Trim any whitespace from the ID
+    const trimmedId = acceptedTaskId.trim();
+
+    const acceptedTask = await prisma.acceptedTask.findUnique({
+      where: { 
+        id: trimmedId,
+        userId: req.user.id
+      },
+      include: {
+        task: true,
+        user: {
+          select: {
+            name: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    if (!acceptedTask) {
+      return res.status(404).json({ error: 'Accepted task not found' });
+    }
+
+    res.json(acceptedTask);
+  } catch (error) {
+    console.error('Get Accepted Task Error:', error);
+    res.status(500).json({ error: 'Failed to fetch accepted task' });
   }
 };
 
@@ -603,5 +656,6 @@ module.exports = {
   getTaskById,
   acceptTask,
   updateTaskStatus,
-  submitProof
+  submitProof,
+  getAcceptedTaskById
 }; 

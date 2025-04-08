@@ -47,8 +47,10 @@ const token = Cookies.get("token");
   const timeAgo = formatDistanceToNow(new Date(createdAt), { addSuffix: true })
   const acceptTaskData = async () => {
     try {
+      console.log("suraj",id);
       const data = await acceptTask(id, token);
-      router.push(`/tasks/${id}/accept`);
+      console.log("suraj",data.id);
+      router.push(`/tasks/${data.id}/accept`);
     } catch (error) {
       console.error("Error accepting task:", error);
     }
@@ -149,9 +151,9 @@ const token = Cookies.get("token");
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        <Link href={`/tasks/${id}/accept`}>
-          <Button>Accept Task</Button>
-        </Link>
+        {/* <Link href={`/tasks/${id}/accept`}> */}
+          <Button onClick={acceptTaskData}>Accept Task</Button>
+        {/* </Link> */}
       </CardFooter>
     </Card>
   )

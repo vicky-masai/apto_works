@@ -142,9 +142,9 @@ export const getAllTasks = async (params) => {
 };
 
 // Function to get task by ID
-export const getTaskById = async (taskId, authToken) => {
+export const getAcceptedTaskById = async (taskId, authToken) => {
   try {
-    const response = await axios.get(`${BASE_URL}/tasks/${taskId}`, {
+    const response = await axios.get(`${BASE_URL}/tasks/accepted/${taskId}`, {
       headers: {
         'Authorization': `Bearer ${authToken}`
       }
@@ -171,3 +171,20 @@ export const acceptTask = async (taskId, authToken) => {
     throw error;
   }
 };
+
+export default submitProof = async(acceptedTaskId,authToken,file,describe) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/tasks/${acceptedTaskId}/proof`,{
+      file,
+      describe
+    },{
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    })
+    return response.data;
+  } catch (error) {
+    console.error('Error submitting proof:', error);
+    throw error;
+  }
+}

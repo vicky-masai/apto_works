@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { acceptTask, getTaskById } from "@/API/api"
+import { acceptTask, getAcceptedTaskById } from "@/API/api"
 import Cookies from "js-cookie"
 
 export default function TaskAcceptPage({ params }: { params: Promise<{ id: string }> }) {
@@ -33,8 +33,8 @@ export default function TaskAcceptPage({ params }: { params: Promise<{ id: strin
       // Fetch task data and accept the task
       const fetchTaskAndAccept = async () => {
         try {
-          const taskData = await getTaskById(Id, token);
-          setTask(taskData);
+          const taskData = await getAcceptedTaskById(Id, token);
+          setTask(taskData.task);
           // await acceptTask(Id, token);
           setIsLoading(false);
         } catch (error) {
