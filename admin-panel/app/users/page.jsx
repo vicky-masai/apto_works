@@ -41,12 +41,12 @@ export default function UsersPage() {
   const getStatusBadge = (status) => {
     switch (status) {
       case "active":
-        return <Badge className="bg-green-500">Active</Badge>
+        return <Badge className="w-fit px-3 py-1 rounded-full bg-green-500">Active</Badge>
       case "inactive":
-        return <Badge variant="secondary">Inactive</Badge>
+        return <Badge className="w-fit px-3 py-1 rounded-full" variant="secondary">Inactive</Badge>
       case "pending":
         return (
-          <Badge variant="outline" className="text-yellow-500 border-yellow-500">
+          <Badge variant="outline" className="w-fit px-3 py-1 rounded-full text-yellow-500 border-yellow-500">
             Pending
           </Badge>
         )
@@ -62,7 +62,7 @@ export default function UsersPage() {
           <h1 className="text-3xl font-bold tracking-tight">Users</h1>
           <p className="text-muted-foreground">Manage system users and their permissions</p>
         </div>
-        <Button>Add New User</Button>
+        <Button className="w-fit px-3 py-1 rounded-full">Add New User</Button>
       </div>
 
       <div className="flex items-center gap-2 max-w-sm">
@@ -100,10 +100,10 @@ export default function UsersPage() {
                     <td className="py-3 px-4">{user.joinDate}</td>
                     <td className="py-3 px-4">
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
+                        <Button className="w-fit px-3 py-1 rounded-full" variant="outline" size="sm">
                           Edit
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button className="w-fit px-3 py-1 rounded-full text-red-500 border-red-500 hover:bg-red-50" variant="outline" size="sm">
                           Delete
                         </Button>
                       </div>

@@ -95,7 +95,7 @@ export default function AddedMoneyPage() {
         return <Badge className="w-fit bg-green-500 px-3 py-1 text-white">Completed</Badge>
       case "pending":
         return (
-          <Badge variant="outline" className="text-yellow-500 border-yellow-500">
+          <Badge variant="outline" className="w-fit px-3 py-1 text-yellow-500 border-yellow-500">
             Pending
           </Badge>
         )
@@ -155,7 +155,7 @@ export default function AddedMoneyPage() {
                     <td className="py-3 px-4">{getStatusBadge(transaction.status)}</td>
                     <td className="py-3 px-4">
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
+                        <Button className="w-fit px-3 py-1 rounded-full" variant="outline" size="sm">
                           View
                         </Button>
                       </div>

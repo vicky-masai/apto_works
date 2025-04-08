@@ -107,15 +107,15 @@ export default function WithdrawMoneyPage() {
   const getStatusBadge = (status) => {
     switch (status) {
       case "approved":
-        return <Badge className="bg-green-500">Approved</Badge>
+        return <Badge className="w-fit px-3 py-1 bg-green-500">Approved</Badge>
       case "pending":
         return (
-          <Badge variant="outline" className="text-yellow-500 border-yellow-500">
+          <Badge variant="outline" className="w-fit px-3 py-1 text-yellow-500 border-yellow-500">
             Pending
           </Badge>
         )
       case "rejected":
-        return <Badge variant="destructive">Rejected</Badge>
+        return <Badge className="w-fit px-3 py-1" variant="destructive">Rejected</Badge>
       default:
         return null
     }
@@ -142,15 +142,15 @@ export default function WithdrawMoneyPage() {
           <h1 className="text-3xl font-bold tracking-tight">Withdraw Money Requests</h1>
           <p className="text-muted-foreground">Manage withdrawal requests from users</p>
         </div>
-        <Button>Export Data</Button>
+        <Button className="w-fit px-3 py-1 rounded-full">Export Data</Button>
       </div>
 
       <div className="flex items-center gap-2 max-w-sm">
-        <div className="relative flex-1">
+        <div className="relative flex items-center justify-center w-full h-10">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input type="search" placeholder="Search withdrawals..." className="pl-8" />
         </div>
-        <Button variant="outline">Filter</Button>
+        <Button className="w-fit px-5 py-1 rounded-full" variant="outline">Filter</Button>
       </div>
 
       <Card>
@@ -189,7 +189,7 @@ export default function WithdrawMoneyPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="w-fit px-3 py-1 text-green-500 border-green-500 hover:bg-green-50"
+                              className="w-fit px-3 py-1 text-green-500 border-green-500 hover:bg-green-50 rounded-2xl"
                               onClick={() => {
                                 setSelectedWithdrawal(withdrawal)
                                 setIsApproveDialogOpen(true)
@@ -200,7 +200,7 @@ export default function WithdrawMoneyPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="text-red-500 border-red-500 hover:bg-red-50"
+                              className="text-red-500 border-red-500 hover:bg-red-50 rounded-2xl"
                               onClick={() => {
                                 setSelectedWithdrawal(withdrawal)
                                 setIsRejectDialogOpen(true)
@@ -210,7 +210,7 @@ export default function WithdrawMoneyPage() {
                             </Button>
                           </>
                         )}
-                        <Button variant="outline" size="sm">
+                        <Button className="w-fit px-3 py-1 rounded-full" variant="outline" size="sm">
                           View
                         </Button>
                       </div>
