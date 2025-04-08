@@ -3,32 +3,24 @@ const prisma = require('../config/database');
 const addBalance = async (req, res) => {
   try {
     const { amount } = req.body;
+    const user = req.user;
 
     if (amount <= 0) {
       return res.status(400).json({ error: 'Amount must be greater than 0' });
     }
 
     // Update user's balance
-    if (req.userType === 'taskProvider') {
-      await prisma.taskProvider.update({
-        where: { id: req.user.id },
-        data: {
-          balance: req.user.balance + amount
-        }
-      });
-    } else {
-      await prisma.worker.update({
-        where: { id: req.user.id },
-        data: {
-          balance: req.user.balance + amount
-        }
-      });
-    }
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        balance: user.balance + amount
+      }
+    });
 
     // Create balance history record
     await prisma.balanceHistory.create({
       data: {
-        userId: req.user.id,
+        userId: user.id,
         amount,
         type: 'Add'
       }
@@ -43,36 +35,28 @@ const addBalance = async (req, res) => {
 const withdrawBalance = async (req, res) => {
   try {
     const { amount } = req.body;
+    const user = req.user;
 
     if (amount <= 0) {
       return res.status(400).json({ error: 'Amount must be greater than 0' });
     }
 
-    if (req.user.balance < amount) {
+    if (user.balance < amount) {
       return res.status(400).json({ error: 'Insufficient balance' });
     }
 
     // Update user's balance
-    if (req.userType === 'taskProvider') {
-      await prisma.taskProvider.update({
-        where: { id: req.user.id },
-        data: {
-          balance: req.user.balance - amount
-        }
-      });
-    } else {
-      await prisma.worker.update({
-        where: { id: req.user.id },
-        data: {
-          balance: req.user.balance - amount
-        }
-      });
-    }
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        balance: user.balance - amount
+      }
+    });
 
     // Create balance history record
     await prisma.balanceHistory.create({
       data: {
-        userId: req.user.id,
+        userId: user.id,
         amount,
         type: 'Withdraw'
       }
@@ -97,8 +81,22 @@ const getBalanceHistory = async (req, res) => {
   }
 };
 
+const getBalance = async (req, res) => {
+  try {
+    const user = req.user;
+    
+    res.json({ 
+      balance: user.balance,
+      userId: user.id
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch balance' });
+  }
+};
+
 module.exports = {
   addBalance,
   withdrawBalance,
-  getBalanceHistory
+  getBalanceHistory,
+  getBalance
 }; 

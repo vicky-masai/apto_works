@@ -44,6 +44,7 @@ router.get('/', taskController.getAllTasks);
 router.get('/:taskId', auth, taskController.getTaskById);
 router.post('/:taskId/accept', auth, taskController.acceptTask);
 router.put('/:taskId/status', auth, taskController.updateTaskStatus);
-router.post('/:taskId/proof', auth, upload.single('proof'), taskController.submitProof);
+router.post('/:acceptedTaskId/proof', auth, upload.single('file'), taskController.submitProof);
+router.get('/accepted/:acceptedTaskId', auth, taskController.getAcceptedTaskById);
 
 module.exports = router; 
