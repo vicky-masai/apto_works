@@ -1,7 +1,6 @@
 "use client"
 
 import React from "react"
-
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -12,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { acceptTask } from "@/API/api"
+import { acceptTask, getTaskById } from "@/API/api"
 import Cookies from "js-cookie"
 
 export default function TaskAcceptPage({ params }: { params: Promise<{ id: string }> }) {
@@ -21,6 +20,8 @@ export default function TaskAcceptPage({ params }: { params: Promise<{ id: strin
   const [file, setFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isCompleted, setIsCompleted] = useState(false)
+  const [task, setTask] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const token = Cookies.get("token");
   const router = useRouter();
   const { id: Id } = React.use(params);
@@ -29,37 +30,21 @@ export default function TaskAcceptPage({ params }: { params: Promise<{ id: strin
     if (!token) {
       router.push("/login");
     } else {
-      // Accept the task when component mounts
-      const acceptTaskHandler = async () => {
+      // Fetch task data and accept the task
+      const fetchTaskAndAccept = async () => {
         try {
-          await acceptTask(Id, token);
-          // Task accepted successfully
+          const taskData = await getTaskById(Id, token);
+          setTask(taskData);
+          // await acceptTask(Id, token);
+          setIsLoading(false);
         } catch (error) {
-          console.error("Error accepting task:", error);
+          console.error("Error:", error);
           // Handle error appropriately
         }
       };
-      acceptTaskHandler();
+      fetchTaskAndAccept();
     }
   }, [token, router, Id]);
-
-  // Mock task data - in a real app, this would be fetched from an API
-  const task = {
-    id: Id,
-    title: "Website Registration Task",
-    description: "Complete registration on platform and verify email",
-    price: 5.0,
-    category: "Registration",
-    difficulty: "Easy",
-    estimatedTime: "5 min",
-    instructions: [
-      "Go to example.com/register",
-      "Create a new account with your email",
-      "Verify your email address by clicking the link in the verification email",
-      "Complete your profile with required information",
-      "Take a screenshot of your completed profile page",
-    ],
-  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -77,6 +62,29 @@ export default function TaskAcceptPage({ params }: { params: Promise<{ id: strin
     }, 2000)
   }
 
+  if (isLoading) {
+    return (
+      <div className="container py-6 max-w-4xl m-auto">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!task) {
+    return (
+      <div className="container py-6 max-w-4xl m-auto">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Task Not Found</h2>
+          <Link href="/tasks">
+            <Button>Back to Tasks</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container py-6 max-w-4xl m-auto">
       <div className="mb-6">
@@ -90,19 +98,19 @@ export default function TaskAcceptPage({ params }: { params: Promise<{ id: strin
         <div className="md:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>{task.title}</CardTitle>
-              <CardDescription>{task.description}</CardDescription>
+              <CardTitle>{task.taskTitle}</CardTitle>
+              <CardDescription>{task.taskDescription}</CardDescription>
             </CardHeader>
             <CardContent>
               {step === 1 && (
                 <div className="space-y-4">
                   <div>
                     <h3 className="text-sm font-medium mb-2">Task Instructions</h3>
-                    <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
-                      {task.instructions.map((instruction, index) => (
+                    {/* <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
+                      {task.stepByStepInstructions.map((instruction: string, index: number) => (
                         <li key={index}>{instruction}</li>
                       ))}
-                    </ol>
+                    </ol> */}
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">

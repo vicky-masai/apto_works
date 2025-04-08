@@ -585,6 +585,7 @@ const submitProof = async (req, res) => {
 
     res.json(updatedTask);
   } catch (error) {
+    console.error('Submit Proof Error:', error);
     res.status(500).json({ error: 'Failed to submit proof' });
   }
 };

@@ -141,6 +141,22 @@ export const getAllTasks = async (params) => {
   }
 };
 
+// Function to get task by ID
+export const getTaskById = async (taskId, authToken) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/tasks/${taskId}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    console.log(response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching task:', error);
+    throw error;
+  }
+};
+
 // Function to accept a task
 export const acceptTask = async (taskId, authToken) => {
   try {
