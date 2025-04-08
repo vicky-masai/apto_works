@@ -26,6 +26,21 @@ export default function TaskAcceptPage({ params }: { params: Promise<{ id: strin
   const router = useRouter();
   const { id: Id } = React.use(params);
 
+  // Load saved step from cookies
+  useEffect(() => {
+    const savedStep = Cookies.get(`task_${Id}_step`);
+    if (savedStep) {
+      setStep(parseInt(savedStep));
+    }
+  }, [Id]);
+
+  // Save step to cookies whenever it changes
+  useEffect(() => {
+    if (step > 1) {
+      Cookies.set(`task_${Id}_step`, step.toString(), { expires: 7 }); // Expires in 7 days
+    }
+  }, [step, Id]);
+
   useEffect(() => {
     if (!token) {
       router.push("/login");
