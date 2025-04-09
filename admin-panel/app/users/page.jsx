@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Search, Loader2 } from "lucide-react"
 import { auth } from "@/API/auth"
-import { getUsers } from "@/API/api"
+import { getUsers, deleteUser } from "@/API/api"
 import { useEffect, useState } from "react"
 export default function UsersPage() {
 
@@ -14,29 +14,31 @@ export default function UsersPage() {
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getUsers(auth.getToken());
+      setUsers(data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setIsLoading(true);
-        const data = await getUsers(auth.getToken());
-        setUsers(data);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+ 
     fetchUsers();
   }, []);
 
-  const deleteUser = async (e, userId) => {
-    e.preventDefault();
+  const onClickDelete = async (e, userId) => {
+    // e.preventDefault();
     console.log(userId);
     const data = await deleteUser(auth.getToken(), userId);
-    alert(data);
-    console.log(data);
+    // alert(data.message);
+    fetchUsers();
+    // console.log(data);
+    // window.location.reload();
   };
 
 
@@ -151,7 +153,7 @@ export default function UsersPage() {
                           <Button className="w-fit px-3 py-1 rounded-full" variant="outline" size="sm">
                             Edit
                           </Button>
-                          <Button onClick={(e) => deleteUser(e, user.id)} className="w-fit px-3 py-1 rounded-full text-red-500 border-red-500 hover:bg-red-50" variant="outline" size="sm">
+                          <Button onClick={(e) => onClickDelete(e, user.id)} className="w-fit px-3 py-1 rounded-full text-red-500 border-red-500 hover:bg-red-50" variant="outline" size="sm">
                             Delete
                           </Button>
                         </div>

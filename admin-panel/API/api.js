@@ -47,8 +47,9 @@ export const dashboard = async (authToken) => {
 
 
   export const deleteUser = async (authToken, userId) => {
+    console.log(userId,"suraj");
     try {
-      const response = await axios.get(`${BASE_URL}/${endpoints.deleteUser}/${userId}`, {
+      const response = await axios.delete(`${BASE_URL}/${endpoints.deleteUser}/${userId}`, {
         headers: {
           'Authorization': `Bearer ${authToken}`
         }
