@@ -9,6 +9,7 @@ const endpoints = {
   dashboard: 'dashboard',
   users: 'users',
   deleteUser: 'users',
+  getAllWithDrawal: 'withdrawals',
 };
 
 // Function to handle user login
@@ -61,3 +62,21 @@ export const dashboard = async (authToken) => {
       throw error;
     }
   };
+
+
+  export const getAllWithDrawal = async (authToken) => {
+    // console.log(userId,"suraj");
+    try {
+      const response = await axios.delete(`${BASE_URL}/${endpoints.getAllWithDrawal}/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
+      console.log(response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching task:', error);
+      throw error;
+    }
+  };
+
