@@ -32,6 +32,8 @@ app.use('/api/workers', require('./routes/workers'));
 app.use('/api/task-providers', require('./routes/taskProviders'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/balance', require('./routes/balance'));
+app.use('/api/admin', require('./routes/adminRoutes'));
+// app.use('/api/withdrawals', require('./routes/withdrawalRoutes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

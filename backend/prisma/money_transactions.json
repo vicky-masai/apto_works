@@ -1,0 +1,47 @@
+[
+  {
+    "userId": "65f1a2b3c4d5e6f7a8b9c0d1",
+    "amount": 100.50,
+    "method": "BankTransfer",
+    "reference": "BANK-2024-001",
+    "status": "Completed",
+    "createdAt": "2024-03-15T10:30:00Z",
+    "updatedAt": "2024-03-15T10:30:00Z"
+  },
+  {
+    "userId": "65f1a2b3c4d5e6f7a8b9c0d2",
+    "amount": 75.25,
+    "method": "PayPal",
+    "reference": "PAYPAL-2024-002",
+    "status": "Completed",
+    "createdAt": "2024-03-16T14:45:00Z",
+    "updatedAt": "2024-03-16T14:45:00Z"
+  },
+  {
+    "userId": "65f1a2b3c4d5e6f7a8b9c0d3",
+    "amount": 200.00,
+    "method": "CreditCard",
+    "reference": "CC-2024-003",
+    "status": "Completed",
+    "createdAt": "2024-03-17T09:15:00Z",
+    "updatedAt": "2024-03-17T09:15:00Z"
+  },
+  {
+    "userId": "65f1a2b3c4d5e6f7a8b9c0d1",
+    "amount": 50.75,
+    "method": "BankTransfer",
+    "reference": "BANK-2024-004",
+    "status": "Completed",
+    "createdAt": "2024-03-18T16:20:00Z",
+    "updatedAt": "2024-03-18T16:20:00Z"
+  },
+  {
+    "userId": "65f1a2b3c4d5e6f7a8b9c0d2",
+    "amount": 150.00,
+    "method": "PayPal",
+    "reference": "PAYPAL-2024-005",
+    "status": "Completed",
+    "createdAt": "2024-03-19T11:30:00Z",
+    "updatedAt": "2024-03-19T11:30:00Z"
+  }
+] 
