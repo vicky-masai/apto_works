@@ -8,6 +8,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000/api/
 const endpoints = {
   dashboard: 'dashboard',
   users: 'users',
+  deleteUser: 'users',
 };
 
 // Function to handle user login
@@ -37,6 +38,23 @@ export const dashboard = async (authToken) => {
       });
       console.log(response.data);
       return response.data;
+    } catch (error) {
+      console.error('Error fetching task:', error);
+      throw error;
+    }
+  };
+
+
+
+  export const deleteUser = async (authToken, userId) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/${endpoints.deleteUser}/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
+      console.log(response.data);
+      return response.data.msg;
     } catch (error) {
       console.error('Error fetching task:', error);
       throw error;
