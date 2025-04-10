@@ -30,11 +30,15 @@ export const dashboard = async (authToken) => {
 
 
 
-  export const getUsers = async (authToken) => {
+  export const getUsers = async (authToken, params = {}) => {
     try {
       const response = await axios.get(`${BASE_URL}/${endpoints.users}`, {
         headers: {
           'Authorization': `Bearer ${authToken}`
+        },
+        params: {
+          page: params.page || 1,
+          search: params.search || ''
         }
       });
       console.log(response.data);
