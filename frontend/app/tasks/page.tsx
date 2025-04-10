@@ -3,6 +3,8 @@
 import Link from "next/link"
 import { SetStateAction, useEffect, useState, useRef, useCallback } from "react"
 import { Search, Filter, UserCheck, Wallet, Upload, DollarSign } from "lucide-react"
+import { useRouter } from "next/navigation"
+import Cookies from "js-cookie"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -48,6 +50,7 @@ export default function TasksPage() {
   const [maxPrice, setMaxPrice] = useState(0)
   const [difficulty, setDifficulty] = useState("")
   const [sortBy, setSortBy] = useState("")
+  const router = useRouter()
 
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState("")
@@ -236,6 +239,15 @@ export default function TasksPage() {
     setCurrentPage(prevPage => prevPage + 1)
   }
 
+  const handleNavigation = (path: string) => {
+    const token = Cookies.get("token")
+    if (!token) {
+      router.push("/login")
+    } else {
+      router.push(path)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col bg-white">
@@ -262,24 +274,27 @@ export default function TasksPage() {
                 <CardDescription>Quick links to navigate</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Link href="/wallet">
-                  <Button className="w-full flex items-center gap-2 text-white">
-                    <Wallet className="h-4 w-4" />
-                    Wallet: $100
-                  </Button>
-                </Link>
-                <Link href="/post-task">
-                  <Button className="w-full mt-2 flex items-center gap-2 text-white">
-                    <Upload className="h-4 w-4" />
-                    Post Task
-                  </Button>
-                </Link>
-                <Link href="/tasks">
-                  <Button className="w-full mt-2 flex items-center gap-2 text-white">
-                    <DollarSign className="h-4 w-4" />
-                    Earn Money
-                  </Button>
-                </Link>
+                <Button 
+                  className="w-full flex items-center gap-2 text-white" 
+                  onClick={() => handleNavigation("/wallet")}
+                >
+                  <Wallet className="h-4 w-4" />
+                  Wallet: $100
+                </Button>
+                <Button 
+                  className="w-full mt-2 flex items-center gap-2 text-white"
+                  onClick={() => handleNavigation("/post-task")}
+                >
+                  <Upload className="h-4 w-4" />
+                  Post Task
+                </Button>
+                <Button 
+                  className="w-full mt-2 flex items-center gap-2 text-white"
+                  onClick={() => handleNavigation("/tasks")}
+                >
+                  <DollarSign className="h-4 w-4" />
+                  Earn Money
+                </Button>
               </CardContent>
             </Card>
           </div>
