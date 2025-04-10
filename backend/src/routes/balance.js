@@ -8,6 +8,8 @@ router.post('/add', auth, balanceController.addBalance);
 router.post('/withdraw', auth, balanceController.withdrawBalance);
 router.get('/history', auth, balanceController.getBalanceHistory);
 router.get('/', auth, balanceController.getBalance);
+router.get('/user', auth, balanceController.getUserBalance);
+
 
 // Withdrawal request routes
 router.post('/withdrawal-request', auth, balanceController.createWithdrawalRequest);

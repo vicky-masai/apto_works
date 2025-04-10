@@ -274,7 +274,54 @@ const updateWithdrawalStatus = async (req, res) => {
   }
 };
 
+const getUserBalance = async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        balance: true,
+        totalEarnings: true,
+        acceptedTasks: {
+          select: {
+            task: {
+              select: {
+                taskTitle: true,
+                createdAt: true,
+                price: true,
+                taskStatus: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const earningsHistory = user.acceptedTasks.map(task => ({
+      taskName: task.task.taskTitle,
+      date: task.task.createdAt,
+      amount: task.task.price,
+      status: task.task.taskStatus
+    }));
+
+    res.json({
+      userId: user.id,
+      availableBalance: user.balance,
+      totalEarnings: user.totalEarnings,
+      pending: user.acceptedTasks.filter(task => task.task.taskStatus === 'Pending').length,
+      earningsHistory
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch balance' });
+  }
+}
+
 module.exports = {
+  getUserBalance,
   addBalance,
   withdrawBalance,
   getBalanceHistory,
