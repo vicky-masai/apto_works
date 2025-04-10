@@ -331,25 +331,52 @@ const unpublishTask = async (req, res) => {
 
 const getAllTasks = async (req, res) => {
   try {
-    const { filter, sortBy = 'createdAt', sortOrder = 'desc', page = 1, status = 'Published' } = req.query;
+    const { filter, sortBy = 'createdAt', sortOrder = 'desc', page = 1, status = 'Published', category, minPrice, maxPrice, difficulty, search } = req.query;
 
     let where = {
       taskStatus: status
     };
 
+    if (category) {
+      where.category = category;
+    }
+
+    if (minPrice) {
+      where.price = {
+        ...where.price,
+        gte: parseFloat(minPrice)
+      };
+    }
+
+    if (maxPrice) {
+      where.price = {
+        ...where.price,
+        lte: parseFloat(maxPrice)
+      };
+    }
+
+    if (difficulty) {
+      where.difficulty = difficulty;
+    }
+
+    if (search) {
+      where.taskTitle = {
+        contains: search,
+        mode: 'insensitive'
+      };
+    }
+
     let orderBy = {};
 
     if (filter === 'HighPaying') {
-      // Set minimum price for high paying tasks and sort by price
       where.price = {
         ...where.price,
-        gte: 50 // Minimum price for high paying tasks
+        gte: 50
       };
       orderBy = {
         price: 'desc'
       };
     } else {
-      // Default sorting
       switch (sortBy) {
         case 'price':
           orderBy.price = sortOrder;
@@ -362,15 +389,12 @@ const getAllTasks = async (req, res) => {
       }
     }
 
-    // Calculate pagination
     const pageSize = 10;
     const skip = (parseInt(page) - 1) * pageSize;
 
-    // Get total count for pagination
     const totalCount = await prisma.task.count({ where });
     const totalPages = Math.ceil(totalCount / pageSize);
 
-    // Get tasks with filters, sorting and pagination
     const tasks = await prisma.task.findMany({
       where,
       include: {
@@ -391,7 +415,6 @@ const getAllTasks = async (req, res) => {
       take: pageSize
     });
 
-    // If filter is Popular, sort by accepted users count in memory
     let formattedTasks = tasks.map(task => ({
       ...task,
       acceptedCount: task._count.acceptedUsers,
