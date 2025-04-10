@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TaskCard } from "@/components/task-card"
 import { Footer } from "@/components/Footer"
 import { Header } from "@/components/Header"
-import { getAllTasks } from "@/API/api"
+import { getAllTasks,getAcceptedTasks } from "@/API/api"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
 interface Task {
@@ -50,6 +50,19 @@ export default function TasksPage() {
     difficulties: [] as string[],
     status: 'Published'
   })
+
+  const [acceptedTasks, setAcceptedTasks] = useState([])
+
+  const getAcceptedTasksFetch = async () => {
+    const data = await getAcceptedTasks(Cookies.get("token"))
+    setAcceptedTasks(data)
+  }
+
+
+  useEffect(() => {
+    getAcceptedTasksFetch()
+  }, [getAllTasks])
+
   const tasksPerPage = 5
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
@@ -82,6 +95,8 @@ export default function TasksPage() {
       };
     });
   };
+
+
 
   const handlePriceChange = (type: 'minPrice' | 'maxPrice', value: string) => {
     setFilterParams(prev => ({
@@ -255,7 +270,7 @@ export default function TasksPage() {
       <main className="flex-1 container py-6 m-auto">
         <div className="flex flex-col md:flex-row gap-6">
           <div className="md:w-1/4">
-            <Card className="bg-white border shadow-sm">
+            <Card  className="bg-white border shadow-sm">
               <CardHeader>
                 <CardTitle>Navigation</CardTitle>
                 <CardDescription>Quick links to navigate</CardDescription>
