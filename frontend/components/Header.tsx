@@ -38,6 +38,14 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
     router.push("/");
   };
 
+  const handleProtectedNavigation = (path: string) => {
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+    router.push(path);
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white">
       <div className="container flex h-16 items-center justify-between">
@@ -48,9 +56,12 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
         {isLoggedIn ? (
           <>
             <nav className="hidden md:flex items-center gap-6">
-              <Link href="/dashboard" className="text-sm font-medium text-gray-900">
+              <button 
+                onClick={() => handleProtectedNavigation("/dashboard")} 
+                className="text-sm font-medium text-gray-900 hover:text-primary"
+              >
                 Dashboard
-              </Link>
+              </button>
               <Link href="/tasks" className="text-sm font-medium text-gray-600 hover:text-gray-900">
                 Tasks
               </Link>
@@ -64,36 +75,51 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
                   <div className="py-1">
                     {token ? (
                       <>
-                        <Link href="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        <button 
+                          onClick={() => handleProtectedNavigation("/dashboard")} 
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
                           <span className="flex items-center">
                             <Home className="h-4 w-4 mr-2" />
                             Dashboard
                           </span>
-                        </Link>
-                        <Link href="/post-task" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        </button>
+                        <button 
+                          onClick={() => handleProtectedNavigation("/post-task")} 
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
                           <span className="flex items-center">
                             <Upload className="h-4 w-4 mr-2" />
                             Post a Task
                           </span>
-                        </Link>
-                        <Link href="/earnings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        </button>
+                        <button 
+                          onClick={() => handleProtectedNavigation("/earnings")} 
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
                           <span className="flex items-center">
                             <DollarSign className="h-4 w-4 mr-2" />
                             Earnings
                           </span>
-                        </Link>
-                        <Link href="/wallet" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        </button>
+                        <button 
+                          onClick={() => handleProtectedNavigation("/wallet")} 
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
                           <span className="flex items-center">
                             <Wallet className="h-4 w-4 mr-2" />
                             Wallet
                           </span>
-                        </Link>
-                        <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        </button>
+                        <button 
+                          onClick={() => handleProtectedNavigation("/profile")} 
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
                           <span className="flex items-center">
                             <User className="h-4 w-4 mr-2" />
                             Profile
                           </span>
-                        </Link>
+                        </button>
                         <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                           <span className="flex items-center">
                             <LogOut className="h-4 w-4 mr-2" />

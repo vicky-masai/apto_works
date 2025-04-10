@@ -12,6 +12,7 @@ const endpoints = {
   forgotPassword: 'auth/forgot-password',
   resetPassword: 'auth/reset-password',
   resendOtp: 'auth/resend-otp',
+  getAcceptedTasks: 'workers/accepted-tasks'
 };
 
 // Function to handle user login
@@ -192,6 +193,21 @@ export const submitProof = async (acceptedTaskId, file, describe, authToken) => 
     return response.data;
   } catch (error) {
     console.error('Error submitting proof:', error);
+    throw error;
+  }
+};
+
+
+export const getAcceptedTasks = async (authToken) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/${endpoints.getAcceptedTasks}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching accepted tasks:', error);
     throw error;
   }
 };

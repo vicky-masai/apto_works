@@ -37,15 +37,23 @@ interface TaskCardProps {
   totalAmount: number
   taskProviderId: string
   updatedAt: string
+  isAccepted?: boolean
 }
 
-export function TaskCard({ id, title, description, price, category, difficulty, estimatedTime, createdAt, stepByStepInstructions, taskStatus, requiredProof, numWorkersNeeded, totalAmount, taskProviderId, updatedAt }: TaskCardProps) {
+export function TaskCard({ id, title, description, price, category, difficulty, estimatedTime, createdAt, stepByStepInstructions, taskStatus, requiredProof, numWorkersNeeded, totalAmount, taskProviderId, updatedAt, isAccepted = false }: TaskCardProps) {
   const [open, setOpen] = useState(false)
   const router = useRouter();
-const token = Cookies.get("token");
+  const token = Cookies.get("token");
+  
   // Convert createdAt to a more readable format
   const timeAgo = formatDistanceToNow(new Date(createdAt), { addSuffix: true })
+  
   const acceptTaskData = async () => {
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+    
     try {
       console.log("suraj",id);
       const data = await acceptTask(id, token);
@@ -147,13 +155,15 @@ const token = Cookies.get("token");
               <Button variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-                <Button>Accept Task</Button>
+              <Button onClick={acceptTaskData} disabled={isAccepted}>
+                {isAccepted ? "Accepted" : "Accept Task"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        {/* <Link href={`/tasks/${id}/accept`}> */}
-          <Button onClick={acceptTaskData}>Accept Task</Button>
-        {/* </Link> */}
+        <Button onClick={acceptTaskData} disabled={isAccepted}>
+          {isAccepted ? "Accepted" : "Accept Task"}
+        </Button>
       </CardFooter>
     </Card>
   )

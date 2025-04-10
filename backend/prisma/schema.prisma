@@ -12,10 +12,13 @@ datasource db {
 
 enum UserType {
   Admin
-  Moderator
   User
   TaskProvider
-  Worker
+}
+
+enum UserStatus {
+  Active
+  Deleted
 }
 
 enum OrganizationType {
@@ -25,12 +28,9 @@ enum OrganizationType {
 }
 
 enum TaskStatus {
-  NotPublished
   Published
-  Active
-  PENDING_REVIEW
-  COMPLETED
-  REJECTED
+  Review
+  Rejected
 }
 
 enum Difficulty {
@@ -42,21 +42,22 @@ enum Difficulty {
 enum TransactionType {
   Add
   Withdraw
+  Earning
+}
+
+enum TransactionStatus {
+  Pending
+  Completed
+  Approved
+  Rejected
 }
 
 enum AcceptedTaskStatus {
   Active
   Completed
-  Pending
   Review
   Paid
   Cancelled
-}
-
-enum AdminTaskStatus {
-  Completed
-  Pending
-  InProgress
 }
 
 enum WithdrawalStatus {
@@ -76,30 +77,23 @@ model User {
   name                  String
   email                 String         @unique
   password              String
-  userType              UserType       @default(Worker)
+  userType              UserType       @default(User)
   organizationType      OrganizationType?
   skills                String[]
   balance               Float          @default(0)
-  currentAssignedBalance Float        @default(0)
-  totalUsedBalance      Float          @default(0)
   totalEarnings         Float          @default(0)
   inProgress            Int            @default(0)
   completedTasks        Int            @default(0)
   isEmailVerified       Boolean        @default(false)
   otp                   String?
   otpExpiry             DateTime?
-  resetToken            String?
-  resetTokenExpiry      DateTime?
-  tasks                 Task[]         @relation("TaskProvider")
+  tasks                 Task[]         @relation("User")
   acceptedTasks         AcceptedTask[] @relation("Worker")
-  balanceHistory        BalanceHistory[]
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
-  adminTasks            AdminTask[]
-  moneyTransactions     MoneyTransaction[]
-  withdrawalRequests    WithdrawalRequest[]
+  transactions          Transaction[]
   role                  UserType       @default(User)
-  status                String         @default("Active")
+  status                UserStatus     @default(Active)
 
   @@index([userType])
 }
@@ -116,9 +110,9 @@ model Task {
   numWorkersNeeded      Int
   totalAmount           Float
   difficulty            String         @default("Medium")
-  taskStatus            TaskStatus     @default(NotPublished)
+  taskStatus            TaskStatus     @default(Review)
   userId                String         @db.ObjectId
-  user                  User           @relation("TaskProvider", fields: [userId], references: [id])
+  user                  User           @relation("User", fields: [userId], references: [id])
   acceptedUsers         AcceptedTask[]
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
@@ -134,7 +128,7 @@ model AcceptedTask {
   task                  Task           @relation(fields: [taskId], references: [id])
   userId                String         @db.ObjectId
   user                  User           @relation("Worker", fields: [userId], references: [id])
-  status                TaskStatus     @default(Active)
+  status                AcceptedTaskStatus     @default(Active)
   proof                 String?
   describe              String?
   createdAt             DateTime       @default(now())
@@ -145,59 +139,20 @@ model AcceptedTask {
   @@index([status])
 }
 
-model BalanceHistory {
-  id        String          @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String          @db.ObjectId
-  amount    Float
-  type      TransactionType
-  user      User            @relation(fields: [userId], references: [id])
-  createdAt DateTime        @default(now())
-
-  @@index([userId])
-  @@index([type])
-}
-
-model AdminTask {
-  id          String          @id @default(auto()) @map("_id") @db.ObjectId
-  title       String
-  description String
-  status      AdminTaskStatus @default(Pending)
-  priority    String          @default("Medium")
-  dueDate     DateTime
-  assignedTo  String          @db.ObjectId
-  user        User            @relation(fields: [assignedTo], references: [id])
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-
-  @@index([assignedTo])
-  @@index([status])
-}
-
-model MoneyTransaction {
-  id          String      @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String      @db.ObjectId
-  user        User        @relation(fields: [userId], references: [id])
-  amount      Float
-  method      PaymentMethod
-  reference   String      @unique
-  status      String      @default("Completed")
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
-  @@index([userId])
-}
-
-model WithdrawalRequest {
+model Transaction {
   id              String           @id @default(auto()) @map("_id") @db.ObjectId
   userId          String           @db.ObjectId
   user            User             @relation(fields: [userId], references: [id])
   amount          Float
-  method          PaymentMethod
-  accountDetails  String
-  status          WithdrawalStatus @default(Pending)
+  type            TransactionType
+  method          PaymentMethod?
+  reference       String?
+  accountDetails  String?
+  status          TransactionStatus @default(Pending)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
   @@index([userId])
+  @@index([type])
   @@index([status])
 } 
