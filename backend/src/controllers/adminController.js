@@ -121,7 +121,7 @@ const deleteUser = async (req, res) => {
 // Task Management
 const getTasks = async (req, res) => {
   try {
-    const tasks = await prisma.adminTask.findMany({
+    const tasks = await prisma.task.findMany({
       include: { user: true },
       orderBy: { createdAt: 'desc' }
     });
