@@ -53,6 +53,7 @@ export const dashboard = async (authToken) => {
 
   export const getTasks = async (authToken, params = {}) => {
     try {
+      console.log("pandey")
       const response = await axios.get(`${BASE_URL}/${endpoints.tasks}`, {
         headers: {
           'Authorization': `Bearer ${authToken}`

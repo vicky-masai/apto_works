@@ -15,6 +15,14 @@ export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [totalPages, setTotalPages] = useState(1);
+  const [filters, setFilters] = useState({
+    role: "",
+    status: "",
+    sortBy: "createdAt",
+    sortOrder: "desc"
+  });
+  const [searchField, setSearchField] = useState("name");
   const observer = useRef();
   const lastUserElementRef = useCallback(node => {
     if (isLoading) return;
@@ -27,16 +35,50 @@ export default function UsersPage() {
     if (node) observer.current.observe(node);
   }, [isLoading, hasMore]);
 
-  const fetchUsers = async (pageNum = 1, search = "") => {
+  const searchFields = [
+    { value: "name", label: "Name" },
+    { value: "email", label: "Email" },
+    { value: "role", label: "Role" }
+  ];
+
+  const roleOptions = [
+    { value: "", label: "All Roles" },
+    { value: "admin", label: "Admin" },
+    { value: "user", label: "User" },
+    { value: "moderator", label: "Moderator" }
+  ];
+
+  const statusOptions = [
+    { value: "", label: "All Status" },
+    { value: "active", label: "Active" },
+    { value: "inactive", label: "Inactive" },
+    { value: "pending", label: "Pending" }
+  ];
+
+  const sortOptions = [
+    { value: "createdAt", label: "Join Date" },
+    { value: "name", label: "Name" },
+    { value: "email", label: "Email" },
+    { value: "role", label: "Role" }
+  ];
+
+  const fetchUsers = async (pageNum = 1, search = "", field = "name", filterParams = {}) => {
     try {
       setIsLoading(true);
-      const data = await getUsers(auth.getToken(), { page: pageNum, search });
+      const params = {
+        page: pageNum,
+        search,
+        searchField: field,
+        ...filterParams
+      };
+      const data = await getUsers(auth.getToken(), params);
       if (pageNum === 1) {
         setUsers(data.users);
       } else {
         setUsers(prevUsers => [...prevUsers, ...data.users]);
       }
       setHasMore(data.users.length > 0);
+      setTotalPages(data.totalPages || 1);
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
@@ -45,17 +87,36 @@ export default function UsersPage() {
   };
 
   useEffect(() => {
-    fetchUsers(1, searchQuery);
-  }, [searchQuery]);
+    fetchUsers(1, searchQuery, searchField, filters);
+  }, [searchQuery, searchField, filters]);
 
   useEffect(() => {
     if (page > 1) {
-      fetchUsers(page, searchQuery);
+      fetchUsers(page, searchQuery, searchField, filters);
     }
   }, [page]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+    setPage(1);
+  };
+
+  const handleFilterChange = (field, value) => {
+    setFilters(prev => ({ ...prev, [field]: value }));
+    setPage(1);
+  };
+
+  const handleSearchFieldChange = (value) => {
+    setSearchField(value);
+    setPage(1);
+  };
+
+  const handleSortChange = (field) => {
+    setFilters(prev => ({
+      ...prev,
+      sortBy: field,
+      sortOrder: prev.sortBy === field && prev.sortOrder === "asc" ? "desc" : "asc"
+    }));
     setPage(1);
   };
 
@@ -129,18 +190,69 @@ export default function UsersPage() {
         <Button className="w-fit px-3 py-1 rounded-full">Add New User</Button>
       </div>
 
-      <div className="flex items-center gap-2 max-w-sm">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input 
-            type="search" 
-            placeholder="Search users..." 
-            className="pl-8" 
-            value={searchQuery}
-            onChange={handleSearchChange}
-          />
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input 
+              type="search" 
+              placeholder="Search users..." 
+              className="pl-8" 
+              value={searchQuery}
+              onChange={handleSearchChange}
+            />
+          </div>
+          <select
+            value={searchField}
+            onChange={(e) => handleSearchFieldChange(e.target.value)}
+            className="h-10 rounded-md border border-input bg-background px-3 py-2"
+          >
+            {searchFields.map(field => (
+              <option key={field.value} value={field.value}>{field.label}</option>
+            ))}
+          </select>
         </div>
-        <Button variant="outline">Filter</Button>
+
+        <div className="flex items-center gap-4">
+          <select
+            value={filters.role}
+            onChange={(e) => handleFilterChange('role', e.target.value)}
+            className="h-10 rounded-md border border-input bg-background px-3 py-2"
+          >
+            {roleOptions.map(option => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+
+          <select
+            value={filters.status}
+            onChange={(e) => handleFilterChange('status', e.target.value)}
+            className="h-10 rounded-md border border-input bg-background px-3 py-2"
+          >
+            {statusOptions.map(option => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+
+          <div className="flex items-center gap-2">
+            <select
+              value={filters.sortBy}
+              onChange={(e) => handleSortChange(e.target.value)}
+              className="h-10 rounded-md border border-input bg-background px-3 py-2"
+            >
+              {sortOptions.map(option => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => handleSortChange(filters.sortBy)}
+            >
+              {filters.sortOrder === "asc" ? "↑" : "↓"}
+            </Button>
+          </div>
+        </div>
       </div>
 
       <Card>

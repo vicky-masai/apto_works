@@ -3,7 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, Clock, AlertCircle } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { getTasks } from "@/API/api"
+import { auth } from "@/API/auth"
 import {
   Dialog,
   DialogContent,
@@ -15,57 +17,23 @@ import {
 import { Input } from "@/components/ui/input"
 
 export default function TasksPage() {
-  // Mock data for tasks
-  const tasks = [
-    {
-      id: 1,
-      title: "Review new user registrations",
-      status: "completed",
-      priority: "high",
-      dueDate: "2025-04-10",
-      assignedTo: "John Doe",
-    },
-    {
-      id: 2,
-      title: "Approve withdrawal requests",
-      status: "pending",
-      priority: "high",
-      dueDate: "2025-04-09",
-      assignedTo: "Jane Smith",
-    },
-    {
-      id: 3,
-      title: "Update system settings",
-      status: "in-progress",
-      priority: "medium",
-      dueDate: "2025-04-12",
-      assignedTo: "John Doe",
-    },
-    {
-      id: 4,
-      title: "Generate monthly report",
-      status: "pending",
-      priority: "low",
-      dueDate: "2025-04-15",
-      assignedTo: "Mike Johnson",
-    },
-    {
-      id: 5,
-      title: "Fix login issue",
-      status: "in-progress",
-      priority: "high",
-      dueDate: "2025-04-08",
-      assignedTo: "Jane Smith",
-    },
-    {
-      id: 6,
-      title: "Update user documentation",
-      status: "completed",
-      priority: "medium",
-      dueDate: "2025-04-05",
-      assignedTo: "Mike Johnson",
-    },
-  ]
+  const [tasks, setTasks] = useState([])
+
+  const [isLoading, setIsLoading] = useState(true)
+
+  const getTasksFetch = async () => {
+    try {
+      console.log("pandey1")
+      const response = await getTasks(auth.getToken(), { page: 1, search: "" })
+      setTasks(response)
+    } catch (error) {
+      console.error('Error fetching tasks:', error)
+    }
+  }
+
+  useEffect(()=>{
+    getTasksFetch()
+  },[])
 
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState(null)
@@ -136,25 +104,25 @@ export default function TasksPage() {
                 <tr className="border-b">
                   <th className="text-left py-3 px-4 font-medium">Task</th>
                   <th className="text-left py-3 px-4 font-medium">Status</th>
-                  <th className="text-left py-3 px-4 font-medium">Priority</th>
-                  <th className="text-left py-3 px-4 font-medium">Due Date</th>
-                  <th className="text-left py-3 px-4 font-medium">Assigned To</th>
+                  <th className="text-left py-3 px-4 font-medium">Difficulty</th>
+                  <th className="text-left py-3 px-4 font-medium">Created Date</th>
+                  <th className="text-left py-3 px-4 font-medium">Author</th>
                   <th className="text-left py-3 px-4 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {tasks.map((task) => (
                   <tr key={task.id} className="border-b last:border-0 hover:bg-muted/50">
-                    <td className="py-3 px-4">{task.title}</td>
+                    <td className="py-3 px-4">{task.taskTitle}</td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
-                        {getStatusIcon(task.status)}
-                        <span>{getStatusText(task.status)}</span>
+                        {getStatusIcon(task.taskStatus)}
+                        <span>{getStatusText(task.taskStatus)}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-4">{getPriorityBadge(task.priority)}</td>
-                    <td className="py-3 px-4">{task.dueDate}</td>
-                    <td className="py-3 px-4">{task.assignedTo}</td>
+                    <td className="py-3 px-4">{getPriorityBadge(task.difficulty)}</td>
+                    <td className="py-3 px-4">{task.createdAt}</td>
+                    <td className="py-3 px-4">{task.user.name}</td>
                     <td className="py-3 px-4">
                       <div className="flex gap-2">
                         {task.status === "pending" && (
