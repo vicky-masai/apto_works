@@ -2,21 +2,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle, Clock, AlertCircle } from "lucide-react"
+import { CheckCircle, Clock, AlertCircle, XCircle, Eye, Check, X } from "lucide-react"
 import { useState } from "react"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 
 export default function TasksPage() {
   // Mock data for tasks
-  const tasks = [
+  const [tasks, setTasks] = useState([
     {
       id: 1,
       title: "Review new user registrations",
@@ -65,11 +57,13 @@ export default function TasksPage() {
       dueDate: "2025-04-05",
       assignedTo: "Mike Johnson",
     },
-  ]
+  ])
 
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
+  const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState(null)
   const [rejectComment, setRejectComment] = useState("")
+  const [rejectedTasks, setRejectedTasks] = useState({})
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -79,6 +73,8 @@ export default function TasksPage() {
         return <Clock className="h-5 w-5 text-blue-500" />
       case "pending":
         return <AlertCircle className="h-5 w-5 text-yellow-500" />
+      case "rejected":
+        return <XCircle className="h-5 w-5 text-red-500" />
       default:
         return null
     }
@@ -87,13 +83,30 @@ export default function TasksPage() {
   const getStatusText = (status) => {
     switch (status) {
       case "completed":
-        return "Completed"
+        return "Approved "
       case "in-progress":
         return "In Progress"
       case "pending":
         return "Pending"
+      case "rejected":
+        return "Rejected"
       default:
         return status
+    }
+  }
+
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case "completed":
+        return "text-green-500"
+      case "in-progress":
+        return "text-blue-500"
+      case "pending":
+        return "text-yellow-500"
+      case "rejected":
+        return "text-red-500"
+      default:
+        return ""
     }
   }
 
@@ -113,6 +126,30 @@ export default function TasksPage() {
   const handleReject = (task) => {
     setSelectedTask(task)
     setIsRejectDialogOpen(true)
+  }
+
+  const handleRejectSubmit = () => {
+    if (selectedTask && rejectComment) {
+      setRejectedTasks(prev => ({
+        ...prev,
+        [selectedTask.id]: rejectComment
+      }))
+      setTasks(prevTasks => 
+        prevTasks.map(task => 
+          task.id === selectedTask.id 
+            ? {...task, status: 'rejected'} 
+            : task
+        )
+      )
+      setIsRejectDialogOpen(false)
+      setRejectComment("")
+      setSelectedTask(null)
+    }
+  }
+
+  const handleViewDetails = (task) => {
+    setSelectedTask(task)
+    setIsViewDetailsOpen(true)
   }
 
   return (
@@ -149,7 +186,9 @@ export default function TasksPage() {
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         {getStatusIcon(task.status)}
-                        <span>{getStatusText(task.status)}</span>
+                        <span className={`font-medium ${getStatusStyle(task.status)}`}>
+                          {getStatusText(task.status)}
+                        </span>
                       </div>
                     </td>
                     <td className="py-3 px-4">{getPriorityBadge(task.priority)}</td>
@@ -157,23 +196,49 @@ export default function TasksPage() {
                     <td className="py-3 px-4">{task.assignedTo}</td>
                     <td className="py-3 px-4">
                       <div className="flex gap-2">
-                        {task.status === "pending" && (
+                        {task.status === "pending" ? (
                           <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-fit px-3 py-1 text-green-500 border-green-500 hover:bg-green-50 rounded-full"
+                            <button
+                              onClick={() => {
+                                setTasks(prevTasks =>
+                                  prevTasks.map(t =>
+                                    t.id === task.id
+                                      ? { ...t, status: 'completed' }
+                                      : t
+                                  )
+                                )
+                              }}
+                              className="px-4 py-2 text-sm font-medium text-green-500 bg-white border border-green-500 rounded-full hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 inline-flex items-center gap-2"
                             >
+                              <Check className="h-4 w-4" />
                               Approve
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-red-500 border-red-500 hover:bg-red-50 rounded-full"
+                            </button>
+                            <button
                               onClick={() => handleReject(task)}
+                              className="px-4 py-2 text-sm font-medium text-red-500 bg-white border border-red-500 rounded-full hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 inline-flex items-center gap-2"
                             >
+                              <X className="h-4 w-4" />
                               Reject
-                            </Button>
+                            </button>
+                          </>
+                        ) : task.status === "completed" ? (
+                          <div className="inline-flex items-center gap-2 text-green-500 font-medium">
+                            <CheckCircle className="h-5 w-5" />
+                            Approved
+                          </div>
+                        ) : task.status === "rejected" && (
+                          <>
+                            <div className="inline-flex items-center gap-2 text-red-500 font-medium">
+                              <XCircle className="h-5 w-5" />
+                              Rejected
+                            </div>
+                            <button
+                              onClick={() => handleViewDetails(task)}
+                              className="px-4 py-2 text-sm font-medium text-blue-500 bg-white border border-blue-500 rounded-full hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 inline-flex items-center gap-2"
+                            >
+                              <Eye className="h-4 w-4" />
+                              View Details
+                            </button>
                           </>
                         )}
                       </div>
@@ -186,43 +251,90 @@ export default function TasksPage() {
         </CardContent>
       </Card>
 
-      {/* Reject Dialog */}
-      <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reject Task</DialogTitle>
-            <DialogDescription>Please provide a reason for rejecting this task.</DialogDescription>
-          </DialogHeader>
-          {selectedTask && (
-            <div className="py-4">
-              <p>
-                <strong>Task:</strong> {selectedTask.title}
-              </p>
-              <Input
-                type="text"
-                placeholder="Enter rejection reason..."
-                value={rejectComment}
-                onChange={(e) => setRejectComment(e.target.value)}
-                className="mt-2"
-              />
+      {/* Reject Modal */}
+      {isRejectDialogOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 w-[400px]">
+            <h3 className="text-lg font-semibold mb-4">Reject Task</h3>
+            <p className="text-gray-600 mb-4">Please provide a reason for rejecting this task.</p>
+            
+            {selectedTask && (
+              <div className="space-y-4">
+                <div>
+                  <p className="font-medium">Task:</p>
+                  <p>{selectedTask.title}</p>
+                </div>
+                <div>
+                  <label className="font-medium block mb-2">
+                    Rejection Reason:
+                  </label>
+                  <input
+                    type="text"
+                    value={rejectComment}
+                    onChange={(e) => setRejectComment(e.target.value)}
+                    placeholder="Enter rejection reason..."
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            )}
+            
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setIsRejectDialogOpen(false)
+                  setRejectComment("")
+                  setSelectedTask(null)
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRejectSubmit}
+                disabled={!rejectComment}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Reject
+              </button>
             </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              className="bg-red-500 hover:bg-red-600"
-              onClick={() => {
-                // Handle rejection logic here
-                setIsRejectDialogOpen(false)
-              }}
-            >
-              Reject
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      )}
+
+      {/* View Details Modal */}
+      {isViewDetailsOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 w-[400px]">
+            <h3 className="text-lg font-semibold mb-4">Rejection Details</h3>
+            
+            {selectedTask && (
+              <div className="space-y-4">
+                <div>
+                  <p className="font-medium">Task:</p>
+                  <p>{selectedTask.title}</p>
+                </div>
+                <div>
+                  <p className="font-medium">Rejection Reason:</p>
+                  <p className="text-red-500">{rejectedTasks[selectedTask.id]}</p>
+                </div>
+              </div>
+            )}
+            
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => {
+                  setIsViewDetailsOpen(false)
+                  setSelectedTask(null)
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
