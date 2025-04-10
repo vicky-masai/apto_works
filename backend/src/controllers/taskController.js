@@ -338,7 +338,10 @@ const getAllTasks = async (req, res) => {
     };
 
     if (category) {
-      where.category = category;
+      const categories = category.split(',').map(cat => cat.trim());
+      where.category = {
+        in: categories
+      };
     }
 
     if (minPrice) {
@@ -356,7 +359,10 @@ const getAllTasks = async (req, res) => {
     }
 
     if (difficulty) {
-      where.difficulty = difficulty;
+      const difficulties = difficulty.split(',').map(diff => diff.trim());
+      where.difficulty = {
+        in: difficulties
+      };
     }
 
     if (search) {
@@ -430,7 +436,9 @@ const getAllTasks = async (req, res) => {
       filters: {
         isPopular: filter === 'Popular',
         isHighPaying: filter === 'HighPaying',
-        status: status || 'Published'
+        status: status || 'Published',
+        appliedCategories: category ? category.split(',').map(cat => cat.trim()) : [],
+        appliedDifficulties: difficulty ? difficulty.split(',').map(diff => diff.trim()) : []
       },
       pagination: {
         currentPage: parseInt(page),

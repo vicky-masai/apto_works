@@ -43,6 +43,13 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
+  const [filterParams, setFilterParams] = useState({
+    categories: [] as string[],
+    minPrice: '',
+    maxPrice: '',
+    difficulties: [] as string[],
+    status: 'Published'
+  })
   const tasksPerPage = 5
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
@@ -62,9 +69,34 @@ export default function TasksPage() {
     if (node) observer.current.observe(node)
   }, [isLoading, hasMoreTasks])
 
+  const handleFilterChange = (type: 'categories' | 'difficulties', value: string) => {
+    setFilterParams(prev => {
+      const currentArray = prev[type];
+      const newArray = currentArray.includes(value)
+        ? currentArray.filter(item => item !== value)
+        : [...currentArray, value];
+      
+      return {
+        ...prev,
+        [type]: newArray
+      };
+    });
+  };
+
+  const handlePriceChange = (type: 'minPrice' | 'maxPrice', value: string) => {
+    setFilterParams(prev => ({
+      ...prev,
+      [type]: value
+    }));
+  };
+
   const handleApplyFilters = async () => {
     try {
-      const filterParams = {
+      const params = {
+        ...(filterParams.categories.length > 0 && { category: filterParams.categories.join(',') }),
+        ...(filterParams.difficulties.length > 0 && { difficulty: filterParams.difficulties.join(',') }),
+        ...(filterParams.minPrice && { minPrice: filterParams.minPrice }),
+        ...(filterParams.maxPrice && { maxPrice: filterParams.maxPrice }),
         page: 1,
         ...(searchTerm && { search: searchTerm }),
         ...(activeTab !== "all" && { filter: activeTab === "new" ? "New" : activeTab === "popular" ? "Popular" : "HighPaying" }),
@@ -72,7 +104,7 @@ export default function TasksPage() {
       };
 
       setIsLoading(true);
-      const data = await getAllTasks(filterParams);
+      const data = await getAllTasks(params);
       
       setTasks(data.tasks);
       setCurrentPage(1);
@@ -159,14 +191,18 @@ export default function TasksPage() {
           setIsLoadingMore(true);
         }
         
-        const filterParams = {
+        const params = {
+          ...(filterParams.categories.length > 0 && { category: filterParams.categories.join(',') }),
+          ...(filterParams.difficulties.length > 0 && { difficulty: filterParams.difficulties.join(',') }),
+          ...(filterParams.minPrice && { minPrice: filterParams.minPrice }),
+          ...(filterParams.maxPrice && { maxPrice: filterParams.maxPrice }),
           page: currentPage,
           ...(searchTerm && { search: searchTerm }),
           ...(activeTab !== "all" && { filter: activeTab === "new" ? "New" : activeTab === "popular" ? "Popular" : "HighPaying" }),
           status: "Published"
         };
 
-        const data = await getAllTasks(filterParams);
+        const data = await getAllTasks(params);
         
         if (currentPage === 1) {
           setTasks(data.tasks);
@@ -198,6 +234,20 @@ export default function TasksPage() {
       router.push(path)
     }
   }
+
+  const categories = [
+    { id: 'registration', label: 'Registration' },
+    { id: 'social', label: 'Social Media' },
+    { id: 'testing', label: 'Testing' },
+    { id: 'content', label: 'Content Creation' },
+    { id: 'other', label: 'Other' }
+  ];
+
+  const difficulties = [
+    { id: 'Easy', label: 'Easy' },
+    { id: 'Medium', label: 'Medium' },
+    { id: 'Hard', label: 'Hard' }
+  ];
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
@@ -242,13 +292,23 @@ export default function TasksPage() {
                 <div className="flex items-center gap-2">
                   <div className="relative">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                    <Input type="search" placeholder="Search tasks..." className="w-[200px] md:w-[300px] pl-8" value={searchTerm} onChange={handleSearch} />
+                    <Input 
+                      type="search" 
+                      placeholder="Search tasks..." 
+                      className="w-[200px] md:w-[300px] pl-8" 
+                      value={searchTerm} 
+                      onChange={handleSearch} 
+                    />
                   </div>
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button variant="outline" className="ml-2">
                         <Filter className="h-4 w-4 mr-2" />
-                        Filters
+                        Filters {(filterParams.categories.length > 0 || filterParams.difficulties.length > 0) && 
+                          <span className="ml-1 text-xs bg-primary text-white rounded-full px-2">
+                            {filterParams.categories.length + filterParams.difficulties.length}
+                          </span>
+                        }
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
@@ -256,7 +316,83 @@ export default function TasksPage() {
                         <DialogTitle>Filters</DialogTitle>
                       </DialogHeader>
                       <CardContent className="space-y-4">
-                        <Button className="w-full" onClick={handleApplyFilters}>Apply Filters</Button>
+                        <div className="space-y-2">
+                          <div className="font-medium text-sm">Categories</div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {categories.map(category => (
+                              <label 
+                                key={category.id} 
+                                className="flex items-center gap-2 hover:bg-gray-50 p-2 rounded cursor-pointer"
+                              >
+                                <input
+                                  type="checkbox"
+                                  className="rounded text-primary"
+                                  checked={filterParams.categories.includes(category.id)}
+                                  onChange={() => handleFilterChange('categories', category.id)}
+                                />
+                                <span className="text-sm">{category.label}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        <Separator />
+                        <div className="space-y-2">
+                          <div className="font-medium text-sm">Price Range</div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input 
+                              type="number" 
+                              placeholder="Min" 
+                              min={0} 
+                              value={filterParams.minPrice}
+                              onChange={(e) => handlePriceChange('minPrice', e.target.value)}
+                            />
+                            <Input 
+                              type="number" 
+                              placeholder="Max" 
+                              min={0} 
+                              value={filterParams.maxPrice}
+                              onChange={(e) => handlePriceChange('maxPrice', e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        <Separator />
+                        <div className="space-y-2">
+                          <div className="font-medium text-sm">Difficulty</div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {difficulties.map(difficulty => (
+                              <label 
+                                key={difficulty.id} 
+                                className="flex items-center gap-2 hover:bg-gray-50 p-2 rounded cursor-pointer"
+                              >
+                                <input
+                                  type="checkbox"
+                                  className="rounded text-primary"
+                                  checked={filterParams.difficulties.includes(difficulty.id)}
+                                  onChange={() => handleFilterChange('difficulties', difficulty.id)}
+                                />
+                                <span className="text-sm">{difficulty.label}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex gap-2 pt-2">
+                          <Button 
+                            variant="outline" 
+                            className="w-full" 
+                            onClick={() => setFilterParams({
+                              categories: [],
+                              minPrice: '',
+                              maxPrice: '',
+                              difficulties: [],
+                              status: 'Published'
+                            })}
+                          >
+                            Clear All
+                          </Button>
+                          <Button className="w-full" onClick={handleApplyFilters}>
+                            Apply Filters
+                          </Button>
+                        </div>
                       </CardContent>
                     </DialogContent>
                   </Dialog>
