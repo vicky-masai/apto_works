@@ -13,6 +13,7 @@ datasource db {
 enum UserType {
   Admin
   User
+  TaskProvider
 }
 
 enum UserStatus {
@@ -86,7 +87,7 @@ model User {
   isEmailVerified       Boolean        @default(false)
   otp                   String?
   otpExpiry             DateTime?
-  tasks                 Task[]         @relation("TaskProvider")
+  tasks                 Task[]         @relation("User")
   acceptedTasks         AcceptedTask[] @relation("Worker")
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
@@ -111,7 +112,7 @@ model Task {
   difficulty            String         @default("Medium")
   taskStatus            TaskStatus     @default(Review)
   userId                String         @db.ObjectId
-  user                  User           @relation("TaskProvider", fields: [userId], references: [id])
+  user                  User           @relation("User", fields: [userId], references: [id])
   acceptedUsers         AcceptedTask[]
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt

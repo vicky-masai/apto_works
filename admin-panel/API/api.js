@@ -33,19 +33,37 @@ export const dashboard = async (authToken) => {
 
   export const getUsers = async (authToken, params = {}) => {
     try {
+      // Map frontend params to backend expected params
+      const queryParams = {
+        page: params.page || 1,
+        limit: params.limit || 10,
+        search: params.search || '',
+        searchBy: params.searchField || 'name',
+        sortOrder: params.sortOrder || 'desc'
+      };
+      
+      // Only add these params if they have values
+      if (params.role) queryParams.role = params.role;
+      if (params.status) queryParams.status = params.status;
+      
+      // Map sortBy correctly (frontend value may be different than backend)
+      if (params.sortBy) {
+        // Check if sortBy is 'role' - which needs to be mapped to 'userType' in backend
+        queryParams.sortBy = params.sortBy;
+      }
+      
+      console.log("Search params:", queryParams); // For debugging
+      
       const response = await axios.get(`${BASE_URL}/${endpoints.users}`, {
         headers: {
           'Authorization': `Bearer ${authToken}`
         },
-        params: {
-          page: params.page || 1,
-          search: params.search || ''
-        }
+        params: queryParams
       });
-      console.log(response.data);
+      
       return response.data;
     } catch (error) {
-      console.error('Error fetching task:', error);
+      console.error('Error fetching users:', error);
       throw error;
     }
   };

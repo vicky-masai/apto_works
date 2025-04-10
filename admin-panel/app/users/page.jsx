@@ -43,16 +43,15 @@ export default function UsersPage() {
 
   const roleOptions = [
     { value: "", label: "All Roles" },
-    { value: "admin", label: "Admin" },
-    { value: "user", label: "User" },
-    { value: "moderator", label: "Moderator" }
+    { value: "Admin", label: "Admin" },
+    { value: "User", label: "User" },
+    { value: "TaskProvider", label: "Task Provider" }
   ];
 
   const statusOptions = [
     { value: "", label: "All Status" },
-    { value: "active", label: "Active" },
-    { value: "inactive", label: "Inactive" },
-    { value: "pending", label: "Pending" }
+    { value: "Active", label: "Active" },
+    { value: "Deleted", label: "Deleted" },
   ];
 
   const sortOptions = [
@@ -67,18 +66,25 @@ export default function UsersPage() {
       setIsLoading(true);
       const params = {
         page: pageNum,
+        limit: 10,
         search,
         searchField: field,
         ...filterParams
       };
+      
+      console.log("Fetching users with params:", params);
+      
       const data = await getUsers(auth.getToken(), params);
+      
+      console.log("Received users data:", data);
+      
       if (pageNum === 1) {
-        setUsers(data.users);
+        setUsers(data.users || []);
       } else {
-        setUsers(prevUsers => [...prevUsers, ...data.users]);
+        setUsers(prevUsers => [...prevUsers, ...(data.users || [])]);
       }
-      setHasMore(data.users.length > 0);
-      setTotalPages(data.totalPages || 1);
+      setHasMore(data.pagination && data.pagination.page < data.pagination.totalPages);
+      setTotalPages(data.pagination ? data.pagination.totalPages : 1);
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
@@ -260,52 +266,60 @@ export default function UsersPage() {
           <CardTitle>All Users</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-            <table className="w-full">
-              <thead className="sticky top-0 bg-background">
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-medium">Name</th>
-                  <th className="text-left py-3 px-4 font-medium">Email</th>
-                  <th className="text-left py-3 px-4 font-medium">Role</th>
-                  <th className="text-left py-3 px-4 font-medium">Balance</th>
-                  <th className="text-left py-3 px-4 font-medium">Join Date</th>
-                  <th className="text-left py-3 px-4 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users?.map((user, index) => (
-                  <tr 
-                    key={user.id} 
-                    className="border-b last:border-0 hover:bg-muted/50"
-                    ref={index === users.length - 1 ? lastUserElementRef : null}
-                  >
-                    <td className="py-3 px-4 font-medium">{user.name}</td>
-                    <td className="py-3 px-4">{user.email}</td>
-                    <td className="py-3 px-4">{user.role}</td>
-                    <td className="py-3 px-4">{user.balance}</td>
-                    <td className="py-3 px-4">{new Date(user.createdAt).toLocaleString('en-GB', {
-                      year: 'numeric',
-                      month: '2-digit',
-                      day: '2-digit',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit',
-                      hour12: false
-                    })}</td>
-                    <td className="py-3 px-4">
-                      <div className="flex gap-2">
-                        <Button className="w-fit px-3 py-1 rounded-full" variant="outline" size="sm">
-                          Edit
-                        </Button>
-                        <Button onClick={(e) => onClickDelete(e, user.id)} className="w-fit px-3 py-1 rounded-full text-red-500 border-red-500 hover:bg-red-50" variant="outline" size="sm">
-                          Delete
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="w-full">
+            {/* Table with sticky header and scrollable body */}
+            <div className="border rounded-md">
+              <div className="overflow-x-auto">
+                <div className="max-h-[500px] overflow-y-auto">
+                  <table className="w-full border-collapse">
+                    <thead className="sticky top-0 bg-background border-b z-10">
+                      <tr>
+                        <th className="text-left py-3 px-4 font-medium">Name</th>
+                        <th className="text-left py-3 px-4 font-medium">Email</th>
+                        <th className="text-left py-3 px-4 font-medium">Role</th>
+                        <th className="text-left py-3 px-4 font-medium">Balance</th>
+                        <th className="text-left py-3 px-4 font-medium">Join Date</th>
+                        <th className="text-left py-3 px-4 font-medium">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users?.map((user, index) => (
+                        <tr 
+                          key={user.id} 
+                          className="border-b last:border-0 hover:bg-muted/50"
+                          ref={index === users.length - 1 ? lastUserElementRef : null}
+                        >
+                          <td className="py-3 px-4 font-medium">{user.name}</td>
+                          <td className="py-3 px-4">{user.email}</td>
+                          <td className="py-3 px-4">{user.role || user.userType}</td>
+                          <td className="py-3 px-4">{user.balance}</td>
+                          <td className="py-3 px-4">{new Date(user.createdAt).toLocaleString('en-GB', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: false
+                          })}</td>
+                          <td className="py-3 px-4">
+                            <div className="flex gap-2">
+                              <Button className="w-fit px-3 py-1 rounded-full" variant="outline" size="sm">
+                                Edit
+                              </Button>
+                              <Button onClick={(e) => onClickDelete(e, user.id)} className="w-fit px-3 py-1 rounded-full text-red-500 border-red-500 hover:bg-red-50" variant="outline" size="sm">
+                                Delete
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            
             {isLoading && (
               <div className="flex justify-center items-center h-32">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

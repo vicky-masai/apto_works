@@ -8,20 +8,24 @@ const getDashboardStats = async (req, res) => {
     const [
       totalUsers,
       totalTasks,
-      totalRevenue,
+      totalTransactions,
       pendingWithdrawals,
-      recentActivities,
+      recentTransactions,
       systemStatus
     ] = await Promise.all([
       prisma.user.count(),
-      prisma.adminTask.count(),
-      prisma.moneyTransaction.aggregate({
-        _sum: { amount: true }
+      prisma.task.count(),
+      prisma.transaction.aggregate({
+        _sum: { amount: true },
+        where: { type: 'Add' }
       }),
-      prisma.withdrawalRequest.count({
-        where: { status: 'Pending' }
+      prisma.transaction.count({
+        where: { 
+          type: 'Withdraw',
+          status: 'Pending' 
+        }
       }),
-      prisma.moneyTransaction.findMany({
+      prisma.transaction.findMany({
         take: 5,
         orderBy: { createdAt: 'desc' },
         include: { user: true }
@@ -37,9 +41,9 @@ const getDashboardStats = async (req, res) => {
     res.json({
       totalUsers,
       totalTasks,
-      totalRevenue: totalRevenue._sum.amount || 0,
+      totalRevenue: totalTransactions._sum.amount || 0,
       pendingWithdrawals,
-      recentActivities,
+      recentActivities: recentTransactions,
       systemStatus
     });
   } catch (error) {
@@ -50,36 +54,68 @@ const getDashboardStats = async (req, res) => {
 // User Management
 const getUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = '', role, status } = req.query;
+    const { page = 1, limit = 10, search = '', searchBy = 'name', role, status, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    const whereClause = {
-      OR: [
-        { name: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } }
-      ]
-    };
+    console.log("Query params:", { page, limit, search, searchBy, role, status, sortBy, sortOrder });
 
+    const whereClause = {};
+    
+    // Add OR filters for search
+    if (search) {
+      whereClause.OR = [];
+      
+      // Handle different search fields
+      if (searchBy === 'name') {
+        whereClause.OR.push({ name: { contains: search, mode: 'insensitive' } });
+      } else if (searchBy === 'email') {
+        whereClause.OR.push({ email: { contains: search, mode: 'insensitive' } });
+      } else if (searchBy === 'role') {
+        whereClause.OR.push({ role: { contains: search, mode: 'insensitive' } });
+      } else {
+        // Default fallback - search in name and email
+        whereClause.OR.push({ name: { contains: search, mode: 'insensitive' } });
+        whereClause.OR.push({ email: { contains: search, mode: 'insensitive' } });
+      }
+    }
+
+    // Add explicit role filter - separate from search
     if (role) {
-      whereClause.role = role;
+      // If we already have search conditions, we need to add role as a separate AND condition
+      if (whereClause.OR) {
+        whereClause.role = role;
+      } else {
+        whereClause.role = role;
+      }
     }
 
     if (status) {
       whereClause.status = status;
     }
 
+    // Map frontend sorting fields to database fields
+    const sortingField = sortBy === 'role' ? 'role' : 
+                         sortBy === 'joinDate' ? 'createdAt' : 
+                         sortBy;
+
+    console.log("Final whereClause:", JSON.stringify(whereClause, null, 2));
+
     const [users, total] = await Promise.all([
       prisma.user.findMany({
         where: whereClause,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { [sortingField]: sortOrder },
         skip,
         take: parseInt(limit)
       }),
       prisma.user.count({ where: whereClause })
     ]);
 
+    if (users.length > 0) {
+      console.log("Sample user:", JSON.stringify(users[0], null, 2));
+    }
+
     res.json({
-      users,
+      users: users,
       pagination: {
         total,
         page: parseInt(page),
@@ -99,7 +135,12 @@ const updateUser = async (req, res) => {
     
     const user = await prisma.user.update({
       where: { id },
-      data: { name, email, role, status }
+      data: { 
+        name, 
+        email, 
+        userType: role, 
+        status 
+      }
     });
     
     res.json(user);
@@ -111,7 +152,11 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-    await prisma.user.delete({ where: { id } });
+    // Instead of deleting, mark as deleted
+    await prisma.user.update({ 
+      where: { id },
+      data: { status: 'Deleted' }
+    });
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -121,11 +166,42 @@ const deleteUser = async (req, res) => {
 // Task Management
 const getTasks = async (req, res) => {
   try {
-    const tasks = await prisma.task.findMany({
-      include: { user: true },
-      orderBy: { createdAt: 'desc' }
+    const { page = 1, limit = 10, search = '', status } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const whereClause = {};
+    
+    if (search) {
+      whereClause.OR = [
+        { taskTitle: { contains: search, mode: 'insensitive' } },
+        { taskDescription: { contains: search, mode: 'insensitive' } }
+      ];
+    }
+
+    if (status) {
+      whereClause.taskStatus = status;
+    }
+
+    const [tasks, total] = await Promise.all([
+      prisma.task.findMany({
+        where: whereClause,
+        include: { user: true },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: parseInt(limit)
+      }),
+      prisma.task.count({ where: whereClause })
+    ]);
+    
+    res.json({
+      tasks,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / parseInt(limit))
+      }
     });
-    res.json(tasks);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -154,17 +230,17 @@ const createTask = async (req, res) => {
 const updateTask = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, status, priority, dueDate, assignedTo } = req.body;
+    const { taskTitle, taskDescription, taskStatus, category, price, estimatedTime } = req.body;
     
-    const task = await prisma.adminTask.update({
+    const task = await prisma.task.update({
       where: { id },
       data: {
-        title,
-        description,
-        status,
-        priority,
-        dueDate: new Date(dueDate),
-        assignedTo
+        taskTitle,
+        taskDescription,
+        taskStatus,
+        category,
+        price,
+        estimatedTime
       }
     });
     
@@ -180,12 +256,16 @@ const getTransactions = async (req, res) => {
     const { page = 1, limit = 10, search = '', type, status } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    const whereClause = {
-      OR: [
-        { user: { name: { contains: search, mode: 'insensitive' } } },
-        { user: { email: { contains: search, mode: 'insensitive' } } }
-      ]
-    };
+    const whereClause = {};
+    
+    if (search) {
+      whereClause.user = {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } }
+        ]
+      };
+    }
 
     if (type) {
       whereClause.type = type;
@@ -196,14 +276,14 @@ const getTransactions = async (req, res) => {
     }
 
     const [transactions, total] = await Promise.all([
-      prisma.moneyTransaction.findMany({
+      prisma.transaction.findMany({
         where: whereClause,
         include: { user: true },
         orderBy: { createdAt: 'desc' },
         skip,
         take: parseInt(limit)
       }),
-      prisma.moneyTransaction.count({ where: whereClause })
+      prisma.transaction.count({ where: whereClause })
     ]);
 
     res.json({
@@ -226,25 +306,31 @@ const getWithdrawals = async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const whereClause = {
-      OR: [
-        { user: { name: { contains: search, mode: 'insensitive' } } },
-        { user: { email: { contains: search, mode: 'insensitive' } } }
-      ]
+      type: 'Withdraw'
     };
+
+    if (search) {
+      whereClause.user = {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } }
+        ]
+      };
+    }
 
     if (status) {
       whereClause.status = status;
     }
 
     const [withdrawals, total] = await Promise.all([
-      prisma.withdrawalRequest.findMany({
+      prisma.transaction.findMany({
         where: whereClause,
         include: { user: true },
         orderBy: { createdAt: 'desc' },
         skip,
         take: parseInt(limit)
       }),
-      prisma.withdrawalRequest.count({ where: whereClause })
+      prisma.transaction.count({ where: whereClause })
     ]);
 
     res.json({
@@ -266,22 +352,24 @@ const updateWithdrawalStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     
-    const withdrawal = await prisma.withdrawalRequest.update({
+    // Get transaction before update to get amount and userId
+    const transaction = await prisma.transaction.findUnique({
+      where: { id }
+    });
+    
+    // Update transaction status
+    const withdrawal = await prisma.transaction.update({
       where: { id },
       data: { status }
     });
     
     // If approved, update user's balance
-    if (status === 'Approved') {
-      const withdrawalRequest = await prisma.withdrawalRequest.findUnique({
-        where: { id }
-      });
-      
+    if (status === 'Approved' && transaction.type === 'Withdraw') {
       await prisma.user.update({
-        where: { id: withdrawalRequest.userId },
+        where: { id: transaction.userId },
         data: {
           balance: {
-            decrement: withdrawalRequest.amount
+            decrement: transaction.amount
           }
         }
       });
