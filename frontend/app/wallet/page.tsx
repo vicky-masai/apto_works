@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ArrowDown, ArrowUp, CreditCard, DollarSign, Plus, Wallet } from "lucide-react"
 
@@ -21,6 +21,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Footer } from "@/components/Footer"
 import { Header } from "@/components/Header"
+import { getBalance, getBalanceHistory, getUserWithdrawalRequests } from "@/API/money_api.js"
 
 // Mock transaction data
 const transactionsData = [
@@ -67,7 +68,7 @@ const transactionsData = [
 ]
 
 export default function WalletPage() {
-  const [balance, setBalance] = useState(110.0)
+  const [balance, setBalance] = useState(0)
   const [depositAmount, setDepositAmount] = useState("")
   const [depositMethod, setDepositMethod] = useState("credit-card")
   const [withdrawAmount, setWithdrawAmount] = useState("")
@@ -80,6 +81,19 @@ export default function WalletPage() {
   const [openWithdrawDialog, setOpenWithdrawDialog] = useState(false)
   const [transactions, setTransactions] = useState(transactionsData)
   const [filter, setFilter] = useState("all")
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        const data = await getBalance();
+        setBalance(data.balance);
+      } catch (error) {
+        console.error('Failed to fetch balance:', error);
+      }
+    };
+
+    fetchBalance();
+  }, []);
 
   // Filter transactions
   const filteredTransactions = transactions.filter((transaction) => {
