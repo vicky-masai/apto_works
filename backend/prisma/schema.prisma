@@ -25,11 +25,8 @@ enum OrganizationType {
 }
 
 enum TaskStatus {
-  NotPublished
   Published
-  Active
   PENDING_REVIEW
-  COMPLETED
   REJECTED
 }
 
@@ -186,6 +183,23 @@ model MoneyTransaction {
 
   @@index([userId])
 }
+
+
+model EarningHistory{
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String      @db.ObjectId
+  user        User        @relation(fields: [userId], references: [id])
+  amount      Float
+  method      PaymentMethod
+  reference   String      @unique
+  status      String      @default("Completed")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([userId])
+}
+
+
 
 model WithdrawalRequest {
   id              String           @id @default(auto()) @map("_id") @db.ObjectId
