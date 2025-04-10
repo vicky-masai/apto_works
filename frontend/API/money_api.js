@@ -36,6 +36,37 @@ export const getBalanceHistory = async () => {
   }
 };
 
+// Function to get user profile
+export const getUserBalance = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/balance/user`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    throw error;
+  }
+};
+
+// Function to get user balance details
+export const getUserBalanceDetails = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/balance/user`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user balance details:', error);
+    throw error;
+  }
+};
+
+
 
 // Function to get user withdrawal requests
 export const getUserWithdrawalRequests = async () => {

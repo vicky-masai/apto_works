@@ -21,51 +21,8 @@ import {
 import { Footer } from "@/components/Footer"
 import { Header } from "@/components/Header"
 
-// Mock data for earnings
-const earningsData = [
-  {
-    id: "1",
-    taskName: "Website Registration Task",
-    date: "2025-03-28",
-    amount: 5.0,
-    status: "Paid",
-  },
-  {
-    id: "2",
-    taskName: "Social Media Post Engagement",
-    date: "2025-03-27",
-    amount: 2.5,
-    status: "Paid",
-  },
-  {
-    id: "3",
-    taskName: "Mobile App Testing",
-    date: "2025-03-25",
-    amount: 15.0,
-    status: "Pending",
-  },
-  {
-    id: "4",
-    taskName: "Write Product Review",
-    date: "2025-03-22",
-    amount: 8.0,
-    status: "Paid",
-  },
-  {
-    id: "5",
-    taskName: "Telegram Bot Testing",
-    date: "2025-03-20",
-    amount: 10.0,
-    status: "Processing",
-  },
-  {
-    id: "6",
-    taskName: "Website Feedback",
-    date: "2025-03-18",
-    amount: 5.0,
-    status: "Paid",
-  },
-]
+import { getUserBalance } from "@/API/money_api"
+
 
 export default function EarningsPage() {
   const [withdrawAmount, setWithdrawAmount] = useState("")
@@ -73,28 +30,38 @@ export default function EarningsPage() {
   const [isWithdrawing, setIsWithdrawing] = useState(false)
   const [withdrawSuccess, setWithdrawSuccess] = useState(false)
   const [openDialog, setOpenDialog] = useState(false)
+  const [earningsData, setEarningsData]=useState([]);
   const [filteredEarnings, setFilteredEarnings] = useState(earningsData)
   const [filter, setFilter] = useState("all")
-
-  // Calculate totals
-  const totalEarned = earningsData.reduce((sum, item) => sum + item.amount, 0)
-  const availableBalance = earningsData
-    .filter((item) => item.status === "Paid")
-    .reduce((sum, item) => sum + item.amount, 0)
-  const pendingBalance = earningsData
-    .filter((item) => item.status === "Pending" || item.status === "Processing")
-    .reduce((sum, item) => sum + item.amount, 0)
-
+  const [totalEarned, settotalEarned]= useState(0);
+  const [availableBalance, setAvailableBalance] = useState(0);
+  const [pendingBalance, setPendingBalance] = useState(0);
   useEffect(() => {
     if (filter === "all") {
       setFilteredEarnings(earningsData)
     } else {
-      setFilteredEarnings(earningsData.filter((item) => item.status.toLowerCase() === filter))
+      setFilteredEarnings(earningsData.filter((item: any) => item.status.toLowerCase() === filter))
     }
-  }, [filter])
+  }, [filter, earningsData])
+    const fetchUserBalance = async () => {
+      try {
+        const data = await getUserBalance();
+        // Assuming the data structure returned from the API is similar to earningsData
+        setFilteredEarnings(data.earningsHistory);
+        setEarningsData(data.earningsHistory);
+        settotalEarned(data.totalEarnings)
+        setAvailableBalance(data.availableBalance)
+        setPendingBalance(data.pending)
+      } catch (error) {
+        console.error('Error fetching user balance:', error);
+      }
+    };
+    useEffect(() => {
+      fetchUserBalance();
+    }, []);
 
-  const handleWithdraw = () => {
-    setIsWithdrawing(true)
+    const handleWithdraw = () => {
+      setIsWithdrawing(true)
 
     // Simulate API call
     setTimeout(() => {
@@ -278,9 +245,12 @@ export default function EarningsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Transactions</SelectItem>
-                      <SelectItem value="paid">Paid</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
                       <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="processing">Processing</SelectItem>
+                      <SelectItem value="review">Review</SelectItem>
+                      <SelectItem value="paid">Paid</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
                     </SelectContent>
                   </Select>
                   <Button variant="outline" size="icon">
@@ -300,8 +270,8 @@ export default function EarningsPage() {
                     <div>Status</div>
                     <div className="text-right">Actions</div>
                   </div>
-                  {filteredEarnings.map((earning) => (
-                    <div key={earning.id} className="grid grid-cols-5 items-center p-3 text-sm border-t">
+                  {filteredEarnings.map((earning: { taskName: string; date: string; amount: number; status: string }, i: number) => (
+                    <div key={i} className="grid grid-cols-5 items-center p-3 text-sm border-t">
                       <div className="font-medium">{earning.taskName}</div>
                       <div className="text-muted-foreground">{new Date(earning.date).toLocaleDateString()}</div>
                       <div className="font-medium">${earning.amount.toFixed(2)}</div>
