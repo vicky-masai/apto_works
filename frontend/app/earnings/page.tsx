@@ -245,9 +245,12 @@ export default function EarningsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Transactions</SelectItem>
-                      <SelectItem value="paid">Paid</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
                       <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="processing">Processing</SelectItem>
+                      <SelectItem value="review">Review</SelectItem>
+                      <SelectItem value="paid">Paid</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
                     </SelectContent>
                   </Select>
                   <Button variant="outline" size="icon">
@@ -267,8 +270,8 @@ export default function EarningsPage() {
                     <div>Status</div>
                     <div className="text-right">Actions</div>
                   </div>
-                  {filteredEarnings.map((earning) => (
-                    <div key={earning.id} className="grid grid-cols-5 items-center p-3 text-sm border-t">
+                  {filteredEarnings.map((earning: { taskName: string; date: string; amount: number; status: string }, i: number) => (
+                    <div key={i} className="grid grid-cols-5 items-center p-3 text-sm border-t">
                       <div className="font-medium">{earning.taskName}</div>
                       <div className="text-muted-foreground">{new Date(earning.date).toLocaleDateString()}</div>
                       <div className="font-medium">${earning.amount.toFixed(2)}</div>
