@@ -133,7 +133,7 @@ export default function UsersPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((user) => (
+                  {users?.map((user) => (
                     <tr key={user.id} className="border-b last:border-0 hover:bg-muted/50">
                       <td className="py-3 px-4 font-medium">{user.name}</td>
                       <td className="py-3 px-4">{user.email}</td>
