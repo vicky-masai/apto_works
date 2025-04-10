@@ -458,6 +458,7 @@ export default function TasksPage() {
                               totalAmount={task.totalAmount}
                               taskProviderId={task.taskProviderId}
                               updatedAt={task.updatedAt}
+                              isAccepted={acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id)}
                             />
                           </div>
                         ))}
@@ -515,6 +516,7 @@ export default function TasksPage() {
                                 totalAmount={task.totalAmount}
                                 taskProviderId={task.taskProviderId}
                                 updatedAt={task.updatedAt}
+                                isAccepted={acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id)}
                               />
                             </div>
                           ))}

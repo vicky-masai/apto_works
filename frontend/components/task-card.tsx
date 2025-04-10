@@ -37,9 +37,10 @@ interface TaskCardProps {
   totalAmount: number
   taskProviderId: string
   updatedAt: string
+  isAccepted?: boolean
 }
 
-export function TaskCard({ id, title, description, price, category, difficulty, estimatedTime, createdAt, stepByStepInstructions, taskStatus, requiredProof, numWorkersNeeded, totalAmount, taskProviderId, updatedAt }: TaskCardProps) {
+export function TaskCard({ id, title, description, price, category, difficulty, estimatedTime, createdAt, stepByStepInstructions, taskStatus, requiredProof, numWorkersNeeded, totalAmount, taskProviderId, updatedAt, isAccepted = false }: TaskCardProps) {
   const [open, setOpen] = useState(false)
   const router = useRouter();
   const token = Cookies.get("token");
@@ -154,11 +155,15 @@ export function TaskCard({ id, title, description, price, category, difficulty, 
               <Button variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={acceptTaskData}>Accept Task</Button>
+              <Button onClick={acceptTaskData} disabled={isAccepted}>
+                {isAccepted ? "Accepted" : "Accept Task"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        <Button onClick={acceptTaskData}>Accept Task</Button>
+        <Button onClick={acceptTaskData} disabled={isAccepted}>
+          {isAccepted ? "Accepted" : "Accept Task"}
+        </Button>
       </CardFooter>
     </Card>
   )
