@@ -284,6 +284,7 @@ const getUserBalance = async (req, res) => {
         totalEarnings: true,
         acceptedTasks: {
           select: {
+            status: true,
             task: {
               select: {
                 taskTitle: true,
@@ -297,6 +298,8 @@ const getUserBalance = async (req, res) => {
       }
     });
 
+    console.log(user);
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -305,7 +308,7 @@ const getUserBalance = async (req, res) => {
       taskName: task.task.taskTitle,
       date: task.task.createdAt,
       amount: task.task.price,
-      status: task.task.taskStatus
+      status: task.status
     }));
 
     res.json({
