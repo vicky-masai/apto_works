@@ -284,9 +284,11 @@ const getUserBalance = async (req, res) => {
         totalEarnings: true,
         acceptedTasks: {
           select: {
+            acceptedId: true,
             status: true,
             task: {
               select: {
+
                 taskTitle: true,
                 createdAt: true,
                 price: true,
@@ -308,7 +310,8 @@ const getUserBalance = async (req, res) => {
       taskName: task.task.taskTitle,
       date: task.task.createdAt,
       amount: task.task.price,
-      status: task.status
+      status: task.status,
+      taskId: task.acceptedId
     }));
 
     res.json({

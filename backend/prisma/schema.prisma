@@ -124,6 +124,7 @@ model Task {
 
 model AcceptedTask {
   id                    String         @id @default(auto()) @map("_id") @db.ObjectId
+  acceptedId            Int?            @unique
   taskId                String         @db.ObjectId
   task                  Task           @relation(fields: [taskId], references: [id])
   userId                String         @db.ObjectId
