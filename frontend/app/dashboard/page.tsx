@@ -9,8 +9,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Footer } from "@/components/Footer"
 import { Header } from "@/components/Header"
+import { useEffect, useState } from "react"
+import { getProfile } from "@/API/profile"
 
 export default function DashboardPage() {
+  const [totalEarned, settotalEarned] = useState(0)
+  const [inProgress, setInProgress] = useState(0)
+  const [completedTasks, setCompletedTasks] = useState(0)
+  const [balance, setBalance] = useState(0)
+
+  useEffect(() => {
+    getProfile().then(profile => {
+      settotalEarned(profile.totalEarnings)
+      setInProgress(profile.inProgress)
+      setCompletedTasks(profile.completedTasks)
+      setBalance(profile.balance)
+    }).catch(error => {
+      console.error("Error fetching profile:", error);
+    });
+  }, []);
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <Header isLoggedIn={true} />
@@ -38,8 +55,10 @@ export default function DashboardPage() {
                 <DollarSign className="h-4 w-4 text-gray-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$45.50</div>
-                <p className="text-xs text-gray-500">+$12.50 from last week</p>
+                <div className="text-2xl font-bold text-green-800">
+                  ₹{totalEarned}
+                </div>
+                {/* <p className="text-xs text-gray-500">+$12.50 from last week</p> */}
               </CardContent>
             </Card>
             <Card className="bg-white border shadow-sm">
@@ -48,8 +67,8 @@ export default function DashboardPage() {
                 <CheckCircle className="h-4 w-4 text-gray-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">12</div>
-                <p className="text-xs text-gray-500">+3 from last week</p>
+                <div className="text-2xl font-bold">{completedTasks}</div>
+                {/* <p className="text-xs text-gray-500">+3 from last week</p> */}
               </CardContent>
             </Card>
             <Card className="bg-white border shadow-sm">
@@ -58,7 +77,7 @@ export default function DashboardPage() {
                 <Clock className="h-4 w-4 text-gray-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">2</div>
+                <div className="text-2xl font-bold">{inProgress}</div>
                 <p className="text-xs text-gray-500">Tasks awaiting completion</p>
               </CardContent>
             </Card>
@@ -68,7 +87,7 @@ export default function DashboardPage() {
                 <Wallet className="h-4 w-4 text-gray-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$110.00</div>
+                <div className="text-2xl font-bold text-green-800">₹{balance}</div>
                 <p className="text-xs text-gray-500">Available for withdrawal</p>
               </CardContent>
             </Card>
