@@ -25,7 +25,7 @@ export default function TasksPage() {
     try {
       console.log("pandey1")
       const response = await getTasks(auth.getToken(), { page: 1, search: "" })
-      setTasks(response)
+      setTasks(response.tasks)
     } catch (error) {
       console.error('Error fetching tasks:', error)
     }
@@ -120,12 +120,12 @@ export default function TasksPage() {
                         <span>{getStatusText(task.taskStatus)}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-4">{getPriorityBadge(task.difficulty)}</td>
+                    <td className="py-3 px-4">{task.difficulty}</td>
                     <td className="py-3 px-4">{task.createdAt}</td>
                     <td className="py-3 px-4">{task.user.name}</td>
                     <td className="py-3 px-4">
                       <div className="flex gap-2">
-                        {task.status === "pending" && (
+                        {task.taskStatus === "Review" && (
                           <>
                             <Button
                               variant="outline"
