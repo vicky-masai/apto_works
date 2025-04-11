@@ -77,6 +77,40 @@ export default function EarningsPage() {
     }, 1500)
   }
 
+  // ... existing code ...
+
+  const downloadEarningsCSV = () => {
+    // Define CSV headers
+    const headers = ['Task ID', 'Task', 'Date', 'Amount', 'Status'];
+    
+    // Convert earnings data to CSV format
+    const csvData = filteredEarnings.map((earning: { taskId: string; taskName: string; date: string; amount: number; status: string; }) => [
+      earning.taskId || '',
+      earning.taskName,
+      new Date(earning.date).toLocaleDateString(),
+      earning.amount.toFixed(2),
+      earning.status
+    ]);
+    
+    // Combine headers and data
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.join(','))
+    ].join('\n');
+    
+    // Create a Blob containing the CSV data
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // Create a download link and trigger download
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `earnings_history_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header isLoggedIn={true} />
@@ -253,7 +287,7 @@ export default function EarningsPage() {
                       <SelectItem value="cancelled">Cancelled</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button variant="outline" size="icon">
+                  <Button variant="outline" size="icon" onClick={downloadEarningsCSV}>
                     <Download className="h-4 w-4" />
                   </Button>
                 </div>
