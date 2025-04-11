@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Calendar, CreditCard, DollarSign, Download } from "lucide-react"
+import { toast } from "react-hot-toast"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -30,6 +31,9 @@ export default function EarningsPage() {
   const [isWithdrawing, setIsWithdrawing] = useState(false)
   const [withdrawSuccess, setWithdrawSuccess] = useState(false)
   const [openDialog, setOpenDialog] = useState(false)
+  const [openPaymentDialog, setOpenPaymentDialog] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState("upi")
+  const [upiId, setUpiId] = useState("")
   const [earningsData, setEarningsData]=useState([]);
   const [filteredEarnings, setFilteredEarnings] = useState(earningsData)
   const [filter, setFilter] = useState("all")
@@ -336,9 +340,66 @@ export default function EarningsPage() {
                   </div>
                 </div>
 
-                <Button variant="outline" className="w-full">
-                  Add Payment Method
-                </Button>
+                <Dialog open={openPaymentDialog} onOpenChange={setOpenPaymentDialog}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full">
+                      Add Payment Method
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Add Payment Method</DialogTitle>
+                      <DialogDescription>
+                        Add a new payment method for withdrawals
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <label htmlFor="payment-method" className="text-sm font-medium">
+                          Payment Method
+                        </label>
+                        <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                          <SelectTrigger id="payment-method">
+                            <SelectValue placeholder="Select method" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="upi">UPI</SelectItem>
+                            <SelectItem value="bank">Bank Account</SelectItem>
+                            <SelectItem value="paypal">PayPal</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {paymentMethod === "upi" && (
+                        <div className="grid gap-2">
+                          <label htmlFor="upi-id" className="text-sm font-medium">
+                            UPI ID
+                          </label>
+                          <Input
+                            id="upi-id"
+                            placeholder="Enter your UPI ID"
+                            value={upiId}
+                            onChange={(e) => setUpiId(e.target.value)}
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setOpenPaymentDialog(false)}>
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          // Handle saving payment method
+                          toast.success("Payment method added successfully");
+                          setOpenPaymentDialog(false);
+                          setUpiId("");
+                        }}
+                      >
+                        Save
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </CardContent>
           </Card>

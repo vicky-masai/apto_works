@@ -6,8 +6,9 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Search, Loader2 } from "lucide-react"
 import { auth } from "@/API/auth"
-import { getUsers, deleteUser } from "@/API/api"
+import { getUsers } from "@/API/api"
 import { useEffect, useState, useRef, useCallback } from "react"
+import { toast } from "react-hot-toast"
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
@@ -34,6 +35,13 @@ export default function UsersPage() {
     });
     if (node) observer.current.observe(node);
   }, [isLoading, hasMore]);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    balance: ""
+  });
 
   const searchFields = [
     { value: "name", label: "Name" },
@@ -126,48 +134,38 @@ export default function UsersPage() {
     setPage(1);
   };
 
-  const onClickDelete = async (e, userId) => {
-    // e.preventDefault();
-    console.log(userId);
-    const data = await deleteUser(auth.getToken(), userId);
-    // alert(data.message);
-    fetchUsers();
-    // console.log(data);
-    // window.location.reload();
+  const handleEdit = (user) => {
+    setEditingUser(user);
+    setEditForm({
+      name: user.name,
+      email: user.email,
+      balance: user.balance
+    });
+    setIsEditDialogOpen(true);
   };
 
-  // Mock data for users
-  // const users = [
-  //   { id: 1, name: "John Doe", email: "john@example.com", role: "Admin", status: "active", joinDate: "2025-01-15" },
-  //   { id: 2, name: "Jane Smith", email: "jane@example.com", role: "User", status: "active", joinDate: "2025-02-20" },
-  //   {
-  //     id: 3,
-  //     name: "Mike Johnson",
-  //     email: "mike@example.com",
-  //     role: "User",
-  //     status: "inactive",
-  //     joinDate: "2025-03-10",
-  //   },
-  //   {
-  //     id: 4,
-  //     name: "Sarah Williams",
-  //     email: "sarah@example.com",
-  //     role: "Moderator",
-  //     status: "active",
-  //     joinDate: "2025-01-05",
-  //   },
-  //   { id: 5, name: "David Brown", email: "david@example.com", role: "User", status: "pending", joinDate: "2025-04-01" },
-  //   { id: 6, name: "Emily Davis", email: "emily@example.com", role: "User", status: "active", joinDate: "2025-02-15" },
-  //   {
-  //     id: 7,
-  //     name: "Robert Wilson",
-  //     email: "robert@example.com",
-  //     role: "Admin",
-  //     status: "active",
-  //     joinDate: "2025-01-20",
-  //   },
-  //   { id: 8, name: "Lisa Taylor", email: "lisa@example.com", role: "User", status: "inactive", joinDate: "2025-03-25" },
-  // ]
+  const handleEditSubmit = async () => {
+    try {
+      // Here you'll add the API call to update user
+      // const response = await updateUser(auth.getToken(), editingUser.id, editForm);
+      
+      // For now, updating locally
+      setUsers(users.map(user => 
+        user.id === editingUser.id 
+          ? { ...user, ...editForm }
+          : user
+      ));
+      
+      setIsEditDialogOpen(false);
+      setEditingUser(null);
+      setEditForm({ name: "", email: "", balance: "" });
+      
+      toast.success("User updated successfully");
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast.error("Failed to update user");
+    }
+  };
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -304,10 +302,19 @@ export default function UsersPage() {
                           })}</td>
                           <td className="py-3 px-4">
                             <div className="flex gap-2">
-                              <Button className="w-fit px-3 py-1 rounded-full" variant="outline" size="sm">
+                              <Button 
+                                className="w-fit px-3 py-1 rounded-full" 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleEdit(user)}
+                              >
                                 Edit
                               </Button>
-                              <Button onClick={(e) => onClickDelete(e, user.id)} className="w-fit px-3 py-1 rounded-full text-red-500 border-red-500 hover:bg-red-50" variant="outline" size="sm">
+                              <Button 
+                                className="w-fit px-3 py-1 rounded-full text-red-500 border-red-500 hover:bg-red-50" 
+                                variant="outline" 
+                                size="sm"
+                              >
                                 Delete
                               </Button>
                             </div>
@@ -328,6 +335,65 @@ export default function UsersPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit User Dialog */}
+      {isEditDialogOpen && editingUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl w-[500px] transform transition-all">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">Edit User</h2>
+              <p className="text-gray-500 mt-1">Update user information</p>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  className="w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Balance</label>
+                <input
+                  type="number"
+                  className="w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={editForm.balance}
+                  onChange={(e) => setEditForm({ ...editForm, balance: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="px-6 py-4 bg-gray-50 rounded-b-xl flex justify-end gap-3">
+              <button
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 shadow-sm"
+                onClick={() => {
+                  setIsEditDialogOpen(false)
+                  setEditingUser(null)
+                  setEditForm({ name: "", email: "", balance: "" })
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 shadow-sm"
+                onClick={handleEditSubmit}
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
