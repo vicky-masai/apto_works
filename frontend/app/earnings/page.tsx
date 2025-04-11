@@ -264,14 +264,15 @@ export default function EarningsPage() {
               <div className="space-y-4">
                 <div className="rounded-md border">
                   <div className="grid grid-cols-5 bg-muted/50 p-3 text-sm font-medium">
+                  <div>Task Id</div>
                     <div>Task</div>
                     <div>Date</div>
                     <div>Amount</div>
                     <div>Status</div>
-                    <div className="text-right">Actions</div>
                   </div>
-                  {filteredEarnings.map((earning: { taskName: string; date: string; amount: number; status: string }, i: number) => (
+                  {filteredEarnings.map((earning: { taskId:number; taskName: string; date: string; amount: number; status: string }, i: number) => (
                     <div key={i} className="grid grid-cols-5 items-center p-3 text-sm border-t">
+                      <div>{(earning?.taskId) || (i+1)}</div>
                       <div className="font-medium">{earning.taskName}</div>
                       <div className="text-muted-foreground">{new Date(earning.date).toLocaleDateString()}</div>
                       <div className="font-medium">${earning.amount.toFixed(2)}</div>
@@ -287,11 +288,6 @@ export default function EarningsPage() {
                         >
                           {earning.status}
                         </Badge>
-                      </div>
-                      <div className="text-right">
-                        <Button variant="ghost" size="sm">
-                          Details
-                        </Button>
                       </div>
                     </div>
                   ))}
