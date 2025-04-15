@@ -8,6 +8,7 @@ import { Search, Loader2 } from "lucide-react"
 import { auth } from "@/API/auth"
 import { getUsers, deleteUser } from "@/API/api"
 import { useEffect, useState, useRef, useCallback } from "react"
+import DeleteModal from "./DeleteModal"
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
@@ -15,7 +16,9 @@ export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [userId, setUserId] = useState(null);
   const [totalPages, setTotalPages] = useState(1);
+  const [isOpen, setIsOpen] = useState(false);
   const [filters, setFilters] = useState({
     role: "",
     status: "",
@@ -126,12 +129,25 @@ export default function UsersPage() {
     setPage(1);
   };
 
-  const onClickDelete = async (e, userId) => {
-    // e.preventDefault();
-    console.log(userId);
+  const handleDeleteConfirmation = async () => {
+    console.log("Confirm");
     const data = await deleteUser(auth.getToken(), userId);
     // alert(data.message);
+    
+    setIsOpen(false);
     fetchUsers();
+
+  }
+
+  const onClickDelete = async (e, userId) => {
+    e.preventDefault();
+    setUserId(userId);
+    console.log(userId);
+    // const data = await deleteUser(auth.getToken(), userId);
+    // alert(data.message);
+    // fetchUsers();
+
+    setIsOpen(true);
     // console.log(data);
     // window.location.reload();
   };
@@ -187,7 +203,9 @@ export default function UsersPage() {
   }
 
   return (
+  
     <div className="space-y-6">
+      <DeleteModal isOpen={isOpen} onCancel={() => setIsOpen(false)} onConfirm={() => handleDeleteConfirmation()} />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Users</h1>
