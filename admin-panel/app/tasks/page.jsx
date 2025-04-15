@@ -2,79 +2,44 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle, Clock, AlertCircle } from "lucide-react"
+import { CheckCircle, Clock, AlertCircle, X, Eye } from "lucide-react"
 import { useEffect, useState } from "react"
 import { getTasks } from "@/API/api"
 import { auth } from "@/API/auth"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState([])
-
   const [isLoading, setIsLoading] = useState(true)
-
-  const getTasksFetch = async () => {
-    try {
-      console.log("pandey1")
-      const response = await getTasks(auth.getToken(), { page: 1, search: "" })
-      setTasks(response.tasks)
-    } catch (error) {
-      console.error('Error fetching tasks:', error)
-    }
-  }
-
-  useEffect(()=>{
-    getTasksFetch()
-  },[])
-
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState(null)
   const [rejectComment, setRejectComment] = useState("")
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case "completed":
-        return <CheckCircle className="h-5 w-5 text-green-500" />
-      case "in-progress":
-        return <Clock className="h-5 w-5 text-blue-500" />
-      case "pending":
-        return <AlertCircle className="h-5 w-5 text-yellow-500" />
-      default:
-        return null
+  const getTasksFetch = async () => {
+    try {
+      const response = await getTasks(auth.getToken(), { page: 1, search: "" })
+      setTasks(response.tasks)
+      setIsLoading(false)
+    } catch (error) {
+      console.error('Error fetching tasks:', error)
+      setIsLoading(false)
     }
   }
 
-  const getStatusText = (status) => {
-    switch (status) {
-      case "completed":
-        return "Completed"
-      case "in-progress":
-        return "In Progress"
-      case "pending":
-        return "Pending"
-      default:
-        return status
-    }
-  }
+  useEffect(() => {
+    getTasksFetch()
+  }, [])
 
-  const getPriorityBadge = (priority) => {
-    switch (priority) {
-      case "high":
-        return <Badge className="w-fit px-3 py-1 rounded-full" variant="destructive">High</Badge>
-      case "medium":
-        return <Badge className="w-fit px-3 py-1 rounded-full" variant="default">Medium</Badge>
-      case "low":
-        return <Badge className="w-fit px-3 py-1 rounded-full" variant="outline">Low</Badge>
-      default:
-        return null
+  const handleApprove = async (taskId) => {
+    try {
+      // Add your API call here for approving task
+      setTasks(tasks.map(task => 
+        task.id === taskId 
+          ? { ...task, taskStatus: 'Approved' }
+          : task
+      ))
+    } catch (error) {
+      console.error('Error approving task:', error)
     }
   }
 
@@ -83,14 +48,35 @@ export default function TasksPage() {
     setIsRejectDialogOpen(true)
   }
 
+  const submitReject = async () => {
+    try {
+      // Add your API call here for rejecting task
+      setTasks(tasks.map(task => 
+        task.id === selectedTask.id 
+          ? { ...task, taskStatus: 'Rejected', rejectionReason: rejectComment }
+          : task
+      ))
+      setIsRejectDialogOpen(false)
+      setRejectComment("")
+      setSelectedTask(null)
+    } catch (error) {
+      console.error('Error rejecting task:', error)
+    }
+  }
+
+  const handleView = (task) => {
+    setSelectedTask(task)
+    setIsViewDialogOpen(true)
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Tasks List</h1>
           <p className="text-muted-foreground">Manage and track all system tasks</p>
         </div>
-        <Button className="w-fit px-3 py-1 rounded-full">Add New Task</Button>
+        <Button className="bg-blue-600 hover:bg-blue-700">Add New Task</Button>
       </div>
 
       <Card>
@@ -112,36 +98,71 @@ export default function TasksPage() {
               </thead>
               <tbody>
                 {tasks.map((task) => (
-                  <tr key={task.id} className="border-b last:border-0 hover:bg-muted/50">
-                    <td className="py-3 px-4">{task.taskTitle}</td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(task.taskStatus)}
-                        <span>{getStatusText(task.taskStatus)}</span>
-                      </div>
+                  <tr key={task.id} className="border-b last:border-0">
+                    <td className="py-4 px-4">{task.taskTitle}</td>
+                    <td className="py-4 px-4">
+                      <Badge 
+                        className={`px-3 py-1 rounded-full ${
+                          task.taskStatus === 'Approved' 
+                            ? 'bg-green-100 text-green-800' 
+                            : task.taskStatus === 'Review'
+                            ? 'bg-blue-100 text-blue-800'
+                            : task.taskStatus === 'Rejected'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        {task.taskStatus}
+                      </Badge>
                     </td>
-                    <td className="py-3 px-4">{task.difficulty}</td>
-                    <td className="py-3 px-4">{task.createdAt}</td>
-                    <td className="py-3 px-4">{task.user.name}</td>
-                    <td className="py-3 px-4">
+                    <td className="py-4 px-4">{task.difficulty}</td>
+                    <td className="py-4 px-4">{task.createdAt}</td>
+                    <td className="py-4 px-4">{task.user.name}</td>
+                    <td className="py-4 px-4">
                       <div className="flex gap-2">
-                        {task.taskStatus === "Review" && (
+                        {task.taskStatus === "Review" ? (
                           <>
                             <Button
+                              onClick={() => handleApprove(task.id)}
+                              className="px-4 py-2 text-sm border border-green-500 text-green-500 hover:bg-green-50 rounded-full"
                               variant="outline"
-                              size="sm"
-                              className="w-fit px-3 py-1 text-green-500 border-green-500 hover:bg-green-50 rounded-full"
                             >
                               Approve
                             </Button>
                             <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-red-500 border-red-500 hover:bg-red-50 rounded-full"
                               onClick={() => handleReject(task)}
+                              className="px-4 py-2 text-sm border border-red-500 text-red-500 hover:bg-red-50 rounded-full"
+                              variant="outline"
                             >
                               Reject
                             </Button>
+                          </>
+                        ) : (
+                          <>
+                            {task.taskStatus === 'Rejected' && (
+                              <div className="flex items-center gap-2">
+                                <Badge 
+                                  className="px-3 py-1.5 rounded-full bg-red-50 text-red-500 border border-red-100"
+                                >
+                                  Rejected
+                                </Badge>
+                                <Button
+                                  onClick={() => handleView(task)}
+                                  className="px-3 py-1.5 text-sm bg-white hover:bg-gray-50 rounded-full flex items-center gap-1.5 border border-gray-200"
+                                  variant="outline"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                  View
+                                </Button>
+                              </div>
+                            )}
+                            {task.taskStatus === 'Approved' && (
+                              <Badge 
+                                className="px-3 py-1.5 rounded-full bg-green-50 text-green-600 border border-green-100"
+                              >
+                                {task.taskStatus}
+                              </Badge>
+                            )}
                           </>
                         )}
                       </div>
@@ -154,43 +175,100 @@ export default function TasksPage() {
         </CardContent>
       </Card>
 
-      {/* Reject Dialog */}
-      <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reject Task</DialogTitle>
-            <DialogDescription>Please provide a reason for rejecting this task.</DialogDescription>
-          </DialogHeader>
-          {selectedTask && (
-            <div className="py-4">
-              <p>
-                <strong>Task:</strong> {selectedTask.title}
-              </p>
-              <Input
-                type="text"
-                placeholder="Enter rejection reason..."
-                value={rejectComment}
-                onChange={(e) => setRejectComment(e.target.value)}
-                className="mt-2"
-              />
+      {/* Custom Reject Dialog */}
+      {isRejectDialogOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg w-[500px]">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Reject Task</h2>
+                <button 
+                  onClick={() => {
+                    setIsRejectDialogOpen(false)
+                    setRejectComment("")
+                    setSelectedTask(null)
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="mt-4">
+                <h4 className="text-sm font-medium mb-2">Rejection Reason</h4>
+                <textarea
+                  placeholder="Enter reason for rejection"
+                  value={rejectComment}
+                  onChange={(e) => setRejectComment(e.target.value)}
+                  className="w-full min-h-[120px] p-3 border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsRejectDialogOpen(false)
+                    setRejectComment("")
+                    setSelectedTask(null)
+                  }}
+                  className="px-6"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={submitReject}
+                  disabled={!rejectComment.trim()}
+                  className="px-6 bg-red-500 hover:bg-red-600 text-white"
+                >
+                  Reject
+                </Button>
+              </div>
             </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              className="bg-red-500 hover:bg-red-600"
-              onClick={() => {
-                // Handle rejection logic here
-                setIsRejectDialogOpen(false)
-              }}
-            >
-              Reject
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      )}
+
+      {isViewDialogOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg w-[500px]">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">View Task Details</h2>
+                <button 
+                  onClick={() => {
+                    setIsViewDialogOpen(false)
+                    setSelectedTask(null)
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-medium">Rejection Reason</h4>
+                  <p className="mt-1 text-gray-600">{selectedTask?.rejectionReason}</p>
+                </div>
+              </div>
+
+              <div className="flex justify-end mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsViewDialogOpen(false)
+                    setSelectedTask(null)
+                  }}
+                  className="px-6"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
