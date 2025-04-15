@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Search, Loader2 } from "lucide-react"
+import { Search, Loader2, X } from "lucide-react"
 import { auth } from "@/API/auth"
 import { getUsers, deleteUser } from "@/API/api"
 import { useEffect, useState, useRef, useCallback } from "react"
@@ -37,6 +37,13 @@ export default function UsersPage() {
     });
     if (node) observer.current.observe(node);
   }, [isLoading, hasMore]);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingUser, setEditingUser] = useState(null)
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    balance: ""
+  })
 
   const searchFields = [
     { value: "name", label: "Name" },
@@ -202,10 +209,129 @@ export default function UsersPage() {
     }
   }
 
+  const handleEdit = (user) => {
+    setEditingUser(user)
+    setEditForm({
+      name: user.status,
+      email: user.email,
+      balance: user.balance
+    })
+    setIsEditDialogOpen(true)
+  }
+
+  const handleEditSubmit = async () => {
+    try {
+      // Add your API call here to update user
+      // const response = await updateUser(auth.getToken(), editingUser.id, editForm);
+      
+      // For now, update locally
+      setUsers(users.map(user => 
+        user.id === editingUser.id 
+          ? { 
+              ...user, 
+              status: editForm.name,
+              email: editForm.email,
+              balance: editForm.balance
+            }
+          : user
+      ))
+      setIsEditDialogOpen(false)
+      setEditingUser(null)
+      setEditForm({ name: "", email: "", balance: "" })
+    } catch (error) {
+      console.error('Error updating user:', error)
+    }
+  }
+
+  const handleFormChange = (field, value) => {
+    setEditForm(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
   return (
   
     <div className="space-y-6">
       <DeleteModal isOpen={isOpen} onCancel={() => setIsOpen(false)} onConfirm={() => handleDeleteConfirmation()} />
+      {isEditDialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/50"></div>
+          <div className="relative bg-white rounded-lg w-[500px] shadow-lg">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold">Edit User Details</h2>
+                <button 
+                  onClick={() => {
+                    setIsEditDialogOpen(false)
+                    setEditingUser(null)
+                    setEditForm({ name: "", email: "", balance: "" })
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Name</label>
+                  <Input
+                    type="text"
+                    placeholder="Enter name"
+                    value={editForm.name}
+                    onChange={(e) => handleFormChange('name', e.target.value)}
+                    className="mt-1.5"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Email Address</label>
+                  <Input
+                    type="email"
+                    placeholder="Enter email"
+                    value={editForm.email}
+                    onChange={(e) => handleFormChange('email', e.target.value)}
+                    className="mt-1.5"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Balance</label>
+                  <Input
+                    type="number"
+                    placeholder="Enter balance"
+                    value={editForm.balance}
+                    onChange={(e) => handleFormChange('balance', e.target.value)}
+                    className="mt-1.5"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-8">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsEditDialogOpen(false)
+                    setEditingUser(null)
+                    setEditForm({ name: "", email: "", balance: "" })
+                  }}
+                  className="px-4 py-2 text-sm"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleEditSubmit}
+                  disabled={!editForm.name.trim() || !editForm.email.trim() || editForm.balance === ""}
+                  className="px-4 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white"
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Users</h1>
@@ -322,12 +448,22 @@ export default function UsersPage() {
                           })}</td>
                           <td className="py-3 px-4">
                             <div className="flex gap-2">
-                              <Button className="w-fit px-3 py-1 rounded-full" variant="outline" size="sm">
+                              <Button
+                                onClick={() => handleEdit(user)}
+                                className="px-4 py-2 text-sm border border-gray-300 hover:bg-gray-50 rounded-full"
+                                variant="outline"
+                              >
                                 Edit
                               </Button>
-                              {user.status == "Active" && <Button onClick={(e) => onClickDelete(e, user.id)} className="w-fit px-3 py-1 rounded-full text-red-500 border-red-500 hover:bg-red-50" variant="outline" size="sm">
-                                Delete
-                              </Button>}
+                              {user.status === "Active" && (
+                                <Button
+                                  onClick={(e) => onClickDelete(e, user.id)}
+                                  className="px-4 py-2 text-sm border border-red-500 text-red-500 hover:bg-red-50 rounded-full"
+                                  variant="outline"
+                                >
+                                  Delete
+                                </Button>
+                              )}
                             </div>
                           </td>
                         </tr>
