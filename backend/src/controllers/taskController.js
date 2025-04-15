@@ -344,12 +344,19 @@ const getAllTasks = async (req, res) => {
       };
     }
 
+
+
     if (minPrice) {
       where.price = {
         ...where.price,
         gte: parseFloat(minPrice)
       };
     }
+
+    where.numWorkersNeeded = {
+      ...where.numWorkersNeeded,
+      gte: 1
+    };
 
     if (maxPrice) {
       where.price = {
