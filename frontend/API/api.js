@@ -211,3 +211,18 @@ export const getAcceptedTasks = async (authToken) => {
     throw error;
   }
 };
+
+// Function to delete a task
+export const deleteTask = async (taskId, authToken) => {
+  try {
+    const response = await axios.delete(`${BASE_URL}/tasks/${taskId}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting task:', error);
+    throw error;
+  }
+};
