@@ -307,7 +307,7 @@ export default function UsersPage() {
                           className="border-b last:border-0 hover:bg-muted/50"
                           ref={index === users.length - 1 ? lastUserElementRef : null}
                         >
-                          <td className="py-3 px-4 font-medium">{user.status}</td>
+                          <td className="py-3 px-4 font-medium">{user.name}</td>
                           <td className="py-3 px-4">{user.email}</td>
                           <td className="py-3 px-4">{user.role || user.userType}</td>
                           <td className="py-3 px-4">{user.balance}</td>
