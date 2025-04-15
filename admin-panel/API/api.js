@@ -11,6 +11,21 @@ const endpoints = {
   tasks: 'tasks',
   deleteUser: 'users',
   getAllWithDrawal: 'withdrawals',
+  login: 'auth/login',
+};
+
+
+export const login = async (email, password) => {
+  try {
+    const response = await axios.post(`http://localhost:4000/api/${endpoints.login}`, {
+      email,
+      password,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error during login:', error);
+    throw error;
+  }
 };
 
 // Function to handle user login

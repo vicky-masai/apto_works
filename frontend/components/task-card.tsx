@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Calendar, Clock, DollarSign, IndianRupee, Tag, Users } from "lucide-react"
+import { Calendar, Clock, DollarSign, IndianRupee, Tag, Users, Trash2 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 
 import { Button } from "@/components/ui/button"
@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { acceptTask } from "@/API/api"
+import { acceptTask, deleteTask } from "@/API/api"
 import Cookies from "js-cookie"
 import { useRouter } from "next/navigation"
 
@@ -38,10 +38,30 @@ interface TaskCardProps {
   taskProviderId: string
   updatedAt: string
   isAccepted?: boolean
+  onDelete?: () => void
 }
 
-export function TaskCard({ id, title, description, price, category, difficulty, estimatedTime, createdAt, stepByStepInstructions, taskStatus, requiredProof, numWorkersNeeded, totalAmount, taskProviderId, updatedAt, isAccepted = false }: TaskCardProps) {
+export function TaskCard({ 
+  id, 
+  title, 
+  description, 
+  price, 
+  category, 
+  difficulty, 
+  estimatedTime, 
+  createdAt, 
+  stepByStepInstructions, 
+  taskStatus, 
+  requiredProof, 
+  numWorkersNeeded, 
+  totalAmount, 
+  taskProviderId, 
+  updatedAt, 
+  isAccepted = false,
+  onDelete
+}: TaskCardProps) {
   const [open, setOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const router = useRouter();
   const token = Cookies.get("token");
   
@@ -55,14 +75,30 @@ export function TaskCard({ id, title, description, price, category, difficulty, 
     }
     
     try {
-      console.log("suraj",id);
       const data = await acceptTask(id, token);
-      console.log("suraj",data.id);
       router.push(`/tasks/${data.id}/accept`);
     } catch (error) {
       console.error("Error accepting task:", error);
     }
   };
+
+  const handleDelete = async () => {
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
+    try {
+      await deleteTask(id, token);
+      setDeleteDialogOpen(false);
+      if (onDelete) {
+        onDelete();
+      }
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
+  };
+
   return (
     <Card className="bg-white border shadow-sm my-3">
       <CardHeader className="pb-3">
@@ -71,9 +107,19 @@ export function TaskCard({ id, title, description, price, category, difficulty, 
             <CardTitle className="text-base sm:text-lg">{title}</CardTitle>
             <CardDescription className="mt-1 text-sm sm:text-base">{description}</CardDescription>
           </div>
-          <div className="flex items-center text-lg font-semibold text-green-600">
-            <IndianRupee className="h-5 w-5 mr-1" />
-            {price.toFixed(2)}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center text-lg font-semibold text-green-600">
+              <IndianRupee className="h-5 w-5 mr-1" />
+              {price.toFixed(2)}
+            </div>
+            {/* <Button
+              variant="ghost"
+              size="icon"
+              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+              onClick={() => setDeleteDialogOpen(true)}
+            >
+              <Trash2 className="h-5 w-5" />
+            </Button> */}
           </div>
         </div>
       </CardHeader>
@@ -142,14 +188,12 @@ export function TaskCard({ id, title, description, price, category, difficulty, 
                   <li>{stepByStepInstructions}</li>
                 </ul>
               </div>
-
-              { requiredProof &&
-              <div>
-                <h4 className="text-sm font-medium">Proof Required</h4>
-                <p className="text-sm text-gray-500 mt-1">
-                  {requiredProof || ""}
-                </p>
-              </div>}
+              {requiredProof && (
+                <div>
+                  <h4 className="text-sm font-medium">Proof Required</h4>
+                  <p className="text-sm text-gray-500 mt-1">{requiredProof}</p>
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>
@@ -165,6 +209,29 @@ export function TaskCard({ id, title, description, price, category, difficulty, 
           {isAccepted ? "Accepted" : "Accept Task"}
         </Button>
       </CardFooter>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-white">
+          <DialogHeader>
+            <DialogTitle>Delete Task</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this task? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

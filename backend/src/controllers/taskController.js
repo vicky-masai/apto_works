@@ -344,12 +344,19 @@ const getAllTasks = async (req, res) => {
       };
     }
 
+
+
     if (minPrice) {
       where.price = {
         ...where.price,
         gte: parseFloat(minPrice)
       };
     }
+
+    where.numWorkersNeeded = {
+      ...where.numWorkersNeeded,
+      gte: 1
+    };
 
     if (maxPrice) {
       where.price = {
@@ -484,12 +491,25 @@ const getTaskById = async (req, res) => {
   }
 };
 
+
+let currentTaskId = 0;
+
+const generateTaskId = () => {
+    if (currentTaskId >= 10000) {
+        throw new Error("Max task limit reached");
+    }
+    return ++currentTaskId;
+};
+
+
 const acceptTask = async (req, res) => {
   try {
     const { taskId } = req.params;
     const task = await prisma.task.findUnique({
       where: { id: taskId }
     });
+
+
 
     if (!task || task.taskStatus !== 'Published') {
       return res.status(400).json({ error: 'Task not available' });
@@ -504,7 +524,8 @@ const acceptTask = async (req, res) => {
     const existingAcceptance = await prisma.acceptedTask.findFirst({
       where: {
         userId: req.user.id,
-        taskId
+        taskId,
+        acceptedId: generateTaskId()
       }
     });
 

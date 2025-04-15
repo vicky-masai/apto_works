@@ -437,31 +437,33 @@ export default function TasksPage() {
                       ))
                     ) : (
                       <>
-                        {tasks.map((task, index) => (
-                          <div
-                            key={task.id}
-                            ref={index === tasks.length - 1 ? lastTaskElementRef : null}
-                          >
-                            <TaskCard
-                              id={task.id}
-                              title={task.taskTitle}
-                              description={task.taskDescription}
-                              price={task.price}
-                              category={task.category}
-                              difficulty={task.difficulty}
-                              estimatedTime={task.estimatedTime}
-                              createdAt={task.createdAt}
-                              stepByStepInstructions={task.stepByStepInstructions}
-                              taskStatus={task.taskStatus}
-                              requiredProof={task.requiredProof}
-                              numWorkersNeeded={task.numWorkersNeeded}
-                              totalAmount={task.totalAmount}
-                              taskProviderId={task.taskProviderId}
-                              updatedAt={task.updatedAt}
-                              isAccepted={acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id)}
-                            />
-                          </div>
-                        ))}
+                        {tasks
+                          .filter(task => !acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id))
+                          .map((task, index) => (
+                            <div
+                              key={task.id}
+                              ref={index === tasks.length - 1 ? lastTaskElementRef : null}
+                            >
+                              <TaskCard
+                                id={task.id}
+                                title={task.taskTitle}
+                                description={task.taskDescription}
+                                price={task.price}
+                                category={task.category}
+                                difficulty={task.difficulty}
+                                estimatedTime={task.estimatedTime}
+                                createdAt={task.createdAt}
+                                stepByStepInstructions={task.stepByStepInstructions}
+                                taskStatus={task.taskStatus}
+                                requiredProof={task.requiredProof}
+                                numWorkersNeeded={task.numWorkersNeeded}
+                                totalAmount={task.totalAmount}
+                                taskProviderId={task.taskProviderId}
+                                updatedAt={task.updatedAt}
+                                isAccepted={acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id)}
+                              />
+                            </div>
+                          ))}
                         {tasks.length === 0 && !isLoading && (
                           <div className="text-center py-8 text-gray-500">
                             No tasks found. Try adjusting your filters.
@@ -495,31 +497,33 @@ export default function TasksPage() {
                         ))
                       ) : (
                         <>
-                          {tasks.map((task, index) => (
-                            <div
-                              key={task.id}
-                              ref={index === tasks.length - 1 ? lastTaskElementRef : null}
-                            >
-                              <TaskCard
-                                id={task.id}
-                                title={task.taskTitle}
-                                description={task.taskDescription}
-                                price={task.price}
-                                category={task.category}
-                                difficulty={task.difficulty}
-                                estimatedTime={task.estimatedTime}
-                                createdAt={task.createdAt}
-                                stepByStepInstructions={task.stepByStepInstructions}
-                                taskStatus={task.taskStatus}
-                                requiredProof={task.requiredProof}
-                                numWorkersNeeded={task.numWorkersNeeded}
-                                totalAmount={task.totalAmount}
-                                taskProviderId={task.taskProviderId}
-                                updatedAt={task.updatedAt}
-                                isAccepted={acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id)}
-                              />
-                            </div>
-                          ))}
+                          {tasks
+                            .filter(task => !acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id))
+                            .map((task, index) => (
+                              <div
+                                key={task.id}
+                                ref={index === tasks.length - 1 ? lastTaskElementRef : null}
+                              >
+                                <TaskCard
+                                  id={task.id}
+                                  title={task.taskTitle}
+                                  description={task.taskDescription}
+                                  price={task.price}
+                                  category={task.category}
+                                  difficulty={task.difficulty}
+                                  estimatedTime={task.estimatedTime}
+                                  createdAt={task.createdAt}
+                                  stepByStepInstructions={task.stepByStepInstructions}
+                                  taskStatus={task.taskStatus}
+                                  requiredProof={task.requiredProof}
+                                  numWorkersNeeded={task.numWorkersNeeded}
+                                  totalAmount={task.totalAmount}
+                                  taskProviderId={task.taskProviderId}
+                                  updatedAt={task.updatedAt}
+                                  isAccepted={acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id)}
+                                />
+                              </div>
+                            ))}
                           {tasks.length === 0 && !isLoading && (
                             <div className="text-center py-8 text-gray-500">
                               No tasks found. Try adjusting your filters.
