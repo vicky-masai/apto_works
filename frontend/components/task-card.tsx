@@ -112,14 +112,14 @@ export function TaskCard({
               <IndianRupee className="h-5 w-5 mr-1" />
               {price.toFixed(2)}
             </div>
-            <Button
+            {/* <Button
               variant="ghost"
               size="icon"
               className="text-red-500 hover:text-red-700 hover:bg-red-50"
               onClick={() => setDeleteDialogOpen(true)}
             >
               <Trash2 className="h-5 w-5" />
-            </Button>
+            </Button> */}
           </div>
         </div>
       </CardHeader>

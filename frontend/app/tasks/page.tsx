@@ -461,11 +461,6 @@ export default function TasksPage() {
                                 taskProviderId={task.taskProviderId}
                                 updatedAt={task.updatedAt}
                                 isAccepted={acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id)}
-                                onDelete={() => {
-                                  // Refresh the tasks list after deletion
-                                  const updatedTasks = tasks.filter(t => t.id !== task.id);
-                                  setTasks(updatedTasks);
-                                }}
                               />
                             </div>
                           ))}
@@ -526,11 +521,6 @@ export default function TasksPage() {
                                   taskProviderId={task.taskProviderId}
                                   updatedAt={task.updatedAt}
                                   isAccepted={acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id)}
-                                  onDelete={() => {
-                                    // Refresh the tasks list after deletion
-                                    const updatedTasks = tasks.filter(t => t.id !== task.id);
-                                    setTasks(updatedTasks);
-                                  }}
                                 />
                               </div>
                             ))}
