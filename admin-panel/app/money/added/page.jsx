@@ -7,80 +7,59 @@ import { Input } from "@/components/ui/input"
 import { Search } from "lucide-react"
 import { useState } from "react"
 import { toast } from "react-hot-toast"
-
+import { getTransactions, updateTransactionStatus } from "@/API/api"
+import { auth } from "@/API/auth"
+import { useEffect } from "react"
 export default function AddedMoneyPage() {
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [selectedTransaction, setSelectedTransaction] = useState(null)
   const [rejectReason, setRejectReason] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [type, setType] = useState('Add')
+  const [status, setStatus] = useState('')
+
+  
 
   // Mock data for added money transactions
-  const [transactions, setTransactions] = useState([
-    {
-      id: 1,
-      userId: 1,
-      userName: "John Doe",
-      amount: 500,
-      method: "UPI",
-      reference: "REF123456",
-      date: "2025-04-08",
-      status: "pending",
-      upiId: "john@upi",
-      companyUpiId: "company@upi",
-      userUpiId: "john@personal",
-      screenshotUrl: "https://example.com/screenshot1.jpg",
-      rejectReason: "",
-    },
-    {
-      id: 2,
-      userId: 2,
-      userName: "Jane Smith",
-      amount: 1000,
-      method: "UPI",
-      reference: "REF789012",
-      date: "2025-04-07",
-      status: "pending",
-      upiId: "jane@upi",
-      companyUpiId: "company@upi",
-      userUpiId: "jane@personal",
-      screenshotUrl: "https://example.com/screenshot2.jpg",
-      rejectReason: "",
-    },
-    {
-      id: 3,
-      userId: 3,
-      userName: "Mike Johnson",
-      amount: 250,
-      method: "UPI",
-      reference: "REF345678",
-      date: "2025-04-06",
-      status: "completed",
-      upiId: "mike@upi",
-      companyUpiId: "company@upi",
-      userUpiId: "mike@personal",
-      screenshotUrl: "https://example.com/screenshot3.jpg",
-    },
-    {
-      id: 4,
-      userId: 4,
-      userName: "Sarah Williams",
-      amount: 750,
-      method: "UPI",
-      reference: "REF901234",
-      date: "2025-04-05",
-      status: "completed",
-      upiId: "sarah@upi",
-      companyUpiId: "company@upi",
-      userUpiId: "sarah@personal",
-      screenshotUrl: "https://example.com/screenshot4.jpg",
-    }
-  ])
+  const [transactions, setTransactions] = useState([])
 
-  const handleAccept = (transaction) => {
-    setTransactions(transactions.map(t => 
-      t.id === transaction.id ? { ...t, status: "completed" } : t
-    ))
-    toast.success("Transaction accepted successfully")
+  const fetchTransactions = async () => {
+    setIsLoading(true)
+    try {
+      const response = await getTransactions(auth.getToken(), {
+        type: type,
+        status: status,
+        search: search,
+        page: 1,
+        limit: 10000
+      });
+      setTransactions(response.transactions);
+    } catch (error) {
+      toast.error("Failed to fetch transactions")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [search, type, status]);
+
+  const handleAccept = async(transaction) => {
+    // setTransactions(transactions.map(t => 
+    //   t.id === transaction.id ? { ...t, status: "completed" } : t
+    // ))
+
+    const response = await updateTransactionStatus(auth.getToken(),transaction.id,"Approved",null);
+    await fetchTransactions();
+    if(response.success){
+      toast.success("Transaction accepted successfully")
+    }else{
+      toast.error("Transaction not accepted")
+    } 
   }
 
   const handleReject = (transaction) => {
@@ -88,21 +67,29 @@ export default function AddedMoneyPage() {
     setIsRejectDialogOpen(true)
   }
 
-  const handleRejectConfirm = () => {
+  const handleRejectConfirm = async() => {
     if (!rejectReason.trim()) {
       toast.error("Please provide a reason for rejection")
       return
     }
 
-    setTransactions(transactions.map(t => 
-      t.id === selectedTransaction.id 
-        ? { ...t, status: "rejected", rejectReason: rejectReason } 
-        : t
-    ))
+    // setTransactions(transactions.map(t => 
+    //   t.id === selectedTransaction.id 
+    //     ? { ...t, status: "rejected", rejectReason: rejectReason } 
+    //     : t
+    // ))
+
+    const response = await updateTransactionStatus(auth.getToken(),selectedTransaction.id,"Rejected",rejectReason);
+    await fetchTransactions();
+    if(response.success){
+      toast.success("Transaction rejected successfully")
+    }else{
+      toast.error("Transaction not rejected")
+    }
     setIsRejectDialogOpen(false)
     setRejectReason("")
     setSelectedTransaction(null)
-    toast.success("Transaction rejected successfully")
+    
   }
 
   const handleView = (transaction) => {
@@ -112,15 +99,15 @@ export default function AddedMoneyPage() {
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case "completed":
+      case "Completed":
         return <Badge className="w-fit bg-green-500 px-3 py-1 text-white">Completed</Badge>
-      case "pending":
+      case "Pending":
         return (
           <Badge variant="outline" className="w-fit px-3 py-1 text-yellow-500 border-yellow-500">
             Pending
           </Badge>
         )
-      case "rejected":
+      case "Rejected":
         return <Badge variant="destructive" className="w-fit bg-red-100 text-red-700 border border-red-200 px-3 py-1">Rejected</Badge>
       default:
         return null
@@ -147,11 +134,20 @@ export default function AddedMoneyPage() {
               type="search" 
               placeholder="Search transactions..." 
               className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <Button variant="outline" className="border-gray-200 hover:bg-gray-50 rounded-full font-medium transition-all duration-200 flex items-center gap-2">
-            Filter
-          </Button>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Completed">Completed</option>
+            <option value="Rejected">Rejected</option>
+          </select>
         </div>
 
         <Card className="shadow-sm border-gray-200">
@@ -160,61 +156,67 @@ export default function AddedMoneyPage() {
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">ID</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">User</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Amount</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Company UPI</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">User UPI</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Reference</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Date</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Status</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactions.map((transaction) => (
-                    <tr key={transaction.id} className="border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors">
-                      <td className="py-4 px-6">#{transaction.id}</td>
-                      <td className="py-4 px-6 font-medium text-gray-900">{transaction.userName}</td>
-                      <td className="py-4 px-6 font-medium">₹{transaction.amount.toFixed(2)}</td>
-                      <td className="py-4 px-6 text-gray-600">{transaction.companyUpiId}</td>
-                      <td className="py-4 px-6 text-gray-600">{transaction.userUpiId}</td>
-                      <td className="py-4 px-6 font-mono text-sm text-gray-600">{transaction.reference}</td>
-                      <td className="py-4 px-6 text-gray-600">{transaction.date}</td>
-                      <td className="py-4 px-6">{getStatusBadge(transaction.status)}</td>
-                      <td className="py-4 px-6">
-                        <div className="flex gap-2">
-                          <button 
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 shadow-sm"
-                            onClick={() => handleView(transaction)}
-                          >
-                            View
-                          </button>
-                          {transaction.status === "pending" && (
-                            <>
-                              <button 
-                                className="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-full hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 shadow-sm"
-                                onClick={() => handleAccept(transaction)}
-                              >
-                                Accept
-                              </button>
-                              <button 
-                                className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 shadow-sm"
-                                onClick={() => handleReject(transaction)}
-                              >
-                                Reject
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
+              {isLoading ? (
+                <div className="flex items-center justify-center p-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : (
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">ID</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">User</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Amount</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Company UPI</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">User UPI</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Reference</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Date</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Status</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {transactions.map((transaction) => (
+                      <tr key={transaction.id} className="border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors">
+                        <td className="py-4 px-6">#{transaction.id}</td>
+                        <td className="py-4 px-6 font-medium text-gray-900">{transaction.user.name}</td>
+                        <td className="py-4 px-6 font-medium">₹{transaction.amount.toFixed(2)}</td>
+                        <td className="py-4 px-6 text-gray-600">{transaction.companyUPI}</td>
+                        <td className="py-4 px-6 text-gray-600">{transaction.userUPI}</td>
+                        <td className="py-4 px-6 font-mono text-sm text-gray-600">{transaction.reference}</td>
+                        <td className="py-4 px-6 text-gray-600">{transaction.createdAt}</td>
+                        <td className="py-4 px-6">{getStatusBadge(transaction.status)}</td>
+                        <td className="py-4 px-6">
+                          <div className="flex gap-2">
+                            <button 
+                              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 shadow-sm"
+                              onClick={() => handleView(transaction)}
+                            >
+                              View
+                            </button>
+                            {transaction.status === "Pending" && (
+                              <>
+                                <button 
+                                  className="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-full hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 shadow-sm"
+                                  onClick={() => handleAccept(transaction)}
+                                >
+                                  Accept
+                                </button>
+                                <button 
+                                  className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 shadow-sm"
+                                  onClick={() => handleReject(transaction)}
+                                >
+                                  Reject
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -275,7 +277,7 @@ export default function AddedMoneyPage() {
                     </p>
                     <p className="flex justify-between">
                       <span className="text-gray-600">User:</span>
-                      <span className="font-medium text-gray-900">{selectedTransaction.userName}</span>
+                      <span className="font-medium text-gray-900">{selectedTransaction.name}</span>
                     </p>
                     <p className="flex justify-between">
                       <span className="text-gray-600">Amount:</span>
@@ -283,11 +285,11 @@ export default function AddedMoneyPage() {
                     </p>
                     <p className="flex justify-between">
                       <span className="text-gray-600">Company UPI ID:</span>
-                      <span className="font-medium text-gray-900">{selectedTransaction.companyUpiId}</span>
+                      <span className="font-medium text-gray-900">{selectedTransaction.companyUPI}</span>
                     </p>
                     <p className="flex justify-between">
                       <span className="text-gray-600">User UPI ID:</span>
-                      <span className="font-medium text-gray-900">{selectedTransaction.userUpiId}</span>
+                      <span className="font-medium text-gray-900">{selectedTransaction.userUPI}</span>
                     </p>
                     <p className="flex justify-between">
                       <span className="text-gray-600">Reference:</span>
@@ -295,7 +297,7 @@ export default function AddedMoneyPage() {
                     </p>
                     <p className="flex justify-between">
                       <span className="text-gray-600">Date:</span>
-                      <span className="font-medium text-gray-900">{selectedTransaction.date}</span>
+                      <span className="font-medium text-gray-900">{selectedTransaction.createdAt}</span>
                     </p>
                     <p className="flex justify-between">
                       <span className="text-gray-600">Status:</span>
@@ -306,15 +308,15 @@ export default function AddedMoneyPage() {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Screenshot</h3>
                   <img 
-                    src={selectedTransaction.screenshotUrl} 
+                    src={selectedTransaction.proof} 
                     alt="Payment Screenshot" 
                     className="w-full rounded-lg border border-gray-200 shadow-sm"
                   />
                 </div>
-                {selectedTransaction.status === "rejected" && (
+                {selectedTransaction.status === "Rejected" && (
                   <div className="col-span-2 bg-red-50 p-6 rounded-lg">
                     <h3 className="text-lg font-semibold text-red-900 mb-2">Rejection Reason</h3>
-                    <p className="text-red-700">{selectedTransaction.rejectReason}</p>
+                    <p className="text-red-700">{selectedTransaction.rejectedReason}</p>
                   </div>
                 )}
               </div>

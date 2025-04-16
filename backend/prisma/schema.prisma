@@ -47,8 +47,8 @@ enum TransactionType {
 
 enum TransactionStatus {
   Pending
-  Completed
   Approved
+  Completed
   Rejected
 }
 
@@ -148,7 +148,11 @@ model Transaction {
   amount          Float
   type            TransactionType
   method          PaymentMethod?
+  companyUPI     String?
+  userUPI        String?
   reference       String?
+  rejectedReason  String?
+  proof           String?
   accountDetails  String?
   status          TransactionStatus @default(Pending)
   createdAt       DateTime         @default(now())

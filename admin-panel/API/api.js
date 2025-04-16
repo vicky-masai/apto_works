@@ -13,6 +13,7 @@ const endpoints = {
   getAllWithDrawal: 'withdrawals',
   login: 'auth/login',
   taskPUT: 'tasks',
+  transactions: 'transactions',
 };
 
 
@@ -174,7 +175,7 @@ export const rejectTask = async (authToken, taskId, rejectedReason) => {
 };
 
 
-const updateUser = async (authToken, userId, userData) => {
+export const updateUser = async (authToken, userId, userData) => {
   try {
     const response = await axios.put(`${BASE_URL}/${endpoints.users}/${userId}`, userData, {
       headers: {
@@ -186,4 +187,41 @@ const updateUser = async (authToken, userId, userData) => {
     throw error;
   }
 };
-  
+
+export const getTransactions = async (authToken,params = {}) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/${endpoints.transactions}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`  
+      },
+      params: {
+        type: params.type || 'Add',
+        status: params.status || '',
+        search: params.search || '',
+        page: params.page || 1,
+        limit: params.limit || 10000
+      }
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+
+export const updateTransactionStatus = async (authToken, transactionId, status, rejectionReason) => {
+  try {
+    const response = await axios.put(`${BASE_URL}/${endpoints.transactions}/${transactionId}`, {
+      status,
+      rejectionReason
+    }, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`  
+      }
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+

@@ -131,15 +131,15 @@ const getUsers = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, role, status } = req.body;
+    const { name, email,balance } = req.body;
     
     const user = await prisma.user.update({
       where: { id },
       data: { 
         name, 
         email, 
-        userType: role, 
-        status 
+        balance:parseFloat(balance)
+
       }
     });
     
@@ -254,7 +254,8 @@ const updateTask = async (req, res) => {
 // Money Management
 const getTransactions = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = '', type, status } = req.query;
+    const { page = 1, limit = 10000, search = '', type, status } = req.query;
+    console.log(search);
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const whereClause = {};
@@ -348,10 +349,10 @@ const getWithdrawals = async (req, res) => {
   }
 };
 
-const updateWithdrawalStatus = async (req, res) => {
+const updateTransactionsStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, rejectionReason } = req.body;
     
     // Get transaction before update to get amount and userId
     const transaction = await prisma.transaction.findUnique({
@@ -361,7 +362,10 @@ const updateWithdrawalStatus = async (req, res) => {
     // Update transaction status
     const withdrawal = await prisma.transaction.update({
       where: { id },
-      data: { status }
+      data: { 
+        status,
+        rejectedReason: status === 'Rejected' ? rejectionReason : null
+      }
     });
     
     // If approved, update user's balance
@@ -392,5 +396,5 @@ module.exports = {
   updateTask,
   getTransactions,
   getWithdrawals,
-  updateWithdrawalStatus
+  updateTransactionsStatus
 }; 
