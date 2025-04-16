@@ -40,6 +40,10 @@ export default function EarningsPage() {
   const [totalEarned, settotalEarned]= useState(0);
   const [availableBalance, setAvailableBalance] = useState(0);
   const [pendingBalance, setPendingBalance] = useState(0);
+  const [upiAccounts, setUpiAccounts] = useState([
+    { id: 1, upiId: "user@upi", isDefault: true }
+  ])
+
   useEffect(() => {
     if (filter === "all") {
       setFilteredEarnings(earningsData)
@@ -81,8 +85,6 @@ export default function EarningsPage() {
     }, 1500)
   }
 
-  // ... existing code ...
-
   const downloadEarningsCSV = () => {
     // Define CSV headers
     const headers = ['Task ID', 'Task', 'Date', 'Amount', 'Status'];
@@ -114,6 +116,54 @@ export default function EarningsPage() {
     link.click();
     document.body.removeChild(link);
   };
+
+  const handleAddUpi = () => {
+    if (!upiId.trim()) {
+      toast.error("Please enter a valid UPI ID")
+      return
+    }
+
+    // Check for duplicate UPI
+    if (upiAccounts.some(acc => acc.upiId === upiId)) {
+      toast.error("This UPI ID already exists")
+      return
+    }
+
+    const newUpi = {
+      id: Date.now(),
+      upiId: upiId,
+      isDefault: upiAccounts.length === 0
+    }
+
+    setUpiAccounts([...upiAccounts, newUpi])
+    setUpiId("")
+    setOpenPaymentDialog(false)
+    toast.success("UPI added successfully")
+  }
+
+  const makeDefault = (id: number) => {
+    setUpiAccounts(upiAccounts.map(acc => ({
+      ...acc,
+      isDefault: acc.id === id
+    })))
+  }
+
+  const removeUpi = (id: number) => {
+    const isDefault = upiAccounts.find(acc => acc.id === id)?.isDefault
+    if (isDefault && upiAccounts.length > 1) {
+      toast.error("Please set another UPI as default first")
+      return
+    }
+    
+    setUpiAccounts(prev => {
+      const filtered = prev.filter(acc => acc.id !== id)
+      // If we removed default and have other UPIs, make first one default
+      if (isDefault && filtered.length > 0) {
+        filtered[0].isDefault = true
+      }
+      return filtered
+    })
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -337,95 +387,94 @@ export default function EarningsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Payment Methods</CardTitle>
-              <CardDescription>Manage your withdrawal methods</CardDescription>
+              <CardDescription>Manage your UPI accounts for withdrawals</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-blue-100 p-2 rounded-md">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="text-blue-600"
-                      >
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                        <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-                      </svg>
+                {upiAccounts.map((account) => (
+                  <div key={account.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-blue-100 p-2 rounded-md">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="text-blue-600"
+                        >
+                          <rect width="20" height="12" x="2" y="6" rx="2" />
+                          <path d="M12 12h.01" />
+                          <path d="M2 12h20" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-medium">UPI ID</div>
+                        <div className="text-sm text-muted-foreground">{account.upiId}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-medium">PayPal</div>
-                      <div className="text-sm text-muted-foreground">user@example.com</div>
+                    <div className="flex items-center gap-2">
+                      {account.isDefault ? (
+                        <Badge variant="secondary" className="bg-blue-50 text-blue-700">Default</Badge>
+                      ) : (
+                        <>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => makeDefault(account.id)}
+                          >
+                            Make Default
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="text-red-500 hover:bg-red-50"
+                            onClick={() => removeUpi(account.id)}
+                          >
+                            Remove
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
-                  <div>
-                    <Badge>Default</Badge>
-                  </div>
-                </div>
+                ))}
 
                 <Dialog open={openPaymentDialog} onOpenChange={setOpenPaymentDialog}>
                   <DialogTrigger asChild>
                     <Button variant="outline" className="w-full">
-                      Add Payment Method
+                      Add New UPI
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                      <DialogTitle>Add Payment Method</DialogTitle>
+                      <DialogTitle>Add UPI Account</DialogTitle>
                       <DialogDescription>
-                        Add a new payment method for withdrawals
+                        Enter your UPI ID to add a new payment method
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       <div className="grid gap-2">
-                        <label htmlFor="payment-method" className="text-sm font-medium">
-                          Payment Method
+                        <label htmlFor="upi-id" className="text-sm font-medium">
+                          UPI ID
                         </label>
-                        <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                          <SelectTrigger id="payment-method">
-                            <SelectValue placeholder="Select method" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="upi">UPI</SelectItem>
-                            <SelectItem value="bank">Bank Account</SelectItem>
-                            <SelectItem value="paypal">PayPal</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <Input
+                          id="upi-id"
+                          placeholder="Enter your UPI ID (e.g. name@upi)"
+                          value={upiId}
+                          onChange={(e) => setUpiId(e.target.value)}
+                        />
                       </div>
-                      {paymentMethod === "upi" && (
-                        <div className="grid gap-2">
-                          <label htmlFor="upi-id" className="text-sm font-medium">
-                            UPI ID
-                          </label>
-                          <Input
-                            id="upi-id"
-                            placeholder="Enter your UPI ID"
-                            value={upiId}
-                            onChange={(e) => setUpiId(e.target.value)}
-                          />
-                        </div>
-                      )}
                     </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setOpenPaymentDialog(false)}>
                         Cancel
                       </Button>
-                      <Button
-                        onClick={() => {
-                          // Handle saving payment method
-                          toast.success("Payment method added successfully");
-                          setOpenPaymentDialog(false);
-                          setUpiId("");
-                        }}
-                      >
-                        Save
+                      <Button onClick={handleAddUpi}>
+                        Add UPI
                       </Button>
                     </DialogFooter>
                   </DialogContent>
