@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { getTransactions } from "@/API/api"
+import { updateTransactionStatus } from "@/API/api"
 import { auth } from "@/API/auth"
 import { useEffect } from "react"
 import { Search, CheckCircle, XCircle, Plus } from "lucide-react"
@@ -75,23 +76,39 @@ export default function WithdrawMoneyPage() {
     setShowAddDialog(false)
   }
 
-  const handleApprove = (withdrawal) => {
-    setWithdrawals(withdrawals.map(w => 
-      w.id === withdrawal.id ? { ...w, status: "Completed" } : w
-    ))
+  const handleApprove = async(withdrawal) => {
+    // setWithdrawals(withdrawals.map(w => 
+    //   w.id === withdrawal.id ? { ...w, status: "Completed" } : w
+    // ))
+
+    const response = await updateTransactionStatus(auth.getToken(),withdrawal.id,"Approved",null);
+    await fetchWithdrawals();
+    if(response.success){
+      toast.success("Transaction accepted successfully")
+    }else{
+      toast.error("Transaction not accepted")
+    }
   }
 
-  const handleReject = () => {
+  const handleReject = async() => {
     if (!rejectionReason.trim()) {
       alert("Please provide a rejection reason")
       return
     }
     
-    setWithdrawals(withdrawals.map(w => 
-      w.id === selectedWithdrawal.id 
-        ? { ...w, status: "Rejected", rejectionReason: rejectionReason } 
-        : w
-    ))
+    // setWithdrawals(withdrawals.map(w => 
+    //   w.id === selectedWithdrawal.id 
+    //     ? { ...w, status: "Rejected", rejectionReason: rejectionReason } 
+    //     : w
+    // ))
+
+    const response = await updateTransactionStatus(auth.getToken(),selectedWithdrawal.id,"Rejected",rejectionReason);
+    await fetchWithdrawals();
+    if(response.success){
+      toast.success("Transaction rejected successfully")
+    }else{
+      toast.error("Transaction not rejected")
+    } 
     setRejectionReason("")
     setShowRejectDialog(false)
     setSelectedWithdrawal(null)
@@ -157,7 +174,7 @@ export default function WithdrawMoneyPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  UPI ID
+                  UPI IDs
                 </label>
                 <input
                   required
@@ -253,7 +270,7 @@ export default function WithdrawMoneyPage() {
                   <div className="mt-6">
                     <h3 className="text-lg font-semibold mb-2 text-red-600">Rejection Reason</h3>
                     <p className="text-red-600 bg-red-50 p-3 rounded">
-                      {selectedWithdrawal.rejectionReason}
+                      {selectedWithdrawal.rejectedReason}
                     </p>
                   </div>
                 )}
@@ -261,9 +278,9 @@ export default function WithdrawMoneyPage() {
 
               <div>
                 <h3 className="text-lg font-semibold mb-4">Payment Screenshot</h3>
-                {selectedWithdrawal.screenshot ? (
+                {selectedWithdrawal.proof ? (
                   <img 
-                    src={selectedWithdrawal.screenshot} 
+                    src={selectedWithdrawal.proof} 
                     alt="Payment Screenshot" 
                     className="w-full rounded-lg border"
                   />
@@ -362,14 +379,14 @@ export default function WithdrawMoneyPage() {
             {withdrawals.map((withdrawal) => (
               <tr key={withdrawal.id} className="border-b last:border-b-0">
                 <td className="p-4">#{withdrawal.id}</td>
-                <td className="p-4">{withdrawal.userName}</td>
+                <td className="p-4">{withdrawal.user.name}</td>
                 <td className="p-4">₹{withdrawal.amount}</td>
-                <td className="p-4">{withdrawal.userUpiId}</td>
-                <td className="p-4">{withdrawal.date}</td>
+                <td className="p-4">{withdrawal.userUPI}</td>
+                <td className="p-4">{withdrawal.createdAt}</td>
                 <td className="p-4">
                   <span className={`inline-block px-2 py-1 rounded-full text-sm
-                    ${withdrawal.status === 'approved' ? 'bg-green-100 text-green-800' : 
-                      withdrawal.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                    ${withdrawal.status === 'Approved' ? 'bg-green-100 text-green-800' : 
+                      withdrawal.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
                       'bg-red-100 text-red-800'}`}
                   >
                     {withdrawal.status.charAt(0).toUpperCase() + withdrawal.status.slice(1)}
@@ -377,7 +394,7 @@ export default function WithdrawMoneyPage() {
                 </td>
                 <td className="p-4">
                   <div className="flex gap-2">
-                    {withdrawal.status === "pending" && (
+                    {withdrawal.status === "Pending" && (
                       <>
                         <button 
                           onClick={() => handleApprove(withdrawal)}

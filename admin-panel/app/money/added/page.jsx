@@ -16,6 +16,9 @@ export default function AddedMoneyPage() {
   const [selectedTransaction, setSelectedTransaction] = useState(null)
   const [rejectReason, setRejectReason] = useState("")
   const [isLoading, setIsLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [type, setType] = useState('Add')
+  const [status, setStatus] = useState('')
 
   
 
@@ -25,7 +28,13 @@ export default function AddedMoneyPage() {
   const fetchTransactions = async () => {
     setIsLoading(true)
     try {
-      const response = await getTransactions(auth.getToken(),{type:'Add'});
+      const response = await getTransactions(auth.getToken(), {
+        type: type,
+        status: status,
+        search: search,
+        page: 1,
+        limit: 10000
+      });
       setTransactions(response.transactions);
     } catch (error) {
       toast.error("Failed to fetch transactions")
@@ -37,7 +46,7 @@ export default function AddedMoneyPage() {
 
   useEffect(() => {
     fetchTransactions();
-  }, []);
+  }, [search, type, status]);
 
   const handleAccept = async(transaction) => {
     // setTransactions(transactions.map(t => 
@@ -125,11 +134,20 @@ export default function AddedMoneyPage() {
               type="search" 
               placeholder="Search transactions..." 
               className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <Button variant="outline" className="border-gray-200 hover:bg-gray-50 rounded-full font-medium transition-all duration-200 flex items-center gap-2">
-            Filter
-          </Button>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Completed">Completed</option>
+            <option value="Rejected">Rejected</option>
+          </select>
         </div>
 
         <Card className="shadow-sm border-gray-200">

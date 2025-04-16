@@ -195,7 +195,11 @@ export const getTransactions = async (authToken,params = {}) => {
         'Authorization': `Bearer ${authToken}`  
       },
       params: {
-        type: params.type || 'Add'
+        type: params.type || 'Add',
+        status: params.status || '',
+        search: params.search || '',
+        page: params.page || 1,
+        limit: params.limit || 10000
       }
     });
     return response.data;
