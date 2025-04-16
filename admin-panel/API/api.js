@@ -12,6 +12,7 @@ const endpoints = {
   deleteUser: 'users',
   getAllWithDrawal: 'withdrawals',
   login: 'auth/login',
+  taskPUT: 'tasks',
 };
 
 
@@ -140,3 +141,34 @@ export const dashboard = async (authToken) => {
     }
   };
 
+
+export const approveTask = async (authToken, taskId) => {
+  try {
+    const response = await axios.put(`${BASE_URL}/${endpoints.taskPUT}/${taskId}`, {
+      taskStatus: "Published"
+    }, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const rejectTask = async (authToken, taskId, rejectedReason) => {
+  try {
+    const response = await axios.put(`${BASE_URL}/${endpoints.taskPUT}/${taskId}`, {
+      taskStatus: "Rejected",
+      rejectedReason: rejectedReason
+    }, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

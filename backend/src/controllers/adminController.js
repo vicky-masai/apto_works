@@ -166,7 +166,7 @@ const deleteUser = async (req, res) => {
 // Task Management
 const getTasks = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = '', status } = req.query;
+    const { page = 1, limit = 10000, search = '', status } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const whereClause = {};
@@ -230,7 +230,7 @@ const createTask = async (req, res) => {
 const updateTask = async (req, res) => {
   try {
     const { id } = req.params;
-    const { taskTitle, taskDescription, taskStatus, category, price, estimatedTime } = req.body;
+    const { taskTitle, taskDescription, taskStatus, category, price, estimatedTime, rejectedReason } = req.body;
     
     const task = await prisma.task.update({
       where: { id },
@@ -240,7 +240,8 @@ const updateTask = async (req, res) => {
         taskStatus,
         category,
         price,
-        estimatedTime
+        estimatedTime,
+        rejectedReason: rejectedReason || "No Reason"
       }
     });
     
