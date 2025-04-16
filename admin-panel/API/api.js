@@ -172,3 +172,18 @@ export const rejectTask = async (authToken, taskId, rejectedReason) => {
     throw error;
   }
 };
+
+
+const updateUser = async (authToken, userId, userData) => {
+  try {
+    const response = await axios.put(`${BASE_URL}/${endpoints.users}/${userId}`, userData, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+  
