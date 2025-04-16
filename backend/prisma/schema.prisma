@@ -108,6 +108,7 @@ model Task {
   stepByStepInstructions String
   requiredProof         String?
   numWorkersNeeded      Int
+  rejectedReason        String?
   totalAmount           Float
   difficulty            String         @default("Medium")
   taskStatus            TaskStatus     @default(Review)

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, Clock, AlertCircle, X, Eye } from "lucide-react"
 import { useEffect, useState } from "react"
-import { getTasks } from "@/API/api"
+import { getTasks, approveTask, rejectTask } from "@/API/api"
 import { auth } from "@/API/auth"
 
 export default function TasksPage() {
@@ -32,14 +32,14 @@ export default function TasksPage() {
 
   const handleApprove = async (taskId) => {
     try {
-      // Add your API call here for approving task
-      setTasks(tasks.map(task => 
-        task.id === taskId 
-          ? { ...task, taskStatus: 'Approved' }
-          : task
-      ))
+      setIsLoading(true);
+      await approveTask(auth.getToken(), taskId);
+      await getTasksFetch();
     } catch (error) {
-      console.error('Error approving task:', error)
+      console.error('Error approving task:', error);
+      // You might want to show an error toast/notification here
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -50,17 +50,17 @@ export default function TasksPage() {
 
   const submitReject = async () => {
     try {
-      // Add your API call here for rejecting task
-      setTasks(tasks.map(task => 
-        task.id === selectedTask.id 
-          ? { ...task, taskStatus: 'Rejected', rejectionReason: rejectComment }
-          : task
-      ))
-      setIsRejectDialogOpen(false)
-      setRejectComment("")
-      setSelectedTask(null)
+      setIsLoading(true);
+      await rejectTask(auth.getToken(), selectedTask.id, rejectComment);
+      await getTasksFetch();
+      setIsRejectDialogOpen(false);
+      setRejectComment("");
+      setSelectedTask(null);
     } catch (error) {
-      console.error('Error rejecting task:', error)
+      console.error('Error rejecting task:', error);
+      // You might want to show an error toast/notification here
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -84,94 +84,100 @@ export default function TasksPage() {
           <CardTitle>All Tasks</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-medium">Task</th>
-                  <th className="text-left py-3 px-4 font-medium">Status</th>
-                  <th className="text-left py-3 px-4 font-medium">Difficulty</th>
-                  <th className="text-left py-3 px-4 font-medium">Created Date</th>
-                  <th className="text-left py-3 px-4 font-medium">Author</th>
-                  <th className="text-left py-3 px-4 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tasks.map((task) => (
-                  <tr key={task.id} className="border-b last:border-0">
-                    <td className="py-4 px-4">{task.taskTitle}</td>
-                    <td className="py-4 px-4">
-                      <Badge 
-                        className={`px-3 py-1 rounded-full ${
-                          task.taskStatus === 'Approved' 
-                            ? 'bg-green-100 text-green-800' 
-                            : task.taskStatus === 'Review'
-                            ? 'bg-blue-100 text-blue-800'
-                            : task.taskStatus === 'Rejected'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}
-                      >
-                        {task.taskStatus}
-                      </Badge>
-                    </td>
-                    <td className="py-4 px-4">{task.difficulty}</td>
-                    <td className="py-4 px-4">{task.createdAt}</td>
-                    <td className="py-4 px-4">{task.user.name}</td>
-                    <td className="py-4 px-4">
-                      <div className="flex gap-2">
-                        {task.taskStatus === "Review" ? (
-                          <>
-                            <Button
-                              onClick={() => handleApprove(task.id)}
-                              className="px-4 py-2 text-sm border border-green-500 text-green-500 hover:bg-green-50 rounded-full"
-                              variant="outline"
-                            >
-                              Approve
-                            </Button>
-                            <Button
-                              onClick={() => handleReject(task)}
-                              className="px-4 py-2 text-sm border border-red-500 text-red-500 hover:bg-red-50 rounded-full"
-                              variant="outline"
-                            >
-                              Reject
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            {task.taskStatus === 'Rejected' && (
-                              <div className="flex items-center gap-2">
-                                <Badge 
-                                  className="px-3 py-1.5 rounded-full bg-red-50 text-red-500 border border-red-100"
-                                >
-                                  Rejected
-                                </Badge>
-                                <Button
-                                  onClick={() => handleView(task)}
-                                  className="px-3 py-1.5 text-sm bg-white hover:bg-gray-50 rounded-full flex items-center gap-1.5 border border-gray-200"
-                                  variant="outline"
-                                >
-                                  <Eye className="w-3.5 h-3.5" />
-                                  View
-                                </Button>
-                              </div>
-                            )}
-                            {task.taskStatus === 'Approved' && (
-                              <Badge 
-                                className="px-3 py-1.5 rounded-full bg-green-50 text-green-600 border border-green-100"
-                              >
-                                {task.taskStatus}
-                              </Badge>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </td>
+          {isLoading ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4 font-medium">Task</th>
+                    <th className="text-left py-3 px-4 font-medium">Status</th>
+                    <th className="text-left py-3 px-4 font-medium">Difficulty</th>
+                    <th className="text-left py-3 px-4 font-medium">Created Date</th>
+                    <th className="text-left py-3 px-4 font-medium">Author</th>
+                    <th className="text-left py-3 px-4 font-medium">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {tasks.map((task) => (
+                    <tr key={task.id} className="border-b last:border-0">
+                      <td className="py-4 px-4">{task.taskTitle}</td>
+                      <td className="py-4 px-4">
+                        <Badge 
+                          className={`px-3 py-1 rounded-full ${
+                            task.taskStatus === 'Approved' 
+                              ? 'bg-green-100 text-green-800' 
+                              : task.taskStatus === 'Review'
+                              ? 'bg-blue-100 text-blue-800'
+                              : task.taskStatus === 'Rejected'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {task.taskStatus}
+                        </Badge>
+                      </td>
+                      <td className="py-4 px-4">{task.difficulty}</td>
+                      <td className="py-4 px-4">{task.createdAt}</td>
+                      <td className="py-4 px-4">{task.user.name}</td>
+                      <td className="py-4 px-4">
+                        <div className="flex gap-2">
+                          {task.taskStatus === "Review" ? (
+                            <>
+                              <Button
+                                onClick={() => handleApprove(task.id)}
+                                className="px-4 py-2 text-sm border border-green-500 text-green-500 hover:bg-green-50 rounded-full"
+                                variant="outline"
+                              >
+                                Approve
+                              </Button>
+                              <Button
+                                onClick={() => handleReject(task)}
+                                className="px-4 py-2 text-sm border border-red-500 text-red-500 hover:bg-red-50 rounded-full"
+                                variant="outline"
+                              >
+                                Reject
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              {task.taskStatus === 'Rejected' && (
+                                <div className="flex items-center gap-2">
+                                  <Badge 
+                                    className="px-3 py-1.5 rounded-full bg-red-50 text-red-500 border border-red-100"
+                                  >
+                                    Rejected
+                                  </Badge>
+                                  <Button
+                                    onClick={() => handleView(task)}
+                                    className="px-3 py-1.5 text-sm bg-white hover:bg-gray-50 rounded-full flex items-center gap-1.5 border border-gray-200"
+                                    variant="outline"
+                                  >
+                                    <Eye className="w-3.5 h-3.5" />
+                                    View
+                                  </Button>
+                                </div>
+                              )}
+                              {task.taskStatus === 'Published' && (
+                                <Badge 
+                                  className="px-3 py-1.5 rounded-full bg-green-50 text-green-600 border border-green-100"
+                                >
+                                  {task.taskStatus}
+                                </Badge>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -249,7 +255,7 @@ export default function TasksPage() {
               <div className="space-y-4">
                 <div>
                   <h4 className="text-sm font-medium">Rejection Reason</h4>
-                  <p className="mt-1 text-gray-600">{selectedTask?.rejectionReason}</p>
+                  <p className="mt-1 text-gray-600">{selectedTask?.rejectedReason}</p>
                 </div>
               </div>
 

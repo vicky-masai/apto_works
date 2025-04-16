@@ -30,7 +30,7 @@ const createTask = async (req, res) => {
         totalAmount,
         difficulty: difficulty || 'Medium',
         userId: req.user.id,
-        taskStatus: 'NotPublished'
+        taskStatus: 'Review'
       }
     });
 
