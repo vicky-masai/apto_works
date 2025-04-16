@@ -254,7 +254,8 @@ const updateTask = async (req, res) => {
 // Money Management
 const getTransactions = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = '', type, status } = req.query;
+    const { page = 1, limit = 10000, search = '', type, status } = req.query;
+    console.log(search);
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const whereClause = {};
