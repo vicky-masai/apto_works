@@ -14,7 +14,7 @@ import ClientLayout from '@/components/ClientLayout'
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <ClientLayout>
           {children}
         </ClientLayout>

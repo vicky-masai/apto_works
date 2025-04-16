@@ -22,6 +22,6 @@ router.put('/tasks/:id', adminController.updateTask);
 // Money Management
 router.get('/transactions', adminController.getTransactions);
 router.get('/withdrawals', adminController.getWithdrawals);
-router.put('/withdrawals/:id/status', adminController.updateWithdrawalStatus);
+router.put('/transactions/:id', adminController.updateTransactionsStatus);
 
 module.exports = router; 

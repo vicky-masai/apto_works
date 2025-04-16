@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Search, Loader2, X } from "lucide-react"
 import { auth } from "@/API/auth"
-import { getUsers, deleteUser } from "@/API/api"
+import { getUsers, deleteUser, updateUser } from "@/API/api"
 import { useEffect, useState, useRef, useCallback } from "react"
 import DeleteModal from "./DeleteModal"
 
@@ -225,16 +225,19 @@ export default function UsersPage() {
       // const response = await updateUser(auth.getToken(), editingUser.id, editForm);
       
       // For now, update locally
-      setUsers(users.map(user => 
-        user.id === editingUser.id 
-          ? { 
-              ...user, 
-              status: editForm.name,
-              email: editForm.email,
-              balance: editForm.balance
-            }
-          : user
-      ))
+      // setUsers(users.map(user => 
+      //   user.id === editingUser.id 
+      //     ? { 
+      //         ...user, 
+      //         status: editForm.name,
+      //         email: editForm.email,
+      //         balance: editForm.balance
+      //       }
+      //     : user
+      // ))
+
+      const response = await updateUser(auth.getToken(), editingUser.id, editForm);
+      await fetchUsers();
       setIsEditDialogOpen(false)
       setEditingUser(null)
       setEditForm({ name: "", email: "", balance: "" })

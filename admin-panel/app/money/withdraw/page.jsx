@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { getTransactions } from "@/API/api"
+import { auth } from "@/API/auth"
+import { useEffect } from "react"
 import { Search, CheckCircle, XCircle, Plus } from "lucide-react"
 import {
   Dialog,
@@ -24,34 +27,7 @@ import {
 import { Label } from "@/components/ui/label"
 
 export default function WithdrawMoneyPage() {
-  const [withdrawals, setWithdrawals] = useState([
-    {
-      id: 1,
-      userId: 1,
-      userName: "John Doe",
-      amount: 300,
-      userUpiId: "user@upi",
-      companyUpiId: "company@upi",
-      date: "2025-04-08",
-      status: "pending",
-      reference: "REF123456",
-      screenshot: "/payments/screenshot1.jpg",
-      rejectionReason: ""
-    },
-    {
-      id: 2,
-      userId: 2,
-      userName: "Jane Smith",
-      amount: 500,
-      userUpiId: "jane@upi",
-      companyUpiId: "company@upi",
-      date: "2025-04-07",
-      status: "pending",
-      reference: "REF789012",
-      screenshot: "/payments/screenshot2.jpg",
-      rejectionReason: ""
-    }
-  ])
+  const [withdrawals, setWithdrawals] = useState([])
 
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showViewDialog, setShowViewDialog] = useState(false)
@@ -64,6 +40,16 @@ export default function WithdrawMoneyPage() {
     amount: "",
     upiId: ""
   })
+
+
+  const fetchWithdrawals = async () => {
+    const response = await getTransactions(auth.getToken(),{type:'Withdraw'});
+    setWithdrawals(response.transactions);
+  } 
+
+  useEffect(() => {
+    fetchWithdrawals();
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -78,7 +64,7 @@ export default function WithdrawMoneyPage() {
       userUpiId: formData.upiId,
       companyUpiId: "company@upi",
       date: today,
-      status: "pending",
+      status: "Pending",
       reference: `REF${Math.floor(Math.random() * 1000000)}`,
       screenshot: "",
       rejectionReason: ""
@@ -91,7 +77,7 @@ export default function WithdrawMoneyPage() {
 
   const handleApprove = (withdrawal) => {
     setWithdrawals(withdrawals.map(w => 
-      w.id === withdrawal.id ? { ...w, status: "approved" } : w
+      w.id === withdrawal.id ? { ...w, status: "Completed" } : w
     ))
   }
 
@@ -103,7 +89,7 @@ export default function WithdrawMoneyPage() {
     
     setWithdrawals(withdrawals.map(w => 
       w.id === selectedWithdrawal.id 
-        ? { ...w, status: "rejected", rejectionReason: rejectionReason } 
+        ? { ...w, status: "Rejected", rejectionReason: rejectionReason } 
         : w
     ))
     setRejectionReason("")
@@ -229,7 +215,7 @@ export default function WithdrawMoneyPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">User:</span>
-                    <span className="font-medium">{selectedWithdrawal.userName}</span>
+                    <span className="font-medium">{selectedWithdrawal.user.name}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Amount:</span>
@@ -237,11 +223,11 @@ export default function WithdrawMoneyPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Company UPI ID:</span>
-                    <span className="font-medium">{selectedWithdrawal.companyUpiId}</span>
+                    <span className="font-medium">{selectedWithdrawal.companyUPI}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">User UPI ID:</span>
-                    <span className="font-medium">{selectedWithdrawal.userUpiId}</span>
+                    <span className="font-medium">{selectedWithdrawal.userUPI}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Reference:</span>
@@ -249,13 +235,13 @@ export default function WithdrawMoneyPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Date:</span>
-                    <span className="font-medium">{selectedWithdrawal.date}</span>
+                    <span className="font-medium">{selectedWithdrawal.createdAt}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Status:</span>
                     <span className={`font-medium ${
-                      selectedWithdrawal.status === 'approved' ? 'text-green-600' :
-                      selectedWithdrawal.status === 'rejected' ? 'text-red-600' :
+                      selectedWithdrawal.status === 'Completed' ? 'text-green-600' :
+                      selectedWithdrawal.status === 'Rejected' ? 'text-red-600' :
                       'text-yellow-600'
                     }`}>
                       {selectedWithdrawal.status.charAt(0).toUpperCase() + selectedWithdrawal.status.slice(1)}
@@ -263,7 +249,7 @@ export default function WithdrawMoneyPage() {
                   </div>
                 </div>
 
-                {selectedWithdrawal.status === 'rejected' && (
+                {selectedWithdrawal.status === 'Rejected' && (
                   <div className="mt-6">
                     <h3 className="text-lg font-semibold mb-2 text-red-600">Rejection Reason</h3>
                     <p className="text-red-600 bg-red-50 p-3 rounded">
