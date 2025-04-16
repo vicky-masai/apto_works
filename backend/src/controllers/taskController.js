@@ -97,10 +97,23 @@ const getAllTask = async (req, res) => {
 
 const getProviderTasks = async (req, res) => {
   try {
+    const { taskStatus } = req.query;
+    
+    let where = {
+      userId: req.user.id
+    };
+
+    console.log(taskStatus);
+
+    // Add taskStatus filter if provided and valid
+    if (taskStatus && ['Published', 'Review', 'Rejected'].includes(taskStatus)) {
+      where.taskStatus = taskStatus;
+    }
+
+    console.log(where);
+
     const tasks = await prisma.task.findMany({
-      where: {
-        userId: req.user.id
-      },
+      where,
       include: {
         acceptedUsers: {
           include: {
@@ -112,6 +125,7 @@ const getProviderTasks = async (req, res) => {
 
     res.json(tasks);
   } catch (error) {
+    console.error(error.message);
     res.status(500).json({ error: 'Failed to fetch tasks' });
   }
 };
