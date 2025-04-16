@@ -1,6 +1,6 @@
 "use client"
 import Link from "next/link"
-import { DollarSign, Home, LogIn, LogOut, Shield, Upload, User, UserPlus, Wallet } from "lucide-react"
+import { DollarSign, Home, LogIn, LogOut, Shield, Upload, User, UserPlus, Wallet, Clipboard } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import Cookies from "js-cookie"
@@ -65,6 +65,9 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
               <Link href="/tasks" className="text-sm font-medium text-gray-600 hover:text-gray-900">
                 Tasks
               </Link>
+              <Link href="/provider/tasks" className="text-sm font-medium text-gray-600 hover:text-gray-900">
+                My Posted Tasks
+              </Link>
             </nav>
             <div className="relative flex items-center gap-4" ref={dropdownRef}>
               <button onClick={toggleDropdown} className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200">
@@ -91,6 +94,15 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
                           <span className="flex items-center">
                             <Upload className="h-4 w-4 mr-2" />
                             Post a Task
+                          </span>
+                        </button>
+                        <button 
+                          onClick={() => handleProtectedNavigation("/provider/tasks")} 
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <span className="flex items-center">
+                            <Clipboard className="h-4 w-4 mr-2" />
+                            My Posted Tasks
                           </span>
                         </button>
                         <button 
