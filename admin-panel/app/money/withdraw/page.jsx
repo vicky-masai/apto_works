@@ -29,6 +29,7 @@ import { Label } from "@/components/ui/label"
 
 export default function WithdrawMoneyPage() {
   const [withdrawals, setWithdrawals] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
 
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showViewDialog, setShowViewDialog] = useState(false)
@@ -44,8 +45,15 @@ export default function WithdrawMoneyPage() {
 
 
   const fetchWithdrawals = async () => {
-    const response = await getTransactions(auth.getToken(),{type:'Withdraw'});
-    setWithdrawals(response.transactions);
+    setIsLoading(true)
+    try {
+      const response = await getTransactions(auth.getToken(),{type:'Withdraw'});
+      setWithdrawals(response.transactions);
+    } catch (error) {
+      console.error('Error fetching withdrawals:', error)
+    } finally {
+      setIsLoading(false)
+    }
   } 
 
   useEffect(() => {
@@ -363,71 +371,77 @@ export default function WithdrawMoneyPage() {
 
       {/* Withdrawals Table */}
       <div className="bg-white rounded-lg shadow overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left p-4">ID</th>
-              <th className="text-left p-4">User</th>
-              <th className="text-left p-4">Amount</th>
-              <th className="text-left p-4">UPI ID</th>
-              <th className="text-left p-4">Date</th>
-              <th className="text-left p-4">Status</th>
-              <th className="text-left p-4">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {withdrawals.map((withdrawal) => (
-              <tr key={withdrawal.id} className="border-b last:border-b-0">
-                <td className="p-4">#{withdrawal.id}</td>
-                <td className="p-4">{withdrawal.user.name}</td>
-                <td className="p-4">₹{withdrawal.amount}</td>
-                <td className="p-4">{withdrawal.userUPI}</td>
-                <td className="p-4">{withdrawal.createdAt}</td>
-                <td className="p-4">
-                  <span className={`inline-block px-2 py-1 rounded-full text-sm
-                    ${withdrawal.status === 'Approved' ? 'bg-green-100 text-green-800' : 
-                      withdrawal.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
-                      'bg-red-100 text-red-800'}`}
-                  >
-                    {withdrawal.status.charAt(0).toUpperCase() + withdrawal.status.slice(1)}
-                  </span>
-                </td>
-                <td className="p-4">
-                  <div className="flex gap-2">
-                    {withdrawal.status === "Pending" && (
-                      <>
-                        <button 
-                          onClick={() => handleApprove(withdrawal)}
-                          className="px-3 py-1 text-sm text-green-600 border border-green-600 rounded-full hover:bg-green-50"
-                        >
-                          Approve
-                        </button>
-                        <button 
-                          onClick={() => {
-                            setSelectedWithdrawal(withdrawal)
-                            setShowRejectDialog(true)
-                          }}
-                          className="px-3 py-1 text-sm text-red-600 border border-red-600 rounded-full hover:bg-red-50"
-                        >
-                          Reject
-                        </button>
-                      </>
-                    )}
-                    <button 
-                      onClick={() => {
-                        setSelectedWithdrawal(withdrawal)
-                        setShowViewDialog(true)
-                      }}
-                      className="px-3 py-1 text-sm border rounded-full hover:bg-gray-50"
-                    >
-                      View
-                    </button>
-                  </div>
-                </td>
+        {isLoading ? (
+          <div className="flex justify-center items-center p-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          </div>
+        ) : (
+          <table className="w-full">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left p-4">ID</th>
+                <th className="text-left p-4">User</th>
+                <th className="text-left p-4">Amount</th>
+                <th className="text-left p-4">UPI ID</th>
+                <th className="text-left p-4">Date</th>
+                <th className="text-left p-4">Status</th>
+                <th className="text-left p-4">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {withdrawals.map((withdrawal) => (
+                <tr key={withdrawal.id} className="border-b last:border-b-0">
+                  <td className="p-4">#{withdrawal.id}</td>
+                  <td className="p-4">{withdrawal.user.name}</td>
+                  <td className="p-4">₹{withdrawal.amount}</td>
+                  <td className="p-4">{withdrawal.userUPI}</td>
+                  <td className="p-4">{withdrawal.createdAt}</td>
+                  <td className="p-4">
+                    <span className={`inline-block px-2 py-1 rounded-full text-sm
+                      ${withdrawal.status === 'Approved' ? 'bg-green-100 text-green-800' : 
+                        withdrawal.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
+                        'bg-red-100 text-red-800'}`}
+                    >
+                      {withdrawal.status.charAt(0).toUpperCase() + withdrawal.status.slice(1)}
+                    </span>
+                  </td>
+                  <td className="p-4">
+                    <div className="flex gap-2">
+                      {withdrawal.status === "Pending" && (
+                        <>
+                          <button 
+                            onClick={() => handleApprove(withdrawal)}
+                            className="px-3 py-1 text-sm text-green-600 border border-green-600 rounded-full hover:bg-green-50"
+                          >
+                            Approve
+                          </button>
+                          <button 
+                            onClick={() => {
+                              setSelectedWithdrawal(withdrawal)
+                              setShowRejectDialog(true)
+                            }}
+                            className="px-3 py-1 text-sm text-red-600 border border-red-600 rounded-full hover:bg-red-50"
+                          >
+                            Reject
+                          </button>
+                        </>
+                      )}
+                      <button 
+                        onClick={() => {
+                          setSelectedWithdrawal(withdrawal)
+                          setShowViewDialog(true)
+                        }}
+                        className="px-3 py-1 text-sm border rounded-full hover:bg-gray-50"
+                      >
+                        View
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   )
