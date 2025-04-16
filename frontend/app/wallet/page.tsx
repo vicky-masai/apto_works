@@ -70,9 +70,9 @@ const transactionsData = [
 export default function WalletPage() {
   const [balance, setBalance] = useState(0)
   const [depositAmount, setDepositAmount] = useState("")
-  const [depositMethod, setDepositMethod] = useState("credit-card")
+  const [depositMethod, setDepositMethod] = useState("upi")
   const [withdrawAmount, setWithdrawAmount] = useState("")
-  const [withdrawMethod, setWithdrawMethod] = useState("paypal")
+  const [withdrawMethod, setWithdrawMethod] = useState("upi")
   const [isDepositing, setIsDepositing] = useState(false)
   const [isWithdrawing, setIsWithdrawing] = useState(false)
   const [depositSuccess, setDepositSuccess] = useState(false)
@@ -81,6 +81,11 @@ export default function WalletPage() {
   const [openWithdrawDialog, setOpenWithdrawDialog] = useState(false)
   const [transactions, setTransactions] = useState(transactionsData)
   const [filter, setFilter] = useState("all")
+  const [upiAccounts, setUpiAccounts] = useState([
+    { id: 1, upiId: "default@upi", isDefault: true }
+  ])
+  const [newUpiId, setNewUpiId] = useState("")
+  const [openAddUpiDialog, setOpenAddUpiDialog] = useState(false)
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -185,7 +190,7 @@ export default function WalletPage() {
                   <DialogHeader>
                     <DialogTitle>Add Money to Wallet</DialogTitle>
                     <DialogDescription>
-                      Choose an amount and payment method to add funds to your wallet.
+                      Enter the amount and your UPI ID to add funds to your wallet.
                     </DialogDescription>
                   </DialogHeader>
                   {!depositSuccess ? (
@@ -193,7 +198,7 @@ export default function WalletPage() {
                       <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
                           <label htmlFor="amount" className="text-sm font-medium">
-                            Amount ($)
+                            Amount (₹)
                           </label>
                           <Input
                             id="amount"
@@ -206,69 +211,22 @@ export default function WalletPage() {
                           />
                         </div>
                         <div className="grid gap-2">
-                          <label htmlFor="method" className="text-sm font-medium">
-                            Payment Method
+                          <label htmlFor="upi-id" className="text-sm font-medium">
+                            Select UPI ID
                           </label>
-                          <Select value={depositMethod} onValueChange={setDepositMethod}>
-                            <SelectTrigger id="method">
-                              <SelectValue placeholder="Select method" />
+                          <Select defaultValue={upiAccounts.find(acc => acc.isDefault)?.id.toString()}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select UPI ID" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="credit-card">Credit/Debit Card</SelectItem>
-                              <SelectItem value="bank">Bank Transfer</SelectItem>
-                              <SelectItem value="paypal">PayPal</SelectItem>
+                              {upiAccounts.map(acc => (
+                                <SelectItem key={acc.id} value={acc.id.toString()}>
+                                  {acc.upiId} {acc.isDefault && "(Default)"}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
-
-                        {depositMethod === "credit-card" && (
-                          <div className="space-y-2">
-                            <div className="grid gap-2">
-                              <label htmlFor="card-number" className="text-sm font-medium">
-                                Card Number
-                              </label>
-                              <Input id="card-number" placeholder="1234 5678 9012 3456" />
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="grid gap-2">
-                                <label htmlFor="expiry" className="text-sm font-medium">
-                                  Expiry Date
-                                </label>
-                                <Input id="expiry" placeholder="MM/YY" />
-                              </div>
-                              <div className="grid gap-2">
-                                <label htmlFor="cvv" className="text-sm font-medium">
-                                  CVV
-                                </label>
-                                <Input id="cvv" placeholder="123" />
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {depositMethod === "bank" && (
-                          <Alert>
-                            <AlertTitle>Bank Transfer Information</AlertTitle>
-                            <AlertDescription>
-                              Use the following details to make a bank transfer:
-                              <div className="mt-2 text-sm">
-                                <div>Bank: TaskHub Bank</div>
-                                <div>Account Number: 1234567890</div>
-                                <div>Routing Number: 987654321</div>
-                                <div>Reference: Your TaskHub ID</div>
-                              </div>
-                            </AlertDescription>
-                          </Alert>
-                        )}
-
-                        {depositMethod === "paypal" && (
-                          <div className="grid gap-2">
-                            <label htmlFor="paypal-email" className="text-sm font-medium">
-                              PayPal Email
-                            </label>
-                            <Input id="paypal-email" type="email" placeholder="your-email@example.com" />
-                          </div>
-                        )}
                       </div>
                       <DialogFooter>
                         <Button variant="outline" onClick={() => setOpenDepositDialog(false)}>
@@ -315,7 +273,7 @@ export default function WalletPage() {
                   <DialogHeader>
                     <DialogTitle>Withdraw Funds</DialogTitle>
                     <DialogDescription>
-                      Enter the amount you want to withdraw and select your preferred payment method.
+                      Enter the amount and select your UPI ID for withdrawal.
                     </DialogDescription>
                   </DialogHeader>
                   {!withdrawSuccess ? (
@@ -323,7 +281,7 @@ export default function WalletPage() {
                       <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
                           <label htmlFor="withdraw-amount" className="text-sm font-medium">
-                            Amount (Available: ${balance.toFixed(2)})
+                            Amount (Available: ₹{balance.toFixed(2)})
                           </label>
                           <Input
                             id="withdraw-amount"
@@ -337,61 +295,22 @@ export default function WalletPage() {
                           />
                         </div>
                         <div className="grid gap-2">
-                          <label htmlFor="withdraw-method" className="text-sm font-medium">
-                            Payment Method
+                          <label htmlFor="withdraw-upi" className="text-sm font-medium">
+                            Select UPI ID
                           </label>
-                          <Select value={withdrawMethod} onValueChange={setWithdrawMethod}>
-                            <SelectTrigger id="withdraw-method">
-                              <SelectValue placeholder="Select method" />
+                          <Select defaultValue={upiAccounts.find(acc => acc.isDefault)?.id.toString()}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select UPI ID" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="paypal">PayPal</SelectItem>
-                              <SelectItem value="bank">Bank Transfer</SelectItem>
-                              <SelectItem value="crypto">Cryptocurrency</SelectItem>
+                              {upiAccounts.map(acc => (
+                                <SelectItem key={acc.id} value={acc.id.toString()}>
+                                  {acc.upiId} {acc.isDefault && "(Default)"}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
-
-                        {withdrawMethod === "paypal" && (
-                          <div className="grid gap-2">
-                            <label htmlFor="paypal-email-withdraw" className="text-sm font-medium">
-                              PayPal Email
-                            </label>
-                            <Input id="paypal-email-withdraw" type="email" placeholder="your-email@example.com" />
-                          </div>
-                        )}
-
-                        {withdrawMethod === "bank" && (
-                          <div className="space-y-2">
-                            <div className="grid gap-2">
-                              <label htmlFor="account-name" className="text-sm font-medium">
-                                Account Holder Name
-                              </label>
-                              <Input id="account-name" placeholder="John Doe" />
-                            </div>
-                            <div className="grid gap-2">
-                              <label htmlFor="account-number" className="text-sm font-medium">
-                                Account Number
-                              </label>
-                              <Input id="account-number" placeholder="XXXXXXXXXXXX" />
-                            </div>
-                            <div className="grid gap-2">
-                              <label htmlFor="routing-number" className="text-sm font-medium">
-                                Routing Number
-                              </label>
-                              <Input id="routing-number" placeholder="XXXXXXXXX" />
-                            </div>
-                          </div>
-                        )}
-
-                        {withdrawMethod === "crypto" && (
-                          <div className="grid gap-2">
-                            <label htmlFor="wallet-address" className="text-sm font-medium">
-                              Wallet Address
-                            </label>
-                            <Input id="wallet-address" placeholder="Enter your wallet address" />
-                          </div>
-                        )}
                       </div>
                       <DialogFooter>
                         <Button variant="outline" onClick={() => setOpenWithdrawDialog(false)}>
@@ -544,60 +463,118 @@ export default function WalletPage() {
 
           <Card className="bg-white border shadow-sm">
             <CardHeader>
-              <CardTitle>Payment Methods</CardTitle>
-              <CardDescription>Manage your deposit and withdrawal methods</CardDescription>
+              <CardTitle>UPI Accounts</CardTitle>
+              <CardDescription>Manage your UPI IDs for deposits and withdrawals</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-blue-100 p-2 rounded-md">
-                      <CreditCard className="h-5 w-5 text-blue-600" />
+                {upiAccounts.map((account) => (
+                  <div key={account.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-blue-100 p-2 rounded-md">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="text-blue-600"
+                        >
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                          <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-medium">{account.upiId}</div>
+                        <div className="text-sm text-gray-500">UPI ID</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-medium">Visa ending in 4242</div>
-                      <div className="text-sm text-gray-500">Expires 12/25</div>
+                    <div className="flex items-center gap-2">
+                      {account.isDefault ? (
+                        <Badge className="bg-blue-100 text-blue-800 border-blue-200">Default</Badge>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setUpiAccounts(upiAccounts.map(acc => ({
+                              ...acc,
+                              isDefault: acc.id === account.id
+                            })))
+                          }}
+                        >
+                          Make Default
+                        </Button>
+                      )}
+                      {!account.isDefault && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setUpiAccounts(upiAccounts.filter(acc => acc.id !== account.id))
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      )}
                     </div>
                   </div>
-                  <div>
-                    <Badge className="bg-blue-100 text-blue-800 border-blue-200">Default</Badge>
-                  </div>
-                </div>
+                ))}
 
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-blue-100 p-2 rounded-md">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="text-blue-600"
-                      >
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                        <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="font-medium">PayPal</div>
-                      <div className="text-sm text-gray-500">user@example.com</div>
-                    </div>
-                  </div>
-                  <div>
-                    <Button variant="ghost" size="sm">
-                      Remove
+                <Dialog open={openAddUpiDialog} onOpenChange={setOpenAddUpiDialog}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full">
+                      Add UPI ID
                     </Button>
-                  </div>
-                </div>
-
-                <Button variant="outline" className="w-full">
-                  Add Payment Method
-                </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add New UPI ID</DialogTitle>
+                      <DialogDescription>
+                        Enter your UPI ID to add it to your account
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <label htmlFor="new-upi" className="text-sm font-medium">
+                          UPI ID
+                        </label>
+                        <Input
+                          id="new-upi"
+                          placeholder="yourname@upi"
+                          value={newUpiId}
+                          onChange={(e) => setNewUpiId(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setOpenAddUpiDialog(false)}>
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          if (newUpiId && !upiAccounts.some(acc => acc.upiId === newUpiId)) {
+                            const isFirst = upiAccounts.length === 0;
+                            setUpiAccounts([...upiAccounts, {
+                              id: upiAccounts.length + 1,
+                              upiId: newUpiId,
+                              isDefault: isFirst
+                            }]);
+                            setNewUpiId("");
+                            setOpenAddUpiDialog(false);
+                          }
+                        }}
+                        disabled={!newUpiId || upiAccounts.some(acc => acc.upiId === newUpiId)}
+                      >
+                        Add UPI
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </CardContent>
           </Card>
