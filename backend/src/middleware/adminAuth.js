@@ -15,7 +15,7 @@ const adminAuth = async (req, res, next) => {
       where: { id: decoded.userId }
     });
 
-    if (!user || (user.role !== 'Admin' && user.role !== 'Moderator')) {
+    if (!user || (user.role !== 'User' && user.role !== 'Moderator')) {
       return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
     }
 
