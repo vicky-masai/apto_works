@@ -174,10 +174,15 @@ export const acceptTask = async (taskId, authToken) => {
 };
 
 // Function to submit proof for a task
-export const submitProof = async (acceptedTaskId, file, describe, authToken) => {
+export const submitProof = async (acceptedTaskId, files, describe, authToken) => {
   try {
     const formData = new FormData();
-    formData.append('file', file);
+    
+    // Append each file to the form data
+    files.forEach((file, index) => {
+      formData.append('files', file);
+    });
+    
     formData.append('describe', describe);
 
     const response = await axios.post(
