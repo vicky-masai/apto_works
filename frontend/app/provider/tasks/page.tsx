@@ -131,6 +131,7 @@ console.log("selectedSubmission",selectedSubmission);
           return task
         }),
       )
+      window.location.reload();
     } catch (error) {
       console.error('Error approving submission:', error);
       // You might want to show an error toast/notification here
@@ -161,6 +162,7 @@ console.log("selectedSubmission",selectedSubmission);
           return task
         }),
       )
+      window.location.reload();
     } catch (error) {
       console.error('Error rejecting submission:', error);
       // You might want to show an error toast/notification here
@@ -288,7 +290,7 @@ console.log("selectedSubmission",selectedSubmission);
                                 </div>
                                 <div className="flex flex-col items-center p-2 rounded-md bg-blue-50 dark:bg-blue-900/20">
                                   <span className="font-medium text-blue-600 dark:text-blue-400">{counts.pendingReviewCount}</span>
-                                  <span className="text-xs text-muted-foreground">Pending</span>
+                                  <span className="text-xs text-muted-foreground">Review Pay</span>
                                 </div>
                               </div>
                             </div>
@@ -474,15 +476,44 @@ console.log("selectedSubmission",selectedSubmission);
             {/* Tab List */}
             <TabsList className="w-full justify-start gap-2 h-auto flex-wrap">
               <TabsTrigger value="pending" className="flex items-center gap-2">
-                Pending Review
-                <Badge variant="secondary" className="ml-1">
-                  {selectedTask?.acceptedUsers
-                    .filter((user) => user.status === "Review" || user.status === "Pending")
-                    .length}
-                </Badge>
+                Pending Review {(() => {
+                  const pendingCount = selectedTask?.acceptedUsers
+                    ?.filter((user) => user.status === "Review" || user.status === "Pending")
+                    ?.length;
+                  
+                  return pendingCount ? (
+                    <Badge variant="secondary" className="ml-1">
+                      {pendingCount}
+                    </Badge>
+                  ) : null;
+                })()}
               </TabsTrigger>
-              <TabsTrigger value="approved">Approved</TabsTrigger>
-              <TabsTrigger value="rejected">Rejected</TabsTrigger>
+              <TabsTrigger value="approved" className="flex items-center gap-2">
+                Approved {(() => {
+                  const approvedCount = selectedTask?.acceptedUsers
+                    ?.filter((user) => user.status === "Completed")
+                    ?.length;
+                  
+                  return approvedCount ? (
+                    <Badge variant="secondary" className="ml-1">
+                      {approvedCount}
+                    </Badge>
+                  ) : null;
+                })()}
+              </TabsTrigger>
+              <TabsTrigger value="rejected" className="flex items-center gap-2">
+                Rejected {(() => {
+                  const rejectedCount = selectedTask?.acceptedUsers
+                    ?.filter((user) => user.status === "Rejected")
+                    ?.length;
+                  
+                  return rejectedCount ? (
+                    <Badge variant="secondary" className="ml-1">
+                      {rejectedCount}
+                    </Badge>
+                  ) : null;
+                })()}
+              </TabsTrigger>
             </TabsList>
 
             {/* Pending Submissions Content */}
@@ -705,7 +736,7 @@ console.log("selectedSubmission",selectedSubmission);
                   variant="outline"
                   className="gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
                   onClick={() =>
-                    selectedTask && selectedSubmission && handleRejectSubmission(selectedSubmission.taskId, selectedSubmission.userId)
+                    selectedTask && selectedSubmission && handleRejectSubmission(selectedSubmission.id, selectedSubmission.userId)
                   }
                   disabled={isProcessing}
                 >
@@ -717,7 +748,7 @@ console.log("selectedSubmission",selectedSubmission);
                   onClick={() =>
                     selectedTask &&
                     selectedSubmission &&
-                    handleApproveSubmission(selectedSubmission.taskId, selectedSubmission.userId)
+                    handleApproveSubmission(selectedSubmission.id, selectedSubmission.userId)
                   }
                   disabled={isProcessing}
                 >
