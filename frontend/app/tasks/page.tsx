@@ -30,6 +30,7 @@ interface Task {
   taskStatus: string
   requiredProof: string | null
   numWorkersNeeded: number
+  availableWorkers: number
   totalAmount: number
   taskProviderId: string
   updatedAt: string
@@ -456,7 +457,7 @@ export default function TasksPage() {
                                 stepByStepInstructions={task.stepByStepInstructions}
                                 taskStatus={task.taskStatus}
                                 requiredProof={task.requiredProof}
-                                numWorkersNeeded={task.numWorkersNeeded}
+                                numWorkersNeeded={task.availableWorkers}
                                 totalAmount={task.totalAmount}
                                 taskProviderId={task.taskProviderId}
                                 updatedAt={task.updatedAt}
@@ -516,7 +517,7 @@ export default function TasksPage() {
                                   stepByStepInstructions={task.stepByStepInstructions}
                                   taskStatus={task.taskStatus}
                                   requiredProof={task.requiredProof}
-                                  numWorkersNeeded={task.numWorkersNeeded}
+                                  numWorkersNeeded={task.availableWorkers}
                                   totalAmount={task.totalAmount}
                                   taskProviderId={task.taskProviderId}
                                   updatedAt={task.updatedAt}

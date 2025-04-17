@@ -92,12 +92,15 @@ const getWorkers = async (req, res) => {
 
 const verifyProof = async (req, res) => {
   try {
-    const { acceptedTaskId } = req.params;
+    const { taskId, workerId } = req.params;
     const { isApproved } = req.body;
 
     // Fetch the accepted task along with its task details
     const acceptedTask = await prisma.acceptedTask.findUnique({
-      where: { id: acceptedTaskId },
+      where: { 
+        id: taskId,
+        userId: workerId
+      },
       include: {
         task: true,
         user: true
@@ -113,14 +116,15 @@ const verifyProof = async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized to verify this task' });
     }
 
-    if (acceptedTask.status !== 'PENDING_REVIEW') {
+    if (acceptedTask.status !== 'Review') {
+
       return res.status(400).json({ error: 'Task is not in review status' });
     }
 
     const updatedTask = await prisma.acceptedTask.update({
-      where: { id: acceptedTaskId },
+      where: { id: taskId },
       data: {
-        status: isApproved ? 'COMPLETED' : 'REJECTED'
+        status: isApproved ? 'Completed' : 'Rejected'
       },
       include: {
         task: true,
@@ -135,18 +139,18 @@ const verifyProof = async (req, res) => {
           where: { id: req.user.id },
           data: {
             balance: {
-              decrement: updatedTask.task.amount
+              decrement: updatedTask.task.price
             }
           }
         }),
         prisma.user.update({
-          where: { id: acceptedTask.userId },
+          where: { id: workerId },
           data: {
             balance: {
-              increment: updatedTask.task.amount
+              increment: updatedTask.task.price
             },
             totalEarnings: {
-              increment: updatedTask.task.amount
+              increment: updatedTask.task.price
             },
             completedTasks: {
               increment: 1
@@ -161,7 +165,7 @@ const verifyProof = async (req, res) => {
 
     res.json(updatedTask);
   } catch (error) {
-    console.error(error.message);
+    console.log(error.message);
     res.status(500).json({ error: 'Failed to verify proof' });
   }
 };
