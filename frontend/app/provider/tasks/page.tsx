@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { CheckCircle, Clock, DollarSign, Eye, Search, X } from "lucide-react"
 
@@ -13,299 +13,109 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Progress } from "@/components/ui/progress"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Header } from "@/components/Header"
+import { getProviderTasks } from "@/API/task"
 
-// Mock data for posted tasks
-const postedTasks = [
-  {
-    id: "1",
-    title: "Website Registration Task",
-    description: "Complete registration on platform and verify email",
-    price: 5.0,
-    category: "Registration",
-    difficulty: "Easy",
-    estimatedTime: "5 min",
-    totalSlots: 20,
-    completedCount: 12,
-    inProgressCount: 5,
-    pendingReviewCount: 3,
-    submissions: [
-      {
-        id: "sub1",
-        userId: "user1",
-        userName: "John Doe",
-        submittedAt: "2025-03-28T14:30:00",
-        proofText:
-          "I registered on the website using my email john@example.com. I verified my email and completed my profile with all required information.",
-        proofImageUrl: "/placeholder.svg?height=300&width=400",
-        status: "pending",
-      },
-      {
-        id: "sub2",
-        userId: "user2",
-        userName: "Jane Smith",
-        submittedAt: "2025-03-28T15:45:00",
-        proofText:
-          "I completed the registration process and verified my email. My username on the platform is janesmith22.",
-        proofImageUrl: "/placeholder.svg?height=300&width=400",
-        status: "pending",
-      },
-      {
-        id: "sub2",
-        userId: "user2",
-        userName: "Jane Smith",
-        submittedAt: "2025-03-28T15:45:00",
-        proofText:
-          "I completed the registration process and verified my email. My username on the platform is janesmith22.",
-        proofImageUrl: "/placeholder.svg?height=300&width=400",
-        status: "pending",
-      },
-      {
-        id: "sub2",
-        userId: "user2",
-        userName: "Jane Smith",
-        submittedAt: "2025-03-28T15:45:00",
-        proofText:
-          "I completed the registration process and verified my email. My username on the platform is janesmith22.",
-        proofImageUrl: "/placeholder.svg?height=300&width=400",
-        status: "pending",
-      },
-      {
-        id: "sub2",
-        userId: "user2",
-        userName: "Jane Smith",
-        submittedAt: "2025-03-28T15:45:00",
-        proofText:
-          "I completed the registration process and verified my email. My username on the platform is janesmith22.",
-        proofImageUrl: "/placeholder.svg?height=300&width=400",
-        status: "pending",
-      },
-      {
-        id: "sub2",
-        userId: "user2",
-        userName: "Jane Smith",
-        submittedAt: "2025-03-28T15:45:00",
-        proofText:
-          "I completed the registration process and verified my email. My username on the platform is janesmith22.",
-        proofImageUrl: "/placeholder.svg?height=300&width=400",
-        status: "pending",
-      },
-      {
-        id: "sub2",
-        userId: "user2",
-        userName: "Jane Smith",
-        submittedAt: "2025-03-28T15:45:00",
-        proofText:
-          "I completed the registration process and verified my email. My username on the platform is janesmith22.",
-        proofImageUrl: "/placeholder.svg?height=300&width=400",
-        status: "pending",
-      },
-      {
-        id: "sub2",
-        userId: "user2",
-        userName: "Jane Smith",
-        submittedAt: "2025-03-28T15:45:00",
-        proofText:
-          "I completed the registration process and verified my email. My username on the platform is janesmith22.",
-        proofImageUrl: "/placeholder.svg?height=300&width=400",
-        status: "pending",
-      },
-      {
-        id: "sub2",
-        userId: "user2",
-        userName: "Jane Smith",
-        submittedAt: "2025-03-28T15:45:00",
-        proofText:
-          "I completed the registration process and verified my email. My username on the platform is janesmith22.",
-        proofImageUrl: "/placeholder.svg?height=300&width=400",
-        status: "pending",
-      },
-      {
-        id: "sub2",
-        userId: "user2",
-        userName: "Jane Smith",
-        submittedAt: "2025-03-28T15:45:00",
-        proofText:
-          "I completed the registration process and verified my email. My username on the platform is janesmith22.",
-        proofImageUrl: "/placeholder.svg?height=300&width=400",
-        status: "pending",
-      },
-      {
-        id: "sub2",
-        userId: "user2",
-        userName: "Jane Smith",
-        submittedAt: "2025-03-28T15:45:00",
-        proofText:
-          "I completed the registration process and verified my email. My username on the platform is janesmith22.",
-        proofImageUrl: "/placeholder.svg?height=300&width=400",
-        status: "pending",
-      },
-      {
-        id: "sub2",
-        userId: "user2",
-        userName: "Jane Smith",
-        submittedAt: "2025-03-28T15:45:00",
-        proofText:
-          "I completed the registration process and verified my email. My username on the platform is janesmith22.",
-        proofImageUrl: "/placeholder.svg?height=300&width=400",
-        status: "pending",
-      },
-      {
-        id: "sub2",
-        userId: "user2",
-        userName: "Jane Smith",
-        submittedAt: "2025-03-28T15:45:00",
-        proofText:
-          "I completed the registration process and verified my email. My username on the platform is janesmith22.",
-        proofImageUrl: "/placeholder.svg?height=300&width=400",
-        status: "pending",
-      },
-      {
-        id: "sub2",
-        userId: "user2",
-        userName: "Jane Smith",
-        submittedAt: "2025-03-28T15:45:00",
-        proofText:
-          "I completed the registration process and verified my email. My username on the platform is janesmith22.",
-        proofImageUrl: "/placeholder.svg?height=300&width=400",
-        status: "pending",
-      },
-      {
-        id: "sub2",
-        userId: "user2",
-        userName: "Jane Smith",
-        submittedAt: "2025-03-28T15:45:00",
-        proofText:
-          "I completed the registration process and verified my email. My username on the platform is janesmith22.",
-        proofImageUrl: "/placeholder.svg?height=300&width=400",
-        status: "pending",
-      },
-      {
-        id: "sub2",
-        userId: "user2",
-        userName: "Jane Smith",
-        submittedAt: "2025-03-28T15:45:00",
-        proofText:
-          "I completed the registration process and verified my email. My username on the platform is janesmith22.",
-        proofImageUrl: "/placeholder.svg?height=300&width=400",
-        status: "pending",
-      },
+// Add types for the API response
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  userType: string;
+  organizationType: string;
+  skills: string[];
+  balance: number;
+  totalEarnings: number;
+  inProgress: number;
+  completedTasks: number;
+  isEmailVerified: boolean;
+  role: string;
+  status: string;
+}
 
-      {
-        id: "sub3",
-        userId: "user3",
-        userName: "Mike Johnson",
-        submittedAt: "2025-03-28T16:20:00",
-        proofText:
-          "Registration completed successfully. I've added all required profile information and verified my email address.",
-        proofImageUrl: "/placeholder.svg?height=300&width=400",
-        status: "pending",
-      },
-    ],
-  },
-  {
-    id: "2",
-    title: "Social Media Post Engagement",
-    description: "Like, comment and share a post on specified social media platform",
-    price: 2.5,
-    category: "Social Media",
-    difficulty: "Easy",
-    estimatedTime: "3 min",
-    totalSlots: 50,
-    completedCount: 30,
-    inProgressCount: 15,
-    pendingReviewCount: 5,
-    submissions: [
-      {
-        id: "sub4",
-        userId: "user4",
-        userName: "Sarah Williams",
-        submittedAt: "2025-03-27T10:15:00",
-        proofText:
-          "I liked, commented, and shared the post as requested. My comment was 'Great content, thanks for sharing!'",
-        proofImageUrl: "/placeholder.svg?height=300&width=400",
-        status: "pending",
-      },
-      {
-        id: "sub5",
-        userId: "user5",
-        userName: "David Brown",
-        submittedAt: "2025-03-27T11:30:00",
-        proofText: "Task completed. I engaged with the post and shared it on my timeline.",
-        proofImageUrl: "/placeholder.svg?height=300&width=400",
-        status: "pending",
-      },
-    ],
-  },
-  {
-    id: "3",
-    title: "Mobile App Testing",
-    description: "Test new mobile application and provide detailed feedback",
-    price: 15.0,
-    category: "Testing",
-    difficulty: "Medium",
-    estimatedTime: "30 min",
-    totalSlots: 10,
-    completedCount: 3,
-    inProgressCount: 4,
-    pendingReviewCount: 2,
-    submissions: [
-      {
-        id: "sub6",
-        userId: "user6",
-        userName: "Emily Davis",
-        submittedAt: "2025-03-26T14:00:00",
-        proofText:
-          "I tested all the features of the app and found a few bugs: 1) The login button doesn't work on the first try, 2) The profile page crashes when uploading a profile picture, 3) The search function is very slow.",
-        proofImageUrl: "/placeholder.svg?height=300&width=400",
-        status: "pending",
-      },
-      {
-        id: "sub7",
-        userId: "user7",
-        userName: "Alex Wilson",
-        submittedAt: "2025-03-26T16:45:00",
-        proofText:
-          "Completed the app testing. The app works well overall, but I noticed some UI issues on smaller screens and the notification system doesn't always work.",
-        proofImageUrl: "/placeholder.svg?height=300&width=400",
-        status: "pending",
-      },
-    ],
-  },
-]
+interface AcceptedUser {
+  id: string;
+  acceptedId: string | null;
+  taskId: string;
+  userId: string;
+  status: string;
+  proof: string | null;
+  describe: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user: User;
+}
+
+interface Task {
+  id: string;
+  taskTitle: string;
+  taskDescription: string;
+  category: string;
+  price: number;
+  estimatedTime: string;
+  stepByStepInstructions: string;
+  requiredProof: string;
+  numWorkersNeeded: number;
+  rejectedReason: string;
+  totalAmount: number;
+  difficulty: string;
+  taskStatus: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  acceptedUsers: AcceptedUser[];
+}
 
 export default function ProviderTasksPage() {
-  const [tasks, setTasks] = useState(postedTasks)
-  const [selectedTask, setSelectedTask] = useState<(typeof postedTasks)[0] | null>(null)
-  const [selectedSubmission, setSelectedSubmission] = useState<(typeof postedTasks)[0]["submissions"][0] | null>(null)
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+  const [selectedSubmission, setSelectedSubmission] = useState<AcceptedUser | null>(null)
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
+  useEffect(() => {
+    getProviderTasks().then((tasksData) => {
+      setTasks(tasksData);
+    });
+  }, []);
+
   const filteredTasks = tasks.filter(
     (task) =>
-      task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.description.toLowerCase().includes(searchQuery.toLowerCase()),
+      task.taskTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      task.taskDescription.toLowerCase().includes(searchQuery.toLowerCase()),
   )
+
+  // Helper function to count submissions by status
+  const getSubmissionCounts = (task: Task) => {
+    const completedCount = task.acceptedUsers.filter(user => user.status === "Completed").length;
+    const inProgressCount = task.acceptedUsers.filter(user => user.status === "Active").length;
+    const pendingReviewCount = task.acceptedUsers.filter(user => user.status === "Pending").length;
+    
+    return {
+      completedCount,
+      inProgressCount,
+      pendingReviewCount,
+      totalSlots: task.numWorkersNeeded
+    };
+  }
 
   const handleApproveSubmission = (taskId: string, submissionId: string) => {
     setIsProcessing(true)
 
-    // Simulate API call
+    // TODO: Replace with actual API call
     setTimeout(() => {
       setTasks((prevTasks) =>
         prevTasks.map((task) => {
           if (task.id === taskId) {
             return {
               ...task,
-              submissions: task.submissions.map((sub) => {
-                if (sub.id === submissionId) {
-                  return { ...sub, status: "approved" }
+              acceptedUsers: task.acceptedUsers.map((user) => {
+                if (user.id === submissionId) {
+                  return { ...user, status: "Completed" }
                 }
-                return sub
+                return user
               }),
-              completedCount: task.completedCount + 1,
-              pendingReviewCount: task.pendingReviewCount - 1,
             }
           }
           return task
@@ -320,21 +130,19 @@ export default function ProviderTasksPage() {
   const handleRejectSubmission = (taskId: string, submissionId: string) => {
     setIsProcessing(true)
 
-    // Simulate API call
+    // TODO: Replace with actual API call
     setTimeout(() => {
       setTasks((prevTasks) =>
         prevTasks.map((task) => {
           if (task.id === taskId) {
             return {
               ...task,
-              submissions: task.submissions.map((sub) => {
-                if (sub.id === submissionId) {
-                  return { ...sub, status: "rejected" }
+              acceptedUsers: task.acceptedUsers.map((user) => {
+                if (user.id === submissionId) {
+                  return { ...user, status: "Rejected" }
                 }
-                return sub
+                return user
               }),
-              inProgressCount: task.inProgressCount + 1,
-              pendingReviewCount: task.pendingReviewCount - 1,
             }
           }
           return task
@@ -398,76 +206,79 @@ export default function ProviderTasksPage() {
 
               <TabsContent value="all" className="space-y-4 mt-4 px-4">
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {filteredTasks.map((task) => (
-                    <Card key={task.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                      <CardHeader className="pb-3">
-                        <div className="flex justify-between items-start gap-4">
-                          <div className="space-y-1.5">
-                            <CardTitle className="line-clamp-1">{task.title}</CardTitle>
-                            <CardDescription className="line-clamp-2">{task.description}</CardDescription>
-                          </div>
-                          <div className="flex items-center text-lg font-semibold text-green-600 dark:text-green-400 whitespace-nowrap">
-                            <DollarSign className="h-5 w-5 mr-1" />
-                            {task.price.toFixed(2)}
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pb-3">
-                        <div className="space-y-4">
-                          <div className="flex flex-wrap gap-2">
-                            <Badge variant="outline" className="flex items-center gap-1">
-                              {task.category}
-                            </Badge>
-                            <Badge variant="outline" className="flex items-center gap-1">
-                              {task.difficulty}
-                            </Badge>
-                            <Badge variant="outline" className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {task.estimatedTime}
-                            </Badge>
-                          </div>
-
-                          <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                              <span>Task Progress</span>
-                              <span className="font-medium">
-                                {task.completedCount} of {task.totalSlots} completed
-                              </span>
+                  {filteredTasks.map((task) => {
+                    const counts = getSubmissionCounts(task);
+                    return (
+                      <Card key={task.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                        <CardHeader className="pb-3">
+                          <div className="flex justify-between items-start gap-4">
+                            <div className="space-y-1.5">
+                              <CardTitle className="line-clamp-1">{task.taskTitle}</CardTitle>
+                              <CardDescription className="line-clamp-2">{task.taskDescription}</CardDescription>
                             </div>
-                            <Progress 
-                              value={(task.completedCount / task.totalSlots) * 100} 
-                              className="h-2 bg-gray-100 dark:bg-gray-700"
-                            />
-
-                            <div className="grid grid-cols-3 gap-2 text-sm mt-2">
-                              <div className="flex flex-col items-center p-2 rounded-md bg-green-50 dark:bg-green-900/20">
-                                <span className="font-medium text-green-600 dark:text-green-400">{task.completedCount}</span>
-                                <span className="text-xs text-muted-foreground">Completed</span>
-                              </div>
-                              <div className="flex flex-col items-center p-2 rounded-md bg-yellow-50 dark:bg-yellow-900/20">
-                                <span className="font-medium text-yellow-600 dark:text-yellow-400">{task.inProgressCount}</span>
-                                <span className="text-xs text-muted-foreground">In Progress</span>
-                              </div>
-                              <div className="flex flex-col items-center p-2 rounded-md bg-blue-50 dark:bg-blue-900/20">
-                                <span className="font-medium text-blue-600 dark:text-blue-400">{task.pendingReviewCount}</span>
-                                <span className="text-xs text-muted-foreground">Pending</span>
-                              </div>
+                            <div className="flex items-center text-lg font-semibold text-green-600 dark:text-green-400 whitespace-nowrap">
+                              <DollarSign className="h-5 w-5 mr-1" />
+                              {task.price.toFixed(2)}
                             </div>
                           </div>
+                        </CardHeader>
+                        <CardContent className="pb-3">
+                          <div className="space-y-4">
+                            <div className="flex flex-wrap gap-2">
+                              <Badge variant="outline" className="flex items-center gap-1">
+                                {task.category}
+                              </Badge>
+                              <Badge variant="outline" className="flex items-center gap-1">
+                                {task.difficulty}
+                              </Badge>
+                              <Badge variant="outline" className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {task.estimatedTime}
+                              </Badge>
+                            </div>
+
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-sm">
+                                <span>Task Progress</span>
+                                <span className="font-medium">
+                                  {counts.completedCount} of {counts.totalSlots} completed
+                                </span>
+                              </div>
+                              <Progress 
+                                value={(counts.completedCount / counts.totalSlots) * 100} 
+                                className="h-2 bg-gray-100 dark:bg-gray-700"
+                              />
+
+                              <div className="grid grid-cols-3 gap-2 text-sm mt-2">
+                                <div className="flex flex-col items-center p-2 rounded-md bg-green-50 dark:bg-green-900/20">
+                                  <span className="font-medium text-green-600 dark:text-green-400">{counts.completedCount}</span>
+                                  <span className="text-xs text-muted-foreground">Completed</span>
+                                </div>
+                                <div className="flex flex-col items-center p-2 rounded-md bg-yellow-50 dark:bg-yellow-900/20">
+                                  <span className="font-medium text-yellow-600 dark:text-yellow-400">{counts.inProgressCount}</span>
+                                  <span className="text-xs text-muted-foreground">In Progress</span>
+                                </div>
+                                <div className="flex flex-col items-center p-2 rounded-md bg-blue-50 dark:bg-blue-900/20">
+                                  <span className="font-medium text-blue-600 dark:text-blue-400">{counts.pendingReviewCount}</span>
+                                  <span className="text-xs text-muted-foreground">Pending</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                        <div className="border-t px-6 py-3 bg-gray-50 dark:bg-gray-800/50">
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setSelectedTask(task)} 
+                            className="w-full hover:bg-white dark:hover:bg-gray-800"
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Submissions
+                          </Button>
                         </div>
-                      </CardContent>
-                      <div className="border-t px-6 py-3 bg-gray-50 dark:bg-gray-800/50">
-                        <Button 
-                          variant="outline" 
-                          onClick={() => setSelectedTask(task)} 
-                          className="w-full hover:bg-white dark:hover:bg-gray-800"
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Submissions
-                        </Button>
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    );
+                  })}
                 </div>
                 
                 {filteredTasks.length === 0 && (
@@ -487,17 +298,17 @@ export default function ProviderTasksPage() {
 
               <TabsContent value="pending-review" className="space-y-4 mt-4 px-4">
                 {filteredTasks
-                  .filter((task) => task.pendingReviewCount > 0)
+                  .filter((task) => task.acceptedUsers.some(user => user.status === "Pending"))
                   .map((task) => (
                     <Card key={task.id} className="overflow-hidden hover:shadow-md transition-shadow">
                       <CardHeader className="pb-3">
                         <div className="flex justify-between items-start gap-4">
                           <div className="space-y-1.5">
-                            <CardTitle className="line-clamp-1">{task.title}</CardTitle>
-                            <CardDescription className="line-clamp-2">{task.description}</CardDescription>
+                            <CardTitle className="line-clamp-1">{task.taskTitle}</CardTitle>
+                            <CardDescription className="line-clamp-2">{task.taskDescription}</CardDescription>
                           </div>
                           <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-200">
-                            {task.pendingReviewCount} Pending Review
+                            {task.acceptedUsers.filter(user => user.status === "Pending").length} Pending Review
                           </Badge>
                         </div>
                       </CardHeader>
@@ -530,17 +341,17 @@ export default function ProviderTasksPage() {
 
               <TabsContent value="active" className="space-y-4 mt-4 px-4">
                 {filteredTasks
-                  .filter((task) => task.inProgressCount > 0)
+                  .filter((task) => task.acceptedUsers.some(user => user.status === "Active"))
                   .map((task) => (
                     <Card key={task.id} className="overflow-hidden hover:shadow-md transition-shadow">
                       <CardHeader className="pb-3">
                         <div className="flex justify-between items-start gap-4">
                           <div className="space-y-1.5">
-                            <CardTitle className="line-clamp-1">{task.title}</CardTitle>
-                            <CardDescription className="line-clamp-2">{task.description}</CardDescription>
+                            <CardTitle className="line-clamp-1">{task.taskTitle}</CardTitle>
+                            <CardDescription className="line-clamp-2">{task.taskDescription}</CardDescription>
                           </div>
                           <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200">
-                            {task.inProgressCount} In Progress
+                            {task.acceptedUsers.filter(user => user.status === "Active").length} In Progress
                           </Badge>
                         </div>
                       </CardHeader>
@@ -573,17 +384,17 @@ export default function ProviderTasksPage() {
 
               <TabsContent value="completed" className="space-y-4 mt-4 px-4">
                 {filteredTasks
-                  .filter((task) => task.completedCount > 0)
+                  .filter((task) => task.acceptedUsers.some(user => user.status === "Completed"))
                   .map((task) => (
                     <Card key={task.id} className="overflow-hidden hover:shadow-md transition-shadow">
                       <CardHeader className="pb-3">
                         <div className="flex justify-between items-start gap-4">
                           <div className="space-y-1.5">
-                            <CardTitle className="line-clamp-1">{task.title}</CardTitle>
-                            <CardDescription className="line-clamp-2">{task.description}</CardDescription>
+                            <CardTitle className="line-clamp-1">{task.taskTitle}</CardTitle>
+                            <CardDescription className="line-clamp-2">{task.taskDescription}</CardDescription>
                           </div>
                           <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-green-200">
-                            {task.completedCount} Completed
+                            {task.acceptedUsers.filter(user => user.status === "Completed").length} Completed
                           </Badge>
                         </div>
                       </CardHeader>
@@ -622,7 +433,7 @@ export default function ProviderTasksPage() {
       <Dialog open={!!selectedTask} onOpenChange={(open) => !open && setSelectedTask(null)}>
         <DialogContent className="max-w-4xl w-[95vw] max-h-[80vh] overflow-y-auto">
           <DialogHeader className="space-y-1">
-            <DialogTitle>{selectedTask?.title}</DialogTitle>
+            <DialogTitle>{selectedTask?.taskTitle}</DialogTitle>
             <DialogDescription>Review and manage task submissions</DialogDescription>
           </DialogHeader>
 
@@ -631,7 +442,7 @@ export default function ProviderTasksPage() {
               <TabsTrigger value="pending" className="flex items-center gap-2">
                 Pending Review
                 <Badge variant="secondary" className="ml-1">
-                  {selectedTask?.pendingReviewCount}
+                  {selectedTask?.acceptedUsers.filter(user => user.status === "Pending").length}
                 </Badge>
               </TabsTrigger>
               <TabsTrigger value="approved">Approved</TabsTrigger>
@@ -651,12 +462,12 @@ export default function ProviderTasksPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {selectedTask?.submissions
-                        .filter((sub) => sub.status === "pending")
-                        .map((submission) => (
-                          <TableRow key={submission.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                            <TableCell className="font-medium">{submission.userName}</TableCell>
-                            <TableCell>{new Date(submission.submittedAt).toLocaleString()}</TableCell>
+                      {selectedTask?.acceptedUsers
+                        .filter((user) => user.status === "Pending")
+                        .map((user) => (
+                          <TableRow key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                            <TableCell className="font-medium">{user.user.name}</TableCell>
+                            <TableCell>{new Date(user.createdAt).toLocaleString()}</TableCell>
                             <TableCell>
                               <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
                                 Pending Review
@@ -667,7 +478,7 @@ export default function ProviderTasksPage() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => {
-                                  setSelectedSubmission(submission)
+                                  setSelectedSubmission(user)
                                   setReviewDialogOpen(true)
                                 }}
                                 className="hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -696,12 +507,12 @@ export default function ProviderTasksPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {selectedTask?.submissions
-                      .filter((sub) => sub.status === "approved")
-                      .map((submission) => (
-                        <TableRow key={submission.id}>
-                          <TableCell className="font-medium">{submission.userName}</TableCell>
-                          <TableCell>{new Date(submission.submittedAt).toLocaleString()}</TableCell>
+                    {selectedTask?.acceptedUsers
+                      .filter((user) => user.status === "Completed")
+                      .map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">{user.user.name}</TableCell>
+                          <TableCell>{new Date(user.createdAt).toLocaleString()}</TableCell>
                           <TableCell>
                             <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-green-200">
                               Approved
@@ -712,7 +523,7 @@ export default function ProviderTasksPage() {
                               variant="outline"
                               size="sm"
                               onClick={() => {
-                                setSelectedSubmission(submission)
+                                setSelectedSubmission(user)
                                 setReviewDialogOpen(true)
                               }}
                             >
@@ -722,7 +533,7 @@ export default function ProviderTasksPage() {
                           </TableCell>
                         </TableRow>
                       ))}
-                    {selectedTask?.submissions.filter((sub) => sub.status === "approved").length === 0 && (
+                    {selectedTask?.acceptedUsers.filter((user) => user.status === "Completed").length === 0 && (
                       <TableRow>
                         <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
                           No approved submissions yet
@@ -746,12 +557,12 @@ export default function ProviderTasksPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {selectedTask?.submissions
-                      .filter((sub) => sub.status === "rejected")
-                      .map((submission) => (
-                        <TableRow key={submission.id}>
-                          <TableCell className="font-medium">{submission.userName}</TableCell>
-                          <TableCell>{new Date(submission.submittedAt).toLocaleString()}</TableCell>
+                    {selectedTask?.acceptedUsers
+                      .filter((user) => user.status === "Rejected")
+                      .map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">{user.user.name}</TableCell>
+                          <TableCell>{new Date(user.createdAt).toLocaleString()}</TableCell>
                           <TableCell>
                             <Badge className="bg-red-100 text-red-800 hover:bg-red-100 border-red-200">Rejected</Badge>
                           </TableCell>
@@ -760,7 +571,7 @@ export default function ProviderTasksPage() {
                               variant="outline"
                               size="sm"
                               onClick={() => {
-                                setSelectedSubmission(submission)
+                                setSelectedSubmission(user)
                                 setReviewDialogOpen(true)
                               }}
                             >
@@ -770,7 +581,7 @@ export default function ProviderTasksPage() {
                           </TableCell>
                         </TableRow>
                       ))}
-                    {selectedTask?.submissions.filter((sub) => sub.status === "rejected").length === 0 && (
+                    {selectedTask?.acceptedUsers.filter((user) => user.status === "Rejected").length === 0 && (
                       <TableRow>
                         <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
                           No rejected submissions
@@ -790,7 +601,7 @@ export default function ProviderTasksPage() {
         <DialogContent className="max-w-3xl w-[100vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader className="space-y-1">
             <DialogTitle>Review Submission</DialogTitle>
-            <DialogDescription>Reviewing submission by {selectedSubmission?.userName}</DialogDescription>
+            <DialogDescription>Reviewing submission by {selectedSubmission?.user.name}</DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-6 py-4">
@@ -798,17 +609,17 @@ export default function ProviderTasksPage() {
               <div className="grid sm:grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground block mb-1">Worker</span>
-                  <span className="font-medium">{selectedSubmission?.userName}</span>
+                  <span className="font-medium">{selectedSubmission?.user.name}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground block mb-1">Submitted</span>
                   <span className="font-medium">
-                    {selectedSubmission && new Date(selectedSubmission.submittedAt).toLocaleString()}
+                    {selectedSubmission && new Date(selectedSubmission.createdAt).toLocaleString()}
                   </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground block mb-1">Task</span>
-                  <span className="font-medium">{selectedTask?.title}</span>
+                  <span className="font-medium">{selectedTask?.taskTitle}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground block mb-1">Payment Amount</span>
@@ -822,22 +633,28 @@ export default function ProviderTasksPage() {
             <div className="space-y-2">
               <h3 className="text-sm font-medium">Proof Description</h3>
               <div className="rounded-lg border p-4 text-sm bg-white dark:bg-gray-800">
-                {selectedSubmission?.proofText}
+                {selectedSubmission?.describe || "No description provided"}
               </div>
             </div>
 
             <div className="space-y-2">
               <h3 className="text-sm font-medium">Proof Screenshot</h3>
               <div className="rounded-lg border overflow-hidden bg-gray-100 dark:bg-gray-800">
-                <img
-                  src={selectedSubmission?.proofImageUrl || "/placeholder.svg"}
-                  alt="Proof screenshot"
-                  className="w-full h-auto max-h-[400px] object-contain"
-                />
+                {selectedSubmission?.proof ? (
+                  <img
+                    src={selectedSubmission.proof}
+                    alt="Proof screenshot"
+                    className="w-full h-auto max-h-[400px] object-contain"
+                  />
+                ) : (
+                  <div className="p-4 text-center text-muted-foreground">
+                    No proof image provided
+                  </div>
+                )}
               </div>
             </div>
 
-            {selectedSubmission?.status === "pending" ? (
+            {selectedSubmission?.status === "Pending" ? (
               <div className="flex flex-col-reverse sm:flex-row justify-between gap-3">
                 <Button
                   variant="outline"
@@ -867,12 +684,12 @@ export default function ProviderTasksPage() {
               <div className="flex justify-center py-2">
                 <Badge
                   className={
-                    selectedSubmission?.status === "approved"
+                    selectedSubmission?.status === "Completed"
                       ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
                       : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
                   }
                 >
-                  {selectedSubmission?.status === "approved" ? "Approved" : "Rejected"}
+                  {selectedSubmission?.status}
                 </Badge>
               </div>
             )}

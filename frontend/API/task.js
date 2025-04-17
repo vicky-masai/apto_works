@@ -19,3 +19,18 @@ export const getAcceptedTasks = async () => {
     throw error;
   }
 };
+
+// Function to get tasks for a provider with authentication
+export const getProviderTasks = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/tasks/provider`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching provider tasks:', error);
+    throw error;
+  }
+};
