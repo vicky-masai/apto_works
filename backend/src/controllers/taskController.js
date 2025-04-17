@@ -624,10 +624,10 @@ const submitProof = async (req, res) => {
   try {
     const { acceptedTaskId } = req.params;
     const { describe } = req.body;
-    const file = req.file;
+    const files = req.files;
 
     console.log('Request body:', req.body);
-    console.log('File:', file);
+    console.log('Files:', files);
     console.log('AcceptedTaskId:', acceptedTaskId);
     console.log('User ID:', req.user.id);
 
@@ -650,8 +650,8 @@ const submitProof = async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized to submit proof for this task' });
     }
 
-    // Construct file URL if file exists
-    const fileUrl = file ? `${process.env.BACKEND_URL}/uploads/${file.filename}` : null;
+    // Construct file URLs if files exist
+    const fileUrls = files ? files.map(file => `${process.env.BACKEND_URL}/uploads/${file.filename}`) : [];
 
     const updatedTask = await prisma.acceptedTask.update({
       where: { 
@@ -660,15 +660,18 @@ const submitProof = async (req, res) => {
       },
       data: {
         describe,
-        proof: fileUrl,
-        status: 'PENDING_REVIEW'
+        proof: fileUrls,
+        status: 'Review'
       }
     });
 
-    res.json({data:{
-      ...updatedTask,
-      fileUrl
-    },message:"Proof submitted successfully"});
+    res.json({
+      data: {
+        ...updatedTask,
+        fileUrls
+      },
+      message: "Proof submitted successfully"
+    });
   } catch (error) {
     console.error('Submit Proof Error:', error);
     res.status(500).json({ error: 'Failed to submit proof' });

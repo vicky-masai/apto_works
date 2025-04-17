@@ -17,7 +17,7 @@ import Cookies from "js-cookie"
 export default function TaskAcceptPage({ params }: { params: Promise<{ id: string }> }) {
   const [step, setStep] = useState(1)
   const [proofText, setProofText] = useState("")
-  const [file, setFile] = useState<File | null>(null)
+  const [files, setFiles] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isCompleted, setIsCompleted] = useState(false)
   const [task, setTask] = useState<any>(null)
@@ -62,24 +62,28 @@ export default function TaskAcceptPage({ params }: { params: Promise<{ id: strin
   }, [token, router, Id]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0])
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setFiles(prevFiles => [...prevFiles, ...newFiles]);
     }
   }
 
+  const handleRemoveFile = (index: number) => {
+    setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
+  }
+
   const handleSubmit = async () => {
-    if (!file || !proofText) return;
+    if (files.length === 0) return;
     
     setIsSubmitting(true);
     try {
-      const response = await submitProof(Id, file, proofText, token);
+      const response = await submitProof(Id, files, proofText, token);
       if (response.data) {
         setIsCompleted(true);
         setStep(3);
       }
     } catch (error) {
       console.error('Error submitting proof:', error);
-      // Handle error appropriately
     } finally {
       setIsSubmitting(false);
     }
@@ -162,7 +166,7 @@ export default function TaskAcceptPage({ params }: { params: Promise<{ id: strin
                     <div className="space-y-4">
                       <div>
                         <label htmlFor="proof" className="text-sm font-medium">
-                          Describe how you completed the task
+                          Describe how you completed the task (Optional)
                         </label>
                         <Textarea
                           id="proof"
@@ -175,7 +179,7 @@ export default function TaskAcceptPage({ params }: { params: Promise<{ id: strin
 
                       <div>
                         <label htmlFor="file" className="text-sm font-medium">
-                          Upload Screenshot or Proof
+                          Upload Screenshots, Videos or PDFs
                         </label>
                         <div className="mt-1 flex items-center justify-center w-full">
                           <label
@@ -187,18 +191,54 @@ export default function TaskAcceptPage({ params }: { params: Promise<{ id: strin
                               <p className="mb-2 text-sm text-muted-foreground">
                                 <span className="font-semibold">Click to upload</span> or drag and drop
                               </p>
-                              <p className="text-xs text-muted-foreground">PNG, JPG or PDF (MAX. 10MB)</p>
+                              <p className="text-xs text-muted-foreground">PNG, JPG, PDF or MP4 (MAX. 10MB each)</p>
                             </div>
                             <input
                               id="file-upload"
                               type="file"
                               className="hidden"
                               onChange={handleFileChange}
-                              accept="image/png, image/jpeg, application/pdf"
+                              accept="image/png, image/jpeg, application/pdf, video/mp4"
+                              multiple
                             />
                           </label>
                         </div>
-                        {file && <p className="text-sm mt-2 text-muted-foreground">Selected file: {file.name}</p>}
+                        
+                        {files.length > 0 && (
+                          <div className="mt-4 grid grid-cols-2 gap-4">
+                            {files.map((file, index) => (
+                              <div key={index} className="relative group">
+                                {file.type.startsWith('image/') && (
+                                  <img
+                                    src={URL.createObjectURL(file)}
+                                    alt={`Preview ${index + 1}`}
+                                    className="w-full h-32 object-cover rounded-lg"
+                                  />
+                                )}
+                                {file.type === 'application/pdf' && (
+                                  <div className="w-full h-32 bg-muted rounded-lg flex items-center justify-center">
+                                    <span className="text-muted-foreground">PDF Preview</span>
+                                  </div>
+                                )}
+                                {file.type.startsWith('video/') && (
+                                  <video
+                                    src={URL.createObjectURL(file)}
+                                    className="w-full h-32 object-cover rounded-lg"
+                                    controls
+                                  />
+                                )}
+                                <button
+                                  onClick={() => handleRemoveFile(index)}
+                                  className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                  </svg>
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -207,7 +247,7 @@ export default function TaskAcceptPage({ params }: { params: Promise<{ id: strin
                     <Button variant="outline" onClick={() => setStep(1)}>
                       Back
                     </Button>
-                    <Button onClick={handleSubmit} disabled={!proofText || !file || isSubmitting}>
+                    <Button onClick={handleSubmit} disabled={files.length === 0 || isSubmitting}>
                       {isSubmitting ? "Submitting..." : "Submit Proof"}
                     </Button>
                   </div>

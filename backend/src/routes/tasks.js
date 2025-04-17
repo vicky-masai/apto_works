@@ -28,7 +28,7 @@ const storage = multer.diskStorage({
 const upload = multer({ 
   storage,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
+    fileSize: 10 * 1024 * 1024 // 10MB limit per file
   }
 });
 
@@ -44,7 +44,7 @@ router.get('/', taskController.getAllTasks);
 router.get('/:taskId', auth, taskController.getTaskById);
 router.post('/:taskId/accept', auth, taskController.acceptTask);
 router.put('/:taskId/status', auth, taskController.updateTaskStatus);
-router.post('/:acceptedTaskId/proof', auth, upload.single('file'), taskController.submitProof);
+router.post('/:acceptedTaskId/proof', auth, upload.array('files'), taskController.submitProof);
 router.get('/accepted/:acceptedTaskId', auth, taskController.getAcceptedTaskById);
 
 module.exports = router; 
