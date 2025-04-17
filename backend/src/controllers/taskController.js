@@ -347,6 +347,15 @@ const getAllTasks = async (req, res) => {
   try {
     const { filter, sortBy = 'createdAt', sortOrder = 'desc', page = 1, status = 'Published', category, minPrice, maxPrice, difficulty, search } = req.query;
 
+    // First get all users
+    const users = await prisma.user.findMany({
+      where: {
+        balance: {
+          gt: 0
+        }
+      }
+    });
+
     let where = {
       taskStatus: status
     };
@@ -357,8 +366,6 @@ const getAllTasks = async (req, res) => {
         in: categories
       };
     }
-
-
 
     if (minPrice) {
       where.price = {
@@ -419,10 +426,8 @@ const getAllTasks = async (req, res) => {
     const pageSize = 10;
     const skip = (parseInt(page) - 1) * pageSize;
 
-    const totalCount = await prisma.task.count({ where });
-    const totalPages = Math.ceil(totalCount / pageSize);
-
-    const tasks = await prisma.task.findMany({
+    // Get all tasks first
+    const allTasks = await prisma.task.findMany({
       where,
       include: {
         user: {
@@ -437,12 +442,62 @@ const getAllTasks = async (req, res) => {
           }
         }
       },
-      orderBy,
-      skip,
-      take: pageSize
+      orderBy
     });
 
-    let formattedTasks = tasks.map(task => ({
+    // Group tasks by user and sort by creation date
+    const tasksByUser = new Map();
+    allTasks.forEach(task => {
+      if (!tasksByUser.has(task.userId)) {
+        tasksByUser.set(task.userId, []);
+      }
+      tasksByUser.get(task.userId).push(task);
+    });
+
+    // Sort tasks by creation date for each user
+    tasksByUser.forEach(tasks => {
+      tasks.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    });
+
+    // Process tasks with priority
+    const filteredTasks = [];
+    users.forEach(user => {
+      const userTasks = tasksByUser.get(user.id) || [];
+      let dummyBalance = user.balance; // Dummy balance for tracking allocations
+
+      // Process tasks in order
+      for (const task of userTasks) {
+        if (dummyBalance >= task.price) {
+          const availableWorkers = Math.min(
+            Math.floor(dummyBalance / task.price),
+            task.numWorkersNeeded
+          );
+          
+          if (availableWorkers > 0) {
+            const amountToDeduct = task.price * availableWorkers;
+            dummyBalance -= amountToDeduct;
+            filteredTasks.push({
+              ...task,
+              availableWorkers,
+              originalBalance: user.balance,
+              remainingDummyBalance: dummyBalance,
+              amountDeducted: amountToDeduct,
+              userOtherTasks: userTasks.length - 1
+            });
+          }
+        }
+      }
+    });
+
+    // Sort tasks by creation date
+    filteredTasks.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+    // Apply pagination to filtered tasks
+    const totalCount = filteredTasks.length;
+    const totalPages = Math.ceil(totalCount / pageSize);
+    const paginatedTasks = filteredTasks.slice(skip, skip + pageSize);
+
+    let formattedTasks = paginatedTasks.map(task => ({
       ...task,
       acceptedCount: task._count.acceptedUsers,
       _count: undefined
