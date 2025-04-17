@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { CheckCircle, Clock, DollarSign, Eye, Search, X } from "lucide-react"
 
+// UI Component Imports
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -13,9 +14,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Progress } from "@/components/ui/progress"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Header } from "@/components/Header"
-import { getProviderTasks } from "@/API/task"
+import { getProviderTasks, verifyProof } from "@/API/task"
 
-// Add types for the API response
+// Type Definitions
 interface User {
   id: string;
   name: string;
@@ -65,7 +66,9 @@ interface Task {
   acceptedUsers: AcceptedUser[];
 }
 
+// Main Component
 export default function ProviderTasksPage() {
+  // State Management
   const [tasks, setTasks] = useState<Task[]>([])
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [selectedSubmission, setSelectedSubmission] = useState<AcceptedUser | null>(null)
@@ -73,24 +76,27 @@ export default function ProviderTasksPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+console.log("selectedSubmission",selectedSubmission);
 
+  // Data Fetching
   useEffect(() => {
     getProviderTasks().then((tasksData) => {
       setTasks(tasksData);
     });
   }, []);
 
+  // Task Filtering
   const filteredTasks = tasks.filter(
     (task) =>
       task.taskTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.taskDescription.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
-  // Helper function to count submissions by status
+  // Helper Functions
   const getSubmissionCounts = (task: Task) => {
     const completedCount = task.acceptedUsers.filter(user => user.status === "Completed").length;
     const inProgressCount = task.acceptedUsers.filter(user => user.status === "Active").length;
-    const pendingReviewCount = task.acceptedUsers.filter(user => user.status === "Pending").length;
+    const pendingReviewCount = task.acceptedUsers.filter(user => user.status === "Review" || user.status === "Pending").length;
     
     return {
       completedCount,
@@ -100,18 +106,22 @@ export default function ProviderTasksPage() {
     };
   }
 
-  const handleApproveSubmission = (taskId: string, submissionId: string) => {
+  // Event Handlers
+  const handleApproveSubmission = async (taskId: string, userId: string) => {
+    console.log("taskId", taskId);
+    console.log("userId", userId);
+    
     setIsProcessing(true)
-
-    // TODO: Replace with actual API call
-    setTimeout(() => {
+    try {
+      await verifyProof(taskId, userId, true);
+      
       setTasks((prevTasks) =>
         prevTasks.map((task) => {
           if (task.id === taskId) {
             return {
               ...task,
               acceptedUsers: task.acceptedUsers.map((user) => {
-                if (user.id === submissionId) {
+                if (user.userId === userId) {
                   return { ...user, status: "Completed" }
                 }
                 return user
@@ -121,17 +131,20 @@ export default function ProviderTasksPage() {
           return task
         }),
       )
-
+    } catch (error) {
+      console.error('Error approving submission:', error);
+      // You might want to show an error toast/notification here
+    } finally {
       setIsProcessing(false)
       setReviewDialogOpen(false)
-    }, 1500)
+    }
   }
 
-  const handleRejectSubmission = (taskId: string, submissionId: string) => {
+  const handleRejectSubmission = async (taskId: string, submissionId: string) => {
     setIsProcessing(true)
-
-    // TODO: Replace with actual API call
-    setTimeout(() => {
+    try {
+      await verifyProof(taskId, submissionId, false);
+      
       setTasks((prevTasks) =>
         prevTasks.map((task) => {
           if (task.id === taskId) {
@@ -139,7 +152,7 @@ export default function ProviderTasksPage() {
               ...task,
               acceptedUsers: task.acceptedUsers.map((user) => {
                 if (user.id === submissionId) {
-                  return { ...user, status: "Rejected" }
+                  return { ...user, status: "Review" }
                 }
                 return user
               }),
@@ -148,24 +161,34 @@ export default function ProviderTasksPage() {
           return task
         }),
       )
-
+    } catch (error) {
+      console.error('Error rejecting submission:', error);
+      // You might want to show an error toast/notification here
+    } finally {
       setIsProcessing(false)
       setReviewDialogOpen(false)
-    }, 1500)
+    }
   }
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900">
+      {/* Header Component */}
       <Header />
 
+      {/* Main Content */}
       <main className="flex-1 container py-6 px-4 mx-auto md:px-6 lg:px-8">
         <div className="flex flex-col gap-6 max-w-7xl mx-auto">
+          {/* Page Header Section */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* Title and Description */}
             <div>
               <h1 className="text-2xl font-bold tracking-tight">My Posted Tasks</h1>
               <p className="text-muted-foreground mt-1">Manage and monitor your task submissions</p>
             </div>
+
+            {/* Search and Post Task Button */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              {/* Search Input */}
               <div className="relative flex-1 sm:flex-none">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -176,6 +199,7 @@ export default function ProviderTasksPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
+              {/* Post Task Button */}
               <Link href="/post-task">
                 <Button className="w-full sm:w-auto shadow-sm">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
@@ -187,8 +211,10 @@ export default function ProviderTasksPage() {
             </div>
           </div>
 
+          {/* Task Tabs Section */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 p-1">
             <Tabs defaultValue="all" className="w-full">
+              {/* Tab Navigation */}
               <TabsList className="w-full justify-start gap-2 rounded-none border-b dark:border-gray-700 px-3 pb-0">
                 <TabsTrigger value="all" className="data-[state=active]:border-primary data-[state=active]:bg-transparent">
                   All Tasks
@@ -204,7 +230,9 @@ export default function ProviderTasksPage() {
                 </TabsTrigger>
               </TabsList>
 
+              {/* All Tasks Tab Content */}
               <TabsContent value="all" className="space-y-4 mt-4 px-4">
+                {/* Task Cards Grid */}
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {filteredTasks.map((task) => {
                     const counts = getSubmissionCounts(task);
@@ -256,7 +284,7 @@ export default function ProviderTasksPage() {
                                 </div>
                                 <div className="flex flex-col items-center p-2 rounded-md bg-yellow-50 dark:bg-yellow-900/20">
                                   <span className="font-medium text-yellow-600 dark:text-yellow-400">{counts.inProgressCount}</span>
-                                  <span className="text-xs text-muted-foreground">In Progress</span>
+                                  <span className="text-xs text-muted-foreground">Working</span>
                                 </div>
                                 <div className="flex flex-col items-center p-2 rounded-md bg-blue-50 dark:bg-blue-900/20">
                                   <span className="font-medium text-blue-600 dark:text-blue-400">{counts.pendingReviewCount}</span>
@@ -296,6 +324,7 @@ export default function ProviderTasksPage() {
                 )}
               </TabsContent>
 
+              {/* Pending Review Tab Content */}
               <TabsContent value="pending-review" className="space-y-4 mt-4 px-4">
                 {filteredTasks
                   .filter((task) => task.acceptedUsers.some(user => user.status === "Pending"))
@@ -308,7 +337,7 @@ export default function ProviderTasksPage() {
                             <CardDescription className="line-clamp-2">{task.taskDescription}</CardDescription>
                           </div>
                           <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-200">
-                            {task.acceptedUsers.filter(user => user.status === "Pending").length} Pending Review
+                            {task.acceptedUsers.filter(user => user.status === "Review").length} In Review
                           </Badge>
                         </div>
                       </CardHeader>
@@ -339,6 +368,7 @@ export default function ProviderTasksPage() {
                   ))}
               </TabsContent>
 
+              {/* Active Tasks Tab Content */}
               <TabsContent value="active" className="space-y-4 mt-4 px-4">
                 {filteredTasks
                   .filter((task) => task.acceptedUsers.some(user => user.status === "Active"))
@@ -351,7 +381,7 @@ export default function ProviderTasksPage() {
                             <CardDescription className="line-clamp-2">{task.taskDescription}</CardDescription>
                           </div>
                           <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200">
-                            {task.acceptedUsers.filter(user => user.status === "Active").length} In Progress
+                            {task.acceptedUsers.filter(user => user.status === "Active").length} Working
                           </Badge>
                         </div>
                       </CardHeader>
@@ -382,6 +412,7 @@ export default function ProviderTasksPage() {
                   ))}
               </TabsContent>
 
+              {/* Completed Tasks Tab Content */}
               <TabsContent value="completed" className="space-y-4 mt-4 px-4">
                 {filteredTasks
                   .filter((task) => task.acceptedUsers.some(user => user.status === "Completed"))
@@ -429,26 +460,32 @@ export default function ProviderTasksPage() {
         </div>
       </main>
 
-      {/* Task Submissions Dialog - Updated for better mobile responsiveness */}
+      {/* Task Submissions Dialog */}
       <Dialog open={!!selectedTask} onOpenChange={(open) => !open && setSelectedTask(null)}>
         <DialogContent className="max-w-4xl w-[95vw] max-h-[80vh] overflow-y-auto">
+          {/* Dialog Header */}
           <DialogHeader className="space-y-1">
             <DialogTitle>{selectedTask?.taskTitle}</DialogTitle>
             <DialogDescription>Review and manage task submissions</DialogDescription>
           </DialogHeader>
 
+          {/* Submission Tabs */}
           <Tabs defaultValue="pending" className="w-full">
+            {/* Tab List */}
             <TabsList className="w-full justify-start gap-2 h-auto flex-wrap">
               <TabsTrigger value="pending" className="flex items-center gap-2">
                 Pending Review
                 <Badge variant="secondary" className="ml-1">
-                  {selectedTask?.acceptedUsers.filter(user => user.status === "Pending").length}
+                  {selectedTask?.acceptedUsers
+                    .filter((user) => user.status === "Review" || user.status === "Pending")
+                    .length}
                 </Badge>
               </TabsTrigger>
               <TabsTrigger value="approved">Approved</TabsTrigger>
               <TabsTrigger value="rejected">Rejected</TabsTrigger>
             </TabsList>
 
+            {/* Pending Submissions Content */}
             <TabsContent value="pending" className="mt-4">
               <div className="rounded-lg border dark:border-gray-700 overflow-hidden">
                 <div className="overflow-x-auto">
@@ -463,7 +500,7 @@ export default function ProviderTasksPage() {
                     </TableHeader>
                     <TableBody>
                       {selectedTask?.acceptedUsers
-                        .filter((user) => user.status === "Pending")
+                        .filter((user) => user.status === "Review" || user.status === "Pending")
                         .map((user) => (
                           <TableRow key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                             <TableCell className="font-medium">{user.user.name}</TableCell>
@@ -495,6 +532,7 @@ export default function ProviderTasksPage() {
               </div>
             </TabsContent>
 
+            {/* Approved Submissions Content */}
             <TabsContent value="approved" className="mt-4">
               <div className="rounded-md border">
                 <Table>
@@ -545,6 +583,7 @@ export default function ProviderTasksPage() {
               </div>
             </TabsContent>
 
+            {/* Rejected Submissions Content */}
             <TabsContent value="rejected" className="mt-4">
               <div className="rounded-md border">
                 <Table>
@@ -596,15 +635,18 @@ export default function ProviderTasksPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Submission Review Dialog - Enhanced for better UX */}
+      {/* Submission Review Dialog */}
       <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
         <DialogContent className="max-w-3xl w-[100vw] max-h-[90vh] overflow-y-auto">
+          {/* Review Dialog Header */}
           <DialogHeader className="space-y-1">
             <DialogTitle>Review Submission</DialogTitle>
             <DialogDescription>Reviewing submission by {selectedSubmission?.user.name}</DialogDescription>
           </DialogHeader>
 
+          {/* Submission Details */}
           <div className="grid gap-6 py-4">
+            {/* Worker and Task Info */}
             <div className="grid gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
               <div className="grid sm:grid-cols-2 gap-4 text-sm">
                 <div>
@@ -630,6 +672,7 @@ export default function ProviderTasksPage() {
               </div>
             </div>
 
+            {/* Proof Description */}
             <div className="space-y-2">
               <h3 className="text-sm font-medium">Proof Description</h3>
               <div className="rounded-lg border p-4 text-sm bg-white dark:bg-gray-800">
@@ -637,6 +680,7 @@ export default function ProviderTasksPage() {
               </div>
             </div>
 
+            {/* Proof Screenshot */}
             <div className="space-y-2">
               <h3 className="text-sm font-medium">Proof Screenshot</h3>
               <div className="rounded-lg border overflow-hidden bg-gray-100 dark:bg-gray-800">
@@ -654,13 +698,14 @@ export default function ProviderTasksPage() {
               </div>
             </div>
 
-            {selectedSubmission?.status === "Pending" ? (
+            {/* Action Buttons */}
+            {selectedSubmission?.status === "Review" || selectedSubmission?.status === "Pending" ? (
               <div className="flex flex-col-reverse sm:flex-row justify-between gap-3">
                 <Button
                   variant="outline"
                   className="gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
                   onClick={() =>
-                    selectedTask && selectedSubmission && handleRejectSubmission(selectedTask.id, selectedSubmission.id)
+                    selectedTask && selectedSubmission && handleRejectSubmission(selectedSubmission.taskId, selectedSubmission.userId)
                   }
                   disabled={isProcessing}
                 >
@@ -672,7 +717,7 @@ export default function ProviderTasksPage() {
                   onClick={() =>
                     selectedTask &&
                     selectedSubmission &&
-                    handleApproveSubmission(selectedTask.id, selectedSubmission.id)
+                    handleApproveSubmission(selectedSubmission.taskId, selectedSubmission.userId)
                   }
                   disabled={isProcessing}
                 >

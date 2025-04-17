@@ -34,3 +34,22 @@ export const getProviderTasks = async () => {
     throw error;
   }
 };
+
+// Function to verify proof for a task submission
+export const verifyProof = async (taskId, workerId, isApproved) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/task-providers/verify-proof/${taskId}/${workerId}`,
+      { isApproved },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error verifying proof:', error);
+    throw error;
+  }
+};
