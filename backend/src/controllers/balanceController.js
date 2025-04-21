@@ -420,7 +420,30 @@ const updatePaymentMethod = async (req, res) => {
   }
 };
 
+const deletePaymentMethod = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = req.user;
 
+    // Check if the payment method exists
+    const paymentMethod = await prisma.userPaymentMethod.findUnique({
+      where: { id, userId: user.id },
+    });
+
+    if (!paymentMethod) {
+      return res.status(404).json({ error: 'Payment method not found' });
+    }
+
+    // Delete the payment method
+    await prisma.userPaymentMethod.delete({
+      where: { id },
+    });
+
+    res.json({ message: 'Payment method deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete payment method' });
+  }
+};
 
 module.exports = {
   getUserBalance,
@@ -436,4 +459,6 @@ module.exports = {
   getAllPaymentMethods,
   getPaymentMethodById,
   updatePaymentMethod,
+  deletePaymentMethod,
+  deletePaymentMethod
 }; 
