@@ -157,7 +157,7 @@ const Leftsidebar = () => {
       </nav>
 
       {/* Post Task Button */}
-      <div className="p-4">
+      {/* <div className="p-4">
         <button className={`
           w-full bg-blue-600 text-white rounded-lg p-3
           hover:bg-blue-700 transition-colors
@@ -167,7 +167,7 @@ const Leftsidebar = () => {
           <PlusSquare className="w-5 h-5" />
           {!isCollapsed && <span className="ml-2">Post Task</span>}
         </button>
-      </div>
+      </div> */}
 
       {/* Logout */}
       <div className="p-4 border-t border-gray-200">
