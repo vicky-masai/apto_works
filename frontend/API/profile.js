@@ -18,3 +18,18 @@ export const getProfile = async () => {
     throw error;
   }
 };
+
+
+export const getNotification = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/auth/notifications`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch profile:', error);
+    throw error;
+  }
+};
