@@ -5,47 +5,54 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import Cookies from "js-cookie"
 import { useRouter } from "next/navigation"
+import socket from '../utils/socket'; // import singleton instance
+import { getNotification } from "@/API/profile"
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
 
 interface HeaderProps {
   isLoggedIn?: boolean
 }
 
-interface Notification {
+type Notification = {
   id: number;
-  title: string;
+  heading: string;
   message: string;
-  time: string;
-  isRead: boolean;
-}
+  timestamp: string;
+  isRead?: boolean;
+};
 
 export function Header({ isLoggedIn = true }: HeaderProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
   const [isBlinking, setIsBlinking] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: 1,
-      title: "New Task Assigned",
-      message: "You have been assigned a new task: UI Development",
-      time: "2 minutes ago",
-      isRead: false
-    },
-    {
-      id: 2,
-      title: "Task Update",
-      message: "Your task 'API Integration' has been approved",
-      time: "1 hour ago",
-      isRead: false
-    },
-    {
-      id: 3,
-      title: "Payment Received",
-      message: "You received payment for task: Database Design",
-      time: "2 hours ago",
-      isRead: false
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await getNotification()
+      setNotifications(response.notifications);
+    } catch (err) {
+      console.error('Error fetching notifications', err);
     }
-  ]);
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+
+    socket.on('getNotification', (data: Notification) => {
+      setNotifications((prev) => [data, ...prev]);
+    });
+
+    // Cleanup (optional but good practice)
+    return () => {
+      socket.off('getNotification');
+    };
+  }, []);
+
   
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
@@ -153,8 +160,8 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
                           onClick={() => markAsRead(notification.id)}
                         >
                           <div className="flex justify-between items-start mb-1">
-                            <h4 className="font-medium text-sm">{notification.title}</h4>
-                            <span className="text-xs text-gray-500">{notification.time}</span>
+                            <h4 className="font-medium text-sm">{notification.heading}</h4>
+                            <span className="text-xs text-gray-500">{dayjs(notification.timestamp).fromNow()}</span>
                           </div>
                           <p className="text-sm text-gray-600">{notification.message}</p>
                         </div>

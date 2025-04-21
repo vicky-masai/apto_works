@@ -49,6 +49,8 @@ const sendPasswordResetEmail = async (email, resetToken) => {
   }
 };
 
+
+
 module.exports = {
   sendOTP,
   sendPasswordResetEmail,
