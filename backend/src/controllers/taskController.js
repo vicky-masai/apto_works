@@ -1,5 +1,5 @@
 const prisma = require('../config/database');
-
+const { sendNotification } = require('../utils/notificationService');
 // Task Provider Methods
 const createTask = async (req, res) => {
   try {
@@ -32,6 +32,13 @@ const createTask = async (req, res) => {
         userId: req.user.id,
         taskStatus: 'Review'
       }
+    });
+
+    await sendNotification({
+      receiverId: req.user.id,
+      heading: 'Task Created',
+      message: 'Your task has been created and is now under review',
+      senderId: 'System'
     });
 
     res.status(201).json({ task, message: 'Task created successfully' });
