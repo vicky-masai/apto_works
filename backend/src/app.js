@@ -4,8 +4,39 @@ const config = require('./config/config');
 const prisma = require('./config/database');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
+const { Server } = require('socket.io');
+const {
+  setSocketIO,
+  addOnlineUser,
+  removeOnlineUser
+} = require('./utils/notificationService');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+});
+
+setSocketIO(io); // Make io available globally in utils
+
+// Handle socket connections
+io.on('connection', (socket) => {
+  console.log('Socket connected:', socket.id);
+
+  socket.on('register', (userId) => {
+    addOnlineUser(userId, socket.id);
+    console.log(`User ${userId} registered with socket ${socket.id}`);
+  });
+
+  socket.on('disconnect', () => {
+    removeOnlineUser(socket.id);
+    console.log('Socket disconnected:', socket.id);
+  });
+});
 
 // Create uploads directory if it doesn't exist
 const uploadDir = path.join(process.cwd(), 'uploads');
@@ -46,8 +77,8 @@ const startServer = async () => {
   try {
     await prisma.$connect();
     console.log('Connected to database');
-    
-    app.listen(config.PORT, () => {
+
+    server.listen(config.PORT, () => {
       console.log(`Server is running on port ${config.PORT}`);
     });
   } catch (error) {
@@ -62,4 +93,4 @@ startServer();
 process.on('SIGINT', async () => {
   await prisma.$disconnect();
   process.exit(0);
-}); 
+});

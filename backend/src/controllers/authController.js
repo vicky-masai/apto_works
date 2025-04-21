@@ -4,6 +4,8 @@ const prisma = require('../config/database');
 const config = require('../config/config');
 const { sendOTP, sendPasswordResetEmail } = require('../utils/email');
 const { generateOTP, generateResetToken } = require('../utils/otp');
+const { sendNotification } = require('../utils/notificationService');
+
 
 // Unified Authentication
 const register = async (req, res) => {
@@ -84,7 +86,12 @@ const login = async (req, res) => {
       config.JWT_SECRET,
       { expiresIn: '100h' }
     );
-
+    await sendNotification({
+      receiverId: user.id,
+      heading: 'Login Successful',
+      message: `Hello ${user.name}, you have logged in successfully.`,
+      senderId: 'AuthSystem',
+    });
     res.json({
       token,
       user: {
