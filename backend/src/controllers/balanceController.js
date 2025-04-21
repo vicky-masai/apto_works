@@ -326,6 +326,102 @@ const getUserBalance = async (req, res) => {
   }
 }
 
+const addPaymentMethod = async (req, res) => {
+  try {
+    const { upiId, methodType, isDefault } = req.body;
+    const user = req.user;
+
+    // Validate required fields
+    if (!upiId || !methodType) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Create a new payment method
+    const paymentMethod = await prisma.userPaymentMethod.create({
+      data: {
+        userId: user.id,
+        upiId,
+        methodType,
+        isDefault: isDefault || false,
+      },
+    });
+
+    res.status(201).json(paymentMethod);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ error: 'Failed to add payment method' });
+  }
+};
+
+const getAllPaymentMethods = async (req, res) => {
+  try {
+    const user = req.user;
+
+    const paymentMethods = await prisma.userPaymentMethod.findMany({
+      where: { userId: user.id },
+    });
+
+    res.json(paymentMethods);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch payment methods' });
+  }
+};
+
+const getPaymentMethodById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = req.user;
+
+    const paymentMethod = await prisma.userPaymentMethod.findUnique({
+      where: { id, userId: user.id },
+    });
+
+    if (!paymentMethod) {
+      return res.status(404).json({ error: 'Payment method not found' });
+    }
+
+    res.json(paymentMethod);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch payment method' });
+  }
+};
+
+const updatePaymentMethod = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { upiId, methodType, isDefault } = req.body;
+    const user = req.user;
+
+    // Validate required fields
+    if (!upiId && !methodType && isDefault === undefined) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    const paymentMethod = await prisma.userPaymentMethod.findUnique({
+      where: { id, userId: user.id },
+    });
+
+    if (!paymentMethod) {
+      return res.status(404).json({ error: 'Payment method not found' });
+    }
+
+    const updatedPaymentMethod = await prisma.userPaymentMethod.update({
+      where: { id },
+      data: {
+        upiId: upiId || paymentMethod.upiId,
+        methodType: methodType || paymentMethod.methodType,
+        isDefault: isDefault !== undefined ? isDefault : paymentMethod.isDefault,
+      },
+    });
+
+    res.json(updatedPaymentMethod);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update payment method' });
+  }
+};
+
+
+
 module.exports = {
   getUserBalance,
   addBalance,
@@ -336,4 +432,8 @@ module.exports = {
   getAllWithdrawalRequests,
   getUserWithdrawalRequests,
   updateWithdrawalStatus,
+  addPaymentMethod,
+  getAllPaymentMethods,
+  getPaymentMethodById,
+  updatePaymentMethod,
 }; 

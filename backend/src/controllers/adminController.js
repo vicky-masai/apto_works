@@ -1,6 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-
+const { sendNotification } = require('../utils/notificationService');
 // Dashboard Statistics
 const getDashboardStats = async (req, res) => {
   try {
@@ -244,6 +244,13 @@ const updateTask = async (req, res) => {
         rejectedReason: rejectedReason || "No Reason"
       }
     });
+
+    await sendNotification({
+      receiverId: task.userId,
+      heading: `Task ${task.taskTitle} ${task.taskStatus}`,
+      message: task.rejectedReason,
+      senderId: req.user.id
+    });
     
     res.json(task);
   } catch (error) {
@@ -379,7 +386,12 @@ const updateTransactionsStatus = async (req, res) => {
         }
       });
     }
-    
+    await sendNotification({
+      receiverId: transaction.userId,
+      heading: `Transaction ${transaction.status}`,
+      message: transaction.rejectedReason,
+      senderId: req.user.id
+    });
     res.json(withdrawal);
   } catch (error) {
     res.status(500).json({ error: error.message });
