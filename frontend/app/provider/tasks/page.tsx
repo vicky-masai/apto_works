@@ -236,77 +236,80 @@ console.log("selectedSubmission",selectedSubmission);
 
                   {/* All Tasks Tab Content */}
                   <TabsContent value="all" className="space-y-4 mt-4 px-4">
-                    {/* Task Cards Grid */}
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {/* Task Cards Stack - Changed from grid to vertical stack */}
+                    <div className="space-y-4">
                       {filteredTasks.map((task) => {
                         const counts = getSubmissionCounts(task);
                         return (
                           <Card key={task.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                            <CardHeader className="pb-3">
-                              <div className="flex justify-between items-start gap-4">
-                                <div className="space-y-1.5">
-                                  <CardTitle className="line-clamp-1">{task.taskTitle}</CardTitle>
-                                  <CardDescription className="line-clamp-2">{task.taskDescription}</CardDescription>
-                                </div>
-                                <div className="flex items-center text-lg font-semibold text-green-600 dark:text-green-400 whitespace-nowrap">
-                                  <DollarSign className="h-5 w-5 mr-1" />
-                                  {task.price.toFixed(2)}
-                                </div>
-                              </div>
-                            </CardHeader>
-                            <CardContent className="pb-3">
-                              <div className="space-y-4">
-                                <div className="flex flex-wrap gap-2">
-                                  <Badge variant="outline" className="flex items-center gap-1">
-                                    {task.category}
-                                  </Badge>
-                                  <Badge variant="outline" className="flex items-center gap-1">
-                                    {task.difficulty}
-                                  </Badge>
-                                  <Badge variant="outline" className="flex items-center gap-1">
-                                    <Clock className="h-3 w-3" />
-                                    {task.estimatedTime}
-                                  </Badge>
-                                </div>
-
-                                <div className="space-y-2">
-                                  <div className="flex justify-between text-sm">
-                                    <span>Task Progress</span>
-                                    <span className="font-medium">
-                                      {counts.completedCount} of {counts.totalSlots} completed
-                                    </span>
+                            <div className="flex flex-col md:flex-row">
+                              <div className="flex-grow p-6">
+                                <div className="flex justify-between items-start gap-4 mb-4">
+                                  <div className="space-y-1.5">
+                                    <CardTitle className="line-clamp-1">{task.taskTitle}</CardTitle>
+                                    <CardDescription className="line-clamp-2">{task.taskDescription}</CardDescription>
                                   </div>
-                                  <Progress 
-                                    value={(counts.completedCount / counts.totalSlots) * 100} 
-                                    className="h-2 bg-gray-100 dark:bg-gray-700"
-                                  />
-
-                                  <div className="grid grid-cols-3 gap-2 text-sm mt-2">
-                                    <div className="flex flex-col items-center p-2 rounded-md bg-green-50 dark:bg-green-900/20">
-                                      <span className="font-medium text-green-600 dark:text-green-400">{counts.completedCount}</span>
-                                      <span className="text-xs text-muted-foreground">Completed</span>
-                                    </div>
-                                    <div className="flex flex-col items-center p-2 rounded-md bg-yellow-50 dark:bg-yellow-900/20">
-                                      <span className="font-medium text-yellow-600 dark:text-yellow-400">{counts.inProgressCount}</span>
-                                      <span className="text-xs text-muted-foreground">Working</span>
-                                    </div>
-                                    <div className="flex flex-col items-center p-2 rounded-md bg-blue-50 dark:bg-blue-900/20">
-                                      <span className="font-medium text-blue-600 dark:text-blue-400">{counts.pendingReviewCount}</span>
-                                      <span className="text-xs text-muted-foreground">Review Pay</span>
-                                    </div>
+                                  <div className="flex items-center text-lg font-semibold text-green-600 dark:text-green-400 whitespace-nowrap">
+                                    <DollarSign className="h-5 w-5 mr-1" />
+                                    {task.price.toFixed(2)}
                                   </div>
                                 </div>
+
+                                <div className="space-y-4">
+                                  <div className="flex flex-wrap gap-2">
+                                    <Badge variant="outline" className="flex items-center gap-1">
+                                      {task.category}
+                                    </Badge>
+                                    <Badge variant="outline" className="flex items-center gap-1">
+                                      {task.difficulty}
+                                    </Badge>
+                                    <Badge variant="outline" className="flex items-center gap-1">
+                                      <Clock className="h-3 w-3" />
+                                      {task.estimatedTime}
+                                    </Badge>
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <div className="flex justify-between text-sm">
+                                      <span>Task Progress</span>
+                                      <span className="font-medium">
+                                        {counts.completedCount} of {counts.totalSlots} completed
+                                      </span>
+                                    </div>
+                                    <Progress 
+                                      value={(counts.completedCount / counts.totalSlots) * 100} 
+                                      className="h-2 bg-gray-100 dark:bg-gray-700"
+                                    />
+
+                                    <div className="flex gap-4 mt-4">
+                                      <div className="flex items-center gap-2 text-sm">
+                                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                        <span>{counts.completedCount} Completed</span>
+                                      </div>
+                                      <div className="flex items-center gap-2 text-sm">
+                                        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                        <span>{counts.inProgressCount} Working</span>
+                                      </div>
+                                      <div className="flex items-center gap-2 text-sm">
+                                        <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                                        <span>{counts.pendingReviewCount} Review</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
-                            </CardContent>
-                            <div className="border-t px-6 py-3 bg-gray-50 dark:bg-gray-800/50">
-                              <Button 
-                                variant="outline" 
-                                onClick={() => setSelectedTask(task)} 
-                                className="w-full hover:bg-white dark:hover:bg-gray-800"
-                              >
-                                <Eye className="h-4 w-4 mr-2" />
-                                View Submissions
-                              </Button>
+                              
+                              <div className="flex items-center justify-center p-4 bg-gray-50/50 dark:bg-gray-800/30 md:w-40 border-l dark:border-gray-700">
+                                <Button 
+                                  variant="outline" 
+                                  onClick={() => setSelectedTask(task)} 
+                                  className="w-full text-sm py-1.5 h-auto bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700"
+                                  size="sm"
+                                >
+                                  <Eye className="h-3.5 w-3.5 mr-1.5" />
+                                  View Details
+                                </Button>
+                              </div>
                             </div>
                           </Card>
                         );
@@ -330,134 +333,134 @@ console.log("selectedSubmission",selectedSubmission);
 
                   {/* Pending Review Tab Content */}
                   <TabsContent value="pending-review" className="space-y-4 mt-4 px-4">
-                    {filteredTasks
-                      .filter((task) => task.acceptedUsers.some(user => user.status === "Pending"))
-                      .map((task) => (
-                        <Card key={task.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                          <CardHeader className="pb-3">
-                            <div className="flex justify-between items-start gap-4">
-                              <div className="space-y-1.5">
-                                <CardTitle className="line-clamp-1">{task.taskTitle}</CardTitle>
-                                <CardDescription className="line-clamp-2">{task.taskDescription}</CardDescription>
+                    <div className="space-y-4">
+                      {filteredTasks
+                        .filter((task) => task.acceptedUsers.some(user => user.status === "Pending"))
+                        .map((task) => (
+                          <Card key={task.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                            <div className="flex flex-col md:flex-row">
+                              <div className="flex-grow p-6">
+                                <div className="flex justify-between items-start gap-4 mb-4">
+                                  <div className="space-y-1.5">
+                                    <CardTitle className="line-clamp-1">{task.taskTitle}</CardTitle>
+                                    <CardDescription className="line-clamp-2">{task.taskDescription}</CardDescription>
+                                  </div>
+                                  <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-200">
+                                    {task.acceptedUsers.filter(user => user.status === "Review").length} In Review
+                                  </Badge>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  <Badge variant="outline" className="flex items-center gap-1">
+                                    {task.category}
+                                  </Badge>
+                                  <Badge variant="outline" className="flex items-center gap-1">
+                                    <DollarSign className="h-3 w-3" />
+                                    {task.price.toFixed(2)}
+                                  </Badge>
+                                </div>
                               </div>
-                              <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-200">
-                                {task.acceptedUsers.filter(user => user.status === "Review").length} In Review
-                              </Badge>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="pb-3">
-                            <div className="space-y-4">
-                              <div className="flex flex-wrap gap-2">
-                                <Badge variant="outline" className="flex items-center gap-1">
-                                  {task.category}
-                                </Badge>
-                                <Badge variant="outline" className="flex items-center gap-1">
-                                  <DollarSign className="h-3 w-3" />
-                                  {task.price.toFixed(2)}
-                                </Badge>
+                              <div className="flex items-center justify-center p-6 bg-gray-50 dark:bg-gray-800/50 md:w-48">
+                                <Button 
+                                  variant="outline" 
+                                  onClick={() => setSelectedTask(task)} 
+                                  className="w-full hover:bg-white dark:hover:bg-gray-800"
+                                >
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  Review Submissions
+                                </Button>
                               </div>
                             </div>
-                          </CardContent>
-                          <div className="border-t px-6 py-3 bg-gray-50 dark:bg-gray-800/50">
-                            <Button 
-                              variant="outline" 
-                              onClick={() => setSelectedTask(task)} 
-                              className="w-full hover:bg-white dark:hover:bg-gray-800"
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              Review Submissions
-                            </Button>
-                          </div>
-                        </Card>
-                      ))}
+                          </Card>
+                        ))}
+                    </div>
                   </TabsContent>
 
                   {/* Active Tasks Tab Content */}
                   <TabsContent value="active" className="space-y-4 mt-4 px-4">
-                    {filteredTasks
-                      .filter((task) => task.acceptedUsers.some(user => user.status === "Active"))
-                      .map((task) => (
-                        <Card key={task.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                          <CardHeader className="pb-3">
-                            <div className="flex justify-between items-start gap-4">
-                              <div className="space-y-1.5">
-                                <CardTitle className="line-clamp-1">{task.taskTitle}</CardTitle>
-                                <CardDescription className="line-clamp-2">{task.taskDescription}</CardDescription>
+                    <div className="space-y-4">
+                      {filteredTasks
+                        .filter((task) => task.acceptedUsers.some(user => user.status === "Active"))
+                        .map((task) => (
+                          <Card key={task.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                            <div className="flex flex-col md:flex-row">
+                              <div className="flex-grow p-6">
+                                <div className="flex justify-between items-start gap-4 mb-4">
+                                  <div className="space-y-1.5">
+                                    <CardTitle className="line-clamp-1">{task.taskTitle}</CardTitle>
+                                    <CardDescription className="line-clamp-2">{task.taskDescription}</CardDescription>
+                                  </div>
+                                  <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200">
+                                    {task.acceptedUsers.filter(user => user.status === "Active").length} Working
+                                  </Badge>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  <Badge variant="outline" className="flex items-center gap-1">
+                                    {task.category}
+                                  </Badge>
+                                  <Badge variant="outline" className="flex items-center gap-1">
+                                    <DollarSign className="h-3 w-3" />
+                                    {task.price.toFixed(2)}
+                                  </Badge>
+                                </div>
                               </div>
-                              <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200">
-                                {task.acceptedUsers.filter(user => user.status === "Active").length} Working
-                              </Badge>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="pb-3">
-                            <div className="space-y-4">
-                              <div className="flex flex-wrap gap-2">
-                                <Badge variant="outline" className="flex items-center gap-1">
-                                  {task.category}
-                                </Badge>
-                                <Badge variant="outline" className="flex items-center gap-1">
-                                  <DollarSign className="h-3 w-3" />
-                                  {task.price.toFixed(2)}
-                                </Badge>
+                              <div className="flex items-center justify-center p-6 bg-gray-50 dark:bg-gray-800/50 md:w-48">
+                                <Button 
+                                  variant="outline" 
+                                  onClick={() => setSelectedTask(task)} 
+                                  className="w-full hover:bg-white dark:hover:bg-gray-800"
+                                >
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View Task Details
+                                </Button>
                               </div>
                             </div>
-                          </CardContent>
-                          <div className="border-t px-6 py-3 bg-gray-50 dark:bg-gray-800/50">
-                            <Button 
-                              variant="outline" 
-                              onClick={() => setSelectedTask(task)} 
-                              className="w-full hover:bg-white dark:hover:bg-gray-800"
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Task Details
-                            </Button>
-                          </div>
-                        </Card>
-                      ))}
+                          </Card>
+                        ))}
+                    </div>
                   </TabsContent>
 
                   {/* Completed Tasks Tab Content */}
                   <TabsContent value="completed" className="space-y-4 mt-4 px-4">
-                    {filteredTasks
-                      .filter((task) => task.acceptedUsers.some(user => user.status === "Completed"))
-                      .map((task) => (
-                        <Card key={task.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                          <CardHeader className="pb-3">
-                            <div className="flex justify-between items-start gap-4">
-                              <div className="space-y-1.5">
-                                <CardTitle className="line-clamp-1">{task.taskTitle}</CardTitle>
-                                <CardDescription className="line-clamp-2">{task.taskDescription}</CardDescription>
+                    <div className="space-y-4">
+                      {filteredTasks
+                        .filter((task) => task.acceptedUsers.some(user => user.status === "Completed"))
+                        .map((task) => (
+                          <Card key={task.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                            <div className="flex flex-col md:flex-row">
+                              <div className="flex-grow p-6">
+                                <div className="flex justify-between items-start gap-4 mb-4">
+                                  <div className="space-y-1.5">
+                                    <CardTitle className="line-clamp-1">{task.taskTitle}</CardTitle>
+                                    <CardDescription className="line-clamp-2">{task.taskDescription}</CardDescription>
+                                  </div>
+                                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-green-200">
+                                    {task.acceptedUsers.filter(user => user.status === "Completed").length} Completed
+                                  </Badge>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  <Badge variant="outline" className="flex items-center gap-1">
+                                    {task.category}
+                                  </Badge>
+                                  <Badge variant="outline" className="flex items-center gap-1">
+                                    <DollarSign className="h-3 w-3" />
+                                    {task.price.toFixed(2)}
+                                  </Badge>
+                                </div>
                               </div>
-                              <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-green-200">
-                                {task.acceptedUsers.filter(user => user.status === "Completed").length} Completed
-                              </Badge>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="pb-3">
-                            <div className="space-y-4">
-                              <div className="flex flex-wrap gap-2">
-                                <Badge variant="outline" className="flex items-center gap-1">
-                                  {task.category}
-                                </Badge>
-                                <Badge variant="outline" className="flex items-center gap-1">
-                                  <DollarSign className="h-3 w-3" />
-                                  {task.price.toFixed(2)}
-                                </Badge>
+                              <div className="flex items-center justify-center p-6 bg-gray-50 dark:bg-gray-800/50 md:w-48">
+                                <Button 
+                                  variant="outline" 
+                                  onClick={() => setSelectedTask(task)} 
+                                  className="w-full hover:bg-white dark:hover:bg-gray-800"
+                                >
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View Details
+                                </Button>
                               </div>
                             </div>
-                          </CardContent>
-                          <div className="border-t px-6 py-3 bg-gray-50 dark:bg-gray-800/50">
-                            <Button 
-                              variant="outline" 
-                              onClick={() => setSelectedTask(task)} 
-                              className="w-full hover:bg-white dark:hover:bg-gray-800"
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Completed Submissions
-                            </Button>
-                          </div>
-                        </Card>
-                      ))}
+                          </Card>
+                        ))}
+                    </div>
                   </TabsContent>
                 </Tabs>
               </div>
