@@ -12,6 +12,7 @@ import { Header } from "@/components/Header"
 import { useEffect, useState } from "react"
 import { getProfile } from "@/API/profile"
 import { getAcceptedTasks } from "@/API/task"
+import Leftsidebar from "@/components/Leftsidebar"
 
 export default function DashboardPage() {
   const [totalEarned, settotalEarned] = useState(0)
@@ -52,6 +53,7 @@ export default function DashboardPage() {
     <div className="flex min-h-screen flex-col bg-white">
       <Header isLoggedIn={true} />
       <main className="flex-1 container py-6 m-auto">
+        <Leftsidebar />
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">Dashboard</h1>
