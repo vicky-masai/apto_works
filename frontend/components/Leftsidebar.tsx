@@ -9,9 +9,12 @@ import {
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
-  Briefcase
+  Briefcase,
+  ListChecks
 } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 interface SidebarItem {
   title: string;
@@ -43,14 +46,35 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ child
 };
 
 const Leftsidebar = () => {
-  // Use local state since the context might not be properly initialized
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const toggleSidebar = () => setIsCollapsed(prev => !prev);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const toggleSidebar = () => {
+    setIsCollapsed(prev => !prev);
+    // Update CSS variable for main content margin
+    document.documentElement.style.setProperty('--sidebar-width', isCollapsed ? '256px' : '80px');
+  };
+
+  const handleLogout = () => {
+    // Clear all cookies
+    Cookies.remove("token");
+    // Clear localStorage
+    localStorage.clear();
+    // Redirect to home page
+    router.push("/");
+  };
+
+  // Set initial CSS variable
+  React.useEffect(() => {
+    document.documentElement.style.setProperty('--sidebar-width', isCollapsed ? '80px' : '256px');
+  }, []);
 
   const menuItems: SidebarItem[] = [
     { title: 'Dashboard', icon: <LayoutDashboard className="w-6 h-6" />, path: '/dashboard' },
+    { title: 'Tasks', icon: <ListChecks className="w-6 h-6" />, path: '/tasks' },
     { title: 'Post a Task', icon: <PlusSquare className="w-6 h-6" />, path: '/post-task' },
-    { title: 'My Posted Tasks', icon: <ListTodo className="w-6 h-6" />, path: '/my-tasks' },
+    { title: 'My Posted Tasks', icon: <ListTodo className="w-6 h-6" />, path: '/provider/tasks' },
     { title: 'Earnings', icon: <DollarSign className="w-6 h-6" />, path: '/earnings' },
     { title: 'Wallet', icon: <Wallet className="w-6 h-6" />, path: '/wallet' },
     { title: 'Profile', icon: <UserCircle className="w-6 h-6" />, path: '/profile' },
@@ -98,29 +122,38 @@ const Leftsidebar = () => {
           <Wallet className="w-5 h-5 text-blue-600" />
           {!isCollapsed && <span className="ml-2 font-medium text-blue-600">Wallet</span>}
         </div>
-        <div className={`text-blue-700 font-bold ${isCollapsed ? 'text-sm' : 'text-lg'}`}>
+        <div className={`text-blue-700 text-center font-bold ${isCollapsed ? 'text-sm' : 'text-lg'}`}>
           $100
         </div>
       </div>
 
       {/* Menu Items */}
       <nav className="flex-1 px-2">
-        {menuItems.map((item, index) => (
-          <Link 
-            href={item.path}
-            key={index}
-            className={`
-              flex items-center rounded-lg p-3 mb-1
-              hover:bg-gray-100 transition-colors
-              ${isCollapsed ? 'justify-center' : 'justify-start'}
-            `}
-          >
-            {item.icon}
-            {!isCollapsed && (
-              <span className="ml-3 text-gray-700">{item.title}</span>
-            )}
-          </Link>
-        ))}
+        {menuItems.map((item, index) => {
+          const isActive = pathname === item.path;
+          return (
+            <Link 
+              href={item.path}
+              key={index}
+              className={`
+                flex items-center rounded-lg p-3 mb-1
+                transition-colors
+                ${isCollapsed ? 'justify-center' : 'justify-start'}
+                ${isActive 
+                  ? 'bg-[#EFF6FF] text-blue-600' 
+                  : 'hover:bg-gray-100 text-gray-700'
+                }
+              `}
+            >
+              <div className={isActive ? 'text-blue-600' : 'text-gray-600'}>
+                {item.icon}
+              </div>
+              {!isCollapsed && (
+                <span className="ml-3">{item.title}</span>
+              )}
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Post Task Button */}
@@ -138,12 +171,15 @@ const Leftsidebar = () => {
 
       {/* Logout */}
       <div className="p-4 border-t border-gray-200">
-        <button className={`
-          w-full text-gray-700 rounded-lg p-3
-          hover:bg-gray-100 transition-colors
-          flex items-center
-          ${isCollapsed ? 'justify-center' : 'justify-start'}
-        `}>
+        <button 
+          onClick={handleLogout}
+          className={`
+            w-full text-gray-700 rounded-lg p-3
+            hover:bg-gray-100 transition-colors
+            flex items-center
+            ${isCollapsed ? 'justify-center' : 'justify-start'}
+          `}
+        >
           <LogOut className="w-6 h-6" />
           {!isCollapsed && <span className="ml-3">Logout</span>}
         </button>

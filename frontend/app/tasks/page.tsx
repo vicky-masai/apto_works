@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TaskCard } from "@/components/task-card"
 import { Footer } from "@/components/Footer"
 import { Header } from "@/components/Header"
+import Leftsidebar from "@/components/Leftsidebar"
 import { getAllTasks,getAcceptedTasks } from "@/API/api"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
@@ -266,288 +267,263 @@ export default function TasksPage() {
   ];
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col">
       <Header isLoggedIn={true} />
-      <main className="flex-1 container py-6 m-auto">
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className="md:w-1/4">
-            <Card  className="bg-white border shadow-sm">
-              <CardHeader>
-                <CardTitle>Navigation</CardTitle>
-                <CardDescription>Quick links to navigate</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Button 
-                  className="w-full flex items-center gap-2 text-white" 
-                  onClick={() => handleNavigation("/wallet")}
-                >
-                  <Wallet className="h-4 w-4" />
-                  Wallet: $100
-                </Button>
-                <Button 
-                  className="w-full mt-2 flex items-center gap-2 text-white"
-                  onClick={() => handleNavigation("/post-task")}
-                >
-                  <Upload className="h-4 w-4" />
-                  Post Task
-                </Button>
-                <Button 
-                  className="w-full mt-2 flex items-center gap-2 text-white"
-                  onClick={() => handleNavigation("/tasks")}
-                >
-                  <DollarSign className="h-4 w-4" />
-                  Earn Money
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-          <div className="md:w-3/4">
+      <div className="flex">
+        <Leftsidebar />
+        <main className={`flex-1 p-6 transition-all duration-300 ml-[256px] dark:bg-gray-900`}>
+          <div className="container mx-auto max-w-7xl">
             <div className="flex flex-col gap-6">
-              <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold">Available Tasks</h1>
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                    <Input 
-                      type="search" 
-                      placeholder="Search tasks..." 
-                      className="w-[200px] md:w-[300px] pl-8" 
-                      value={searchTerm} 
-                      onChange={handleSearch} 
-                    />
-                  </div>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className="ml-2">
-                        <Filter className="h-4 w-4 mr-2" />
-                        Filters {(filterParams.categories.length > 0 || filterParams.difficulties.length > 0) && 
-                          <span className="ml-1 text-xs bg-primary text-white rounded-full px-2">
-                            {filterParams.categories.length + filterParams.difficulties.length}
-                          </span>
-                        }
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Filters</DialogTitle>
-                      </DialogHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <div className="font-medium text-sm">Categories</div>
-                          <div className="grid grid-cols-2 gap-2">
-                            {categories.map(category => (
-                              <label 
-                                key={category.id} 
-                                className="flex items-center gap-2 hover:bg-gray-50 p-2 rounded cursor-pointer"
-                              >
-                                <input
-                                  type="checkbox"
-                                  className="rounded text-primary"
-                                  checked={filterParams.categories.includes(category.id)}
-                                  onChange={() => handleFilterChange('categories', category.id)}
-                                />
-                                <span className="text-sm">{category.label}</span>
-                              </label>
-                            ))}
-                          </div>
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="md:w-3/4">
+                  <div className="flex flex-col gap-6">
+                    <div className="flex items-center justify-between">
+                      <h1 className="text-2xl font-bold">Available Tasks</h1>
+                      <div className="flex items-center gap-2">
+                        <div className="relative">
+                          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                          <Input 
+                            type="search" 
+                            placeholder="Search tasks..." 
+                            className="w-[200px] md:w-[300px] pl-8" 
+                            value={searchTerm} 
+                            onChange={handleSearch} 
+                          />
                         </div>
-                        <Separator />
-                        <div className="space-y-2">
-                          <div className="font-medium text-sm">Price Range</div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <Input 
-                              type="number" 
-                              placeholder="Min" 
-                              min={0} 
-                              value={filterParams.minPrice}
-                              onChange={(e) => handlePriceChange('minPrice', e.target.value)}
-                            />
-                            <Input 
-                              type="number" 
-                              placeholder="Max" 
-                              min={0} 
-                              value={filterParams.maxPrice}
-                              onChange={(e) => handlePriceChange('maxPrice', e.target.value)}
-                            />
-                          </div>
-                        </div>
-                        <Separator />
-                        <div className="space-y-2">
-                          <div className="font-medium text-sm">Difficulty</div>
-                          <div className="grid grid-cols-2 gap-2">
-                            {difficulties.map(difficulty => (
-                              <label 
-                                key={difficulty.id} 
-                                className="flex items-center gap-2 hover:bg-gray-50 p-2 rounded cursor-pointer"
-                              >
-                                <input
-                                  type="checkbox"
-                                  className="rounded text-primary"
-                                  checked={filterParams.difficulties.includes(difficulty.id)}
-                                  onChange={() => handleFilterChange('difficulties', difficulty.id)}
-                                />
-                                <span className="text-sm">{difficulty.label}</span>
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="flex gap-2 pt-2">
-                          <Button 
-                            variant="outline" 
-                            className="w-full" 
-                            onClick={() => setFilterParams({
-                              categories: [],
-                              minPrice: '',
-                              maxPrice: '',
-                              difficulties: [],
-                              status: 'Published'
-                            })}
-                          >
-                            Clear All
-                          </Button>
-                          <Button className="w-full" onClick={handleApplyFilters}>
-                            Apply Filters
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </div>
-              <Tabs defaultValue="all" onValueChange={handleTabChange}>
-                <TabsList>
-                  <TabsTrigger value="all">All Tasks</TabsTrigger>
-                  <TabsTrigger value="new">New</TabsTrigger>
-                  <TabsTrigger value="popular">Popular</TabsTrigger>
-                  <TabsTrigger value="highpaying">High Paying</TabsTrigger>
-                </TabsList>
-                <TabsContent value="all" className="space-y-4 mt-4">
-                  <div className="max-h-[600px] overflow-y-auto pr-4">
-                    {isLoading && currentPage === 1 ? (
-                      // Loading skeleton for initial load
-                      Array.from({ length: 3 }).map((_, index) => (
-                        <div key={index} className="bg-white border rounded-lg p-6 mb-4 animate-pulse">
-                          <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                          <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
-                          <div className="h-3 bg-gray-200 rounded w-1/4"></div>
-                          <div className="flex gap-2 mt-4">
-                            <div className="h-6 w-16 bg-gray-200 rounded"></div>
-                            <div className="h-6 w-16 bg-gray-200 rounded"></div>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <>
-                        {tasks
-                          .filter(task => !acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id))
-                          .map((task, index) => (
-                            <div
-                              key={task.id}
-                              ref={index === tasks.length - 1 ? lastTaskElementRef : null}
-                            >
-                              <TaskCard
-                                id={task.id}
-                                title={task.taskTitle}
-                                description={task.taskDescription}
-                                price={task.price}
-                                category={task.category}
-                                difficulty={task.difficulty}
-                                estimatedTime={task.estimatedTime}
-                                createdAt={task.createdAt}
-                                stepByStepInstructions={task.stepByStepInstructions}
-                                taskStatus={task.taskStatus}
-                                requiredProof={task.requiredProof}
-                                numWorkersNeeded={task.availableWorkers}
-                                totalAmount={task.totalAmount}
-                                taskProviderId={task.taskProviderId}
-                                updatedAt={task.updatedAt}
-                                isAccepted={acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id)}
-                              />
-                            </div>
-                          ))}
-                        {tasks.length === 0 && !isLoading && (
-                          <div className="text-center py-8 text-gray-500">
-                            No tasks found. Try adjusting your filters.
-                          </div>
-                        )}
-                      </>
-                    )}
-                    {isLoadingMore && (
-                      <div className="flex justify-center items-center py-4 gap-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                        <span className="text-sm text-gray-600">Loading more tasks...</span>
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
-                {["new", "popular", "highpaying"].map((tabValue) => (
-                  <TabsContent key={tabValue} value={tabValue} className="space-y-4 mt-4">
-                    <div className="max-h-[600px] overflow-y-auto pr-4">
-                      {isLoading && currentPage === 1 ? (
-                        // Loading skeleton for initial load
-                        Array.from({ length: 3 }).map((_, index) => (
-                          <div key={index} className="bg-white border rounded-lg p-6 mb-4 animate-pulse">
-                            <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                            <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
-                            <div className="h-3 bg-gray-200 rounded w-1/4"></div>
-                            <div className="flex gap-2 mt-4">
-                              <div className="h-6 w-16 bg-gray-200 rounded"></div>
-                              <div className="h-6 w-16 bg-gray-200 rounded"></div>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <>
-                          {tasks
-                            .filter(task => !acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id))
-                            .map((task, index) => (
-                              <div
-                                key={task.id}
-                                ref={index === tasks.length - 1 ? lastTaskElementRef : null}
-                              >
-                                <TaskCard
-                                  id={task.id}
-                                  title={task.taskTitle}
-                                  description={task.taskDescription}
-                                  price={task.price}
-                                  category={task.category}
-                                  difficulty={task.difficulty}
-                                  estimatedTime={task.estimatedTime}
-                                  createdAt={task.createdAt}
-                                  stepByStepInstructions={task.stepByStepInstructions}
-                                  taskStatus={task.taskStatus}
-                                  requiredProof={task.requiredProof}
-                                  numWorkersNeeded={task.availableWorkers}
-                                  totalAmount={task.totalAmount}
-                                  taskProviderId={task.taskProviderId}
-                                  updatedAt={task.updatedAt}
-                                  isAccepted={acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id)}
-                                />
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" className="ml-2">
+                              <Filter className="h-4 w-4 mr-2" />
+                              Filters {(filterParams.categories.length > 0 || filterParams.difficulties.length > 0) && 
+                                <span className="ml-1 text-xs bg-primary text-white rounded-full px-2">
+                                  {filterParams.categories.length + filterParams.difficulties.length}
+                                </span>
+                              }
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Filters</DialogTitle>
+                            </DialogHeader>
+                            <CardContent className="space-y-4">
+                              <div className="space-y-2">
+                                <div className="font-medium text-sm">Categories</div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  {categories.map(category => (
+                                    <label 
+                                      key={category.id} 
+                                      className="flex items-center gap-2 hover:bg-gray-50 p-2 rounded cursor-pointer"
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        className="rounded text-primary"
+                                        checked={filterParams.categories.includes(category.id)}
+                                        onChange={() => handleFilterChange('categories', category.id)}
+                                      />
+                                      <span className="text-sm">{category.label}</span>
+                                    </label>
+                                  ))}
+                                </div>
                               </div>
-                            ))}
-                          {tasks.length === 0 && !isLoading && (
-                            <div className="text-center py-8 text-gray-500">
-                              No tasks found. Try adjusting your filters.
+                              <Separator />
+                              <div className="space-y-2">
+                                <div className="font-medium text-sm">Price Range</div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <Input 
+                                    type="number" 
+                                    placeholder="Min" 
+                                    min={0} 
+                                    value={filterParams.minPrice}
+                                    onChange={(e) => handlePriceChange('minPrice', e.target.value)}
+                                  />
+                                  <Input 
+                                    type="number" 
+                                    placeholder="Max" 
+                                    min={0} 
+                                    value={filterParams.maxPrice}
+                                    onChange={(e) => handlePriceChange('maxPrice', e.target.value)}
+                                  />
+                                </div>
+                              </div>
+                              <Separator />
+                              <div className="space-y-2">
+                                <div className="font-medium text-sm">Difficulty</div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  {difficulties.map(difficulty => (
+                                    <label 
+                                      key={difficulty.id} 
+                                      className="flex items-center gap-2 hover:bg-gray-50 p-2 rounded cursor-pointer"
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        className="rounded text-primary"
+                                        checked={filterParams.difficulties.includes(difficulty.id)}
+                                        onChange={() => handleFilterChange('difficulties', difficulty.id)}
+                                      />
+                                      <span className="text-sm">{difficulty.label}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                              <div className="flex gap-2 pt-2">
+                                <Button 
+                                  variant="outline" 
+                                  className="w-full" 
+                                  onClick={() => setFilterParams({
+                                    categories: [],
+                                    minPrice: '',
+                                    maxPrice: '',
+                                    difficulties: [],
+                                    status: 'Published'
+                                  })}
+                                >
+                                  Clear All
+                                </Button>
+                                <Button className="w-full" onClick={handleApplyFilters}>
+                                  Apply Filters
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </div>
+                    <Tabs defaultValue="all" onValueChange={handleTabChange}>
+                      <TabsList>
+                        <TabsTrigger value="all">All Tasks</TabsTrigger>
+                        <TabsTrigger value="new">New</TabsTrigger>
+                        <TabsTrigger value="popular">Popular</TabsTrigger>
+                        <TabsTrigger value="highpaying">High Paying</TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="all" className="space-y-4 mt-4">
+                        <div className="max-h-[600px] overflow-y-auto pr-4">
+                          {isLoading && currentPage === 1 ? (
+                            // Loading skeleton for initial load
+                            Array.from({ length: 3 }).map((_, index) => (
+                              <div key={index} className="bg-white border rounded-lg p-6 mb-4 animate-pulse">
+                                <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                                <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
+                                <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                                <div className="flex gap-2 mt-4">
+                                  <div className="h-6 w-16 bg-gray-200 rounded"></div>
+                                  <div className="h-6 w-16 bg-gray-200 rounded"></div>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <>
+                              {tasks
+                                .filter(task => !acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id))
+                                .map((task, index) => (
+                                  <div
+                                    key={task.id}
+                                    ref={index === tasks.length - 1 ? lastTaskElementRef : null}
+                                  >
+                                    <TaskCard
+                                      id={task.id}
+                                      title={task.taskTitle}
+                                      description={task.taskDescription}
+                                      price={task.price}
+                                      category={task.category}
+                                      difficulty={task.difficulty}
+                                      estimatedTime={task.estimatedTime}
+                                      createdAt={task.createdAt}
+                                      stepByStepInstructions={task.stepByStepInstructions}
+                                      taskStatus={task.taskStatus}
+                                      requiredProof={task.requiredProof}
+                                      numWorkersNeeded={task.availableWorkers}
+                                      totalAmount={task.totalAmount}
+                                      taskProviderId={task.taskProviderId}
+                                      updatedAt={task.updatedAt}
+                                      isAccepted={acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id)}
+                                    />
+                                  </div>
+                                ))}
+                              {tasks.length === 0 && !isLoading && (
+                                <div className="text-center py-8 text-gray-500">
+                                  No tasks found. Try adjusting your filters.
+                                </div>
+                              )}
+                            </>
+                          )}
+                          {isLoadingMore && (
+                            <div className="flex justify-center items-center py-4 gap-2">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                              <span className="text-sm text-gray-600">Loading more tasks...</span>
                             </div>
                           )}
-                        </>
-                      )}
-                      {isLoadingMore && (
-                        <div className="flex justify-center items-center py-4 gap-2">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                          <span className="text-sm text-gray-600">Loading more tasks...</span>
                         </div>
-                      )}
-                    </div>
-                  </TabsContent>
-                ))}
-              </Tabs>
+                      </TabsContent>
+                      {["new", "popular", "highpaying"].map((tabValue) => (
+                        <TabsContent key={tabValue} value={tabValue} className="space-y-4 mt-4">
+                          <div className="max-h-[600px] overflow-y-auto pr-4">
+                            {isLoading && currentPage === 1 ? (
+                              // Loading skeleton for initial load
+                              Array.from({ length: 3 }).map((_, index) => (
+                                <div key={index} className="bg-white border rounded-lg p-6 mb-4 animate-pulse">
+                                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                                  <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
+                                  <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                                  <div className="flex gap-2 mt-4">
+                                    <div className="h-6 w-16 bg-gray-200 rounded"></div>
+                                    <div className="h-6 w-16 bg-gray-200 rounded"></div>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <>
+                                {tasks
+                                  .filter(task => !acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id))
+                                  .map((task, index) => (
+                                    <div
+                                      key={task.id}
+                                      ref={index === tasks.length - 1 ? lastTaskElementRef : null}
+                                    >
+                                      <TaskCard
+                                        id={task.id}
+                                        title={task.taskTitle}
+                                        description={task.taskDescription}
+                                        price={task.price}
+                                        category={task.category}
+                                        difficulty={task.difficulty}
+                                        estimatedTime={task.estimatedTime}
+                                        createdAt={task.createdAt}
+                                        stepByStepInstructions={task.stepByStepInstructions}
+                                        taskStatus={task.taskStatus}
+                                        requiredProof={task.requiredProof}
+                                        numWorkersNeeded={task.availableWorkers}
+                                        totalAmount={task.totalAmount}
+                                        taskProviderId={task.taskProviderId}
+                                        updatedAt={task.updatedAt}
+                                        isAccepted={acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id)}
+                                      />
+                                    </div>
+                                  ))}
+                                {tasks.length === 0 && !isLoading && (
+                                  <div className="text-center py-8 text-gray-500">
+                                    No tasks found. Try adjusting your filters.
+                                  </div>
+                                )}
+                              </>
+                            )}
+                            {isLoadingMore && (
+                              <div className="flex justify-center items-center py-4 gap-2">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                                <span className="text-sm text-gray-600">Loading more tasks...</span>
+                              </div>
+                            )}
+                          </div>
+                        </TabsContent>
+                      ))}
+                    </Tabs>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
       <Footer />
     </div>
   )
 }
-

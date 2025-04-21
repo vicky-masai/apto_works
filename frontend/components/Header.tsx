@@ -113,7 +113,7 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
         </div>
         {isLoggedIn ? (
           <>
-            <nav className="hidden md:flex items-center gap-6">
+            {/* <nav className="hidden md:flex items-center gap-6">
               <button 
                 onClick={() => handleProtectedNavigation("/dashboard")} 
                 className="text-sm font-medium text-gray-900 hover:text-primary"
@@ -126,7 +126,7 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
               <Link href="/provider/tasks" className="text-sm font-medium text-gray-600 hover:text-gray-900">
                 My Posted Tasks
               </Link>
-            </nav>
+            </nav> */}
             <div className="relative flex items-center gap-4">
               <div className="relative" ref={notificationRef}>
                 <button 
@@ -165,7 +165,10 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
               </div>
               <div className="relative flex items-center gap-4" ref={dropdownRef}>
                 <div className="relative">
-                  <button className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100">
+                  <button 
+                    onClick={toggleDropdown}
+                    className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100"
+                  >
                     <User className="h-5 w-5 text-gray-600" />
                   </button>
                 </div>
@@ -173,68 +176,12 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200">
                     <div className="py-1">
                       {token ? (
-                        <>
-                          <button 
-                            onClick={() => handleProtectedNavigation("/dashboard")} 
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <span className="flex items-center">
-                              <Home className="h-4 w-4 mr-2" />
-                              Dashboard
-                            </span>
-                          </button>
-                          <button 
-                            onClick={() => handleProtectedNavigation("/post-task")} 
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <span className="flex items-center">
-                              <Upload className="h-4 w-4 mr-2" />
-                              Post a Task
-                            </span>
-                          </button>
-                          <button 
-                            onClick={() => handleProtectedNavigation("/provider/tasks")} 
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <span className="flex items-center">
-                              <Clipboard className="h-4 w-4 mr-2" />
-                              My Posted Tasks
-                            </span>
-                          </button>
-                          <button 
-                            onClick={() => handleProtectedNavigation("/earnings")} 
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <span className="flex items-center">
-                              <DollarSign className="h-4 w-4 mr-2" />
-                              Earnings
-                            </span>
-                          </button>
-                          <button 
-                            onClick={() => handleProtectedNavigation("/wallet")} 
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <span className="flex items-center">
-                              <Wallet className="h-4 w-4 mr-2" />
-                              Wallet
-                            </span>
-                          </button>
-                          <button 
-                            onClick={() => handleProtectedNavigation("/profile")} 
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <span className="flex items-center">
-                              <User className="h-4 w-4 mr-2" />
-                              Profile
-                            </span>
-                          </button>
-                          <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                            <span className="flex items-center">
-                              <LogOut className="h-4 w-4 mr-2" />
-                              Logout
-                            </span>
-                          </button>
-                        </>
+                        <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          <span className="flex items-center">
+                            <LogOut className="h-4 w-4 mr-2" />
+                            Logout
+                          </span>
+                        </button>
                       ) : (
                         <>
                           <Link href="/login" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
