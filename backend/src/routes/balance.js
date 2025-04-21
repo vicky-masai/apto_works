@@ -7,7 +7,8 @@ const {
     addPaymentMethod, 
     getAllPaymentMethods, 
     getPaymentMethodById, 
-    updatePaymentMethod 
+    updatePaymentMethod,
+    deletePaymentMethod
   } = require('../controllers/balanceController');
 
 // Balance routes
@@ -34,5 +35,6 @@ router.get('/payment-methods/:id', auth, getPaymentMethodById);
 
 // Route to update a payment method
 router.put('/payment-methods/:id', auth, updatePaymentMethod);
+router.delete('/payment-methods/:id', auth, deletePaymentMethod);
 
 module.exports = router; 
