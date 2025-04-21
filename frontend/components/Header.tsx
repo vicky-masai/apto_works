@@ -105,7 +105,7 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 w-full border-b bg-white">
+    <header className="sticky top-0 z-20 w-full border-b bg-white">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2 font-bold text-xl text-primary">
           {/* <Shield className="h-6 w-6" /> */}
