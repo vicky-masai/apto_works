@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import Link from "next/link"
 import { ArrowDown, ArrowUp, CreditCard, DollarSign, Plus, Wallet, X } from "lucide-react"
 import { toast } from "react-hot-toast"
@@ -26,48 +26,7 @@ import Leftsidebar from "@/components/Leftsidebar"
 import { getBalance, getBalanceHistory, getUserWithdrawalRequests } from "@/API/money_api.js"
 import { getAllPaymentMethods, addPaymentMethod, updatePaymentMethod, deletePaymentMethod } from "@/API/payment_method.js"
 // Mock transaction data
-const transactionsData = [
-  {
-    id: "1",
-    type: "deposit",
-    amount: 100.0,
-    date: "2025-03-28",
-    status: "completed",
-    method: "Credit Card",
-  },
-  {
-    id: "2",
-    type: "withdrawal",
-    amount: 25.0,
-    date: "2025-03-25",
-    status: "completed",
-    method: "PayPal",
-  },
-  {
-    id: "3",
-    type: "earning",
-    amount: 15.0,
-    date: "2025-03-22",
-    status: "completed",
-    method: "Task Completion",
-  },
-  {
-    id: "4",
-    type: "deposit",
-    amount: 50.0,
-    date: "2025-03-20",
-    status: "completed",
-    method: "Bank Transfer",
-  },
-  {
-    id: "5",
-    type: "withdrawal",
-    amount: 30.0,
-    date: "2025-03-18",
-    status: "processing",
-    method: "Bank Transfer",
-  },
-]
+
 
 // Add UPI Account interface
 interface UPIAccount {
@@ -78,8 +37,22 @@ interface UPIAccount {
   methodType?: string;
 }
 
+// Add Transaction interface
+interface Transaction {
+  id: string | null;
+  type: "Deposit" | "Withdraw" | "Earning";
+  date: string;
+  amount: number;
+  status: "Completed" | "Rejected" | "Review" | "Pending";
+  method?: string;
+  taskTitle?: string;
+  category: "transaction" | "earning";
+}
+
 export default function WalletPage() {
   const [balance, setBalance] = useState(0)
+  const [totalDeposits, setTotalDeposits] = useState(0)
+  const [totalWithdrawals, setTotalWithdrawals] = useState(0)
   const [depositAmount, setDepositAmount] = useState("")
   const [depositMethod, setDepositMethod] = useState("upi")
   const [withdrawAmount, setWithdrawAmount] = useState("")
@@ -90,7 +63,15 @@ export default function WalletPage() {
   const [withdrawSuccess, setWithdrawSuccess] = useState(false)
   const [openDepositDialog, setOpenDepositDialog] = useState(false)
   const [openWithdrawDialog, setOpenWithdrawDialog] = useState(false)
-  const [transactions, setTransactions] = useState(transactionsData)
+  const [transactions, setTransactions] = useState<{
+    transactions: Transaction[];
+    earnings: Transaction[];
+    combinedHistory: Transaction[];
+  }>({
+    transactions: [],
+    earnings: [],
+    combinedHistory: []
+  })
   const [filter, setFilter] = useState("all")
   const [upiAccounts, setUpiAccounts] = useState<UPIAccount[]>([])
   const [newUpiId, setNewUpiId] = useState("")
@@ -98,16 +79,17 @@ export default function WalletPage() {
   const [depositStep, setDepositStep] = useState(1)
   const [transactionRef, setTransactionRef] = useState("")
   const [paymentScreenshots, setPaymentScreenshots] = useState<Array<{ file: File; preview: string }>>([])
-
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [balanceData, paymentMethods] = await Promise.all([
           getBalance(),
-          getAllPaymentMethods()
+          getAllPaymentMethods(),
         ]);
         
         setBalance(balanceData.balance);
+        setTotalDeposits(balanceData.totalDeposits);
+        setTotalWithdrawals(balanceData.totalWithdrawals);
         setUpiAccounts(paymentMethods);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -118,11 +100,31 @@ export default function WalletPage() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const transactionsData = await getBalanceHistory();
+        setTransactions(transactionsData);
+      } catch (error) {
+        console.error('Error fetching transactions:', error);
+        toast.error('Failed to load transactions. Please try again.');
+      }
+    };
+
+    fetchTransactions();
+  }, []);
+
   // Filter transactions
-  const filteredTransactions = transactions.filter((transaction) => {
-    if (filter === "all") return true
-    return transaction.type === filter
-  })
+  const filteredTransactions = useMemo(() => {
+    return transactions.combinedHistory.filter((item) => {
+      if (filter === "all") return true;
+      return item.type === filter;
+    });
+  }, [filter, transactions.combinedHistory]);
+
+  const handleFilterChange = (value: string) => {
+    setFilter(value);
+  };
 
   const handleDeposit = () => {
     setIsDepositing(true)
@@ -137,16 +139,21 @@ export default function WalletPage() {
       setBalance((prevBalance) => prevBalance + amount)
 
       // Add transaction
-      const newTransaction = {
-        id: (transactions.length + 1).toString(),
-        type: "deposit",
+      const newTransaction: Transaction = {
+        id: (transactions.transactions.length + 1).toString(),
+        type: "Deposit",
         amount: amount,
-        date: new Date().toISOString().split("T")[0],
-        status: "completed",
-        method: depositMethod === "credit-card" ? "Credit Card" : depositMethod === "bank" ? "Bank Transfer" : "PayPal",
+        date: new Date().toISOString(),
+        status: "Completed",
+        method: "UPI",
+        category: "transaction"
       }
 
-      setTransactions([newTransaction, ...transactions])
+      setTransactions(prev => ({
+        ...prev,
+        transactions: [newTransaction, ...prev.transactions],
+        combinedHistory: [newTransaction, ...prev.combinedHistory]
+      }))
 
       // Reset after showing success message
       setTimeout(() => {
@@ -170,16 +177,21 @@ export default function WalletPage() {
       setBalance((prevBalance) => prevBalance - amount)
 
       // Add transaction
-      const newTransaction = {
-        id: (transactions.length + 1).toString(),
-        type: "withdrawal",
+      const newTransaction: Transaction = {
+        id: (transactions.transactions.length + 1).toString(),
+        type: "Withdraw",
         amount: amount,
-        date: new Date().toISOString().split("T")[0],
-        status: "processing",
-        method: withdrawMethod === "paypal" ? "PayPal" : withdrawMethod === "bank" ? "Bank Transfer" : "Cryptocurrency",
+        date: new Date().toISOString(),
+        status: "Pending",
+        method: "UPI",
+        category: "transaction"
       }
 
-      setTransactions([newTransaction, ...transactions])
+      setTransactions(prev => ({
+        ...prev,
+        transactions: [newTransaction, ...prev.transactions],
+        combinedHistory: [newTransaction, ...prev.combinedHistory]
+      }))
 
       // Reset after showing success message
       setTimeout(() => {
@@ -597,7 +609,7 @@ export default function WalletPage() {
                     <Wallet className="h-4 w-4 text-gray-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">${balance.toFixed(2)}</div>
+                    <div className="text-2xl font-bold">₹{balance.toFixed(2)}</div>
                     <p className="text-xs text-gray-500">Available for tasks and withdrawals</p>
                   </CardContent>
                 </Card>
@@ -607,7 +619,7 @@ export default function WalletPage() {
                     <ArrowUp className="h-4 w-4 text-green-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">$150.00</div>
+                    <div className="text-2xl font-bold">₹{totalDeposits.toFixed(2)}</div>
                     <p className="text-xs text-gray-500">All-time deposits</p>
                   </CardContent>
                 </Card>
@@ -617,7 +629,7 @@ export default function WalletPage() {
                     <ArrowDown className="h-4 w-4 text-red-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">$55.00</div>
+                    <div className="text-2xl font-bold">₹{totalWithdrawals.toFixed(2)}</div>
                     <p className="text-xs text-gray-500">All-time withdrawals</p>
                   </CardContent>
                 </Card>
@@ -627,15 +639,19 @@ export default function WalletPage() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle>Transaction History</CardTitle>
-                    <Select defaultValue="all" onValueChange={setFilter}>
+                    <Select 
+                      defaultValue="all" 
+                      value={filter}
+                      onValueChange={handleFilterChange}
+                    >
                       <SelectTrigger className="w-[150px]">
                         <SelectValue placeholder="Filter" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Transactions</SelectItem>
-                        <SelectItem value="deposit">Deposits</SelectItem>
-                        <SelectItem value="withdrawal">Withdrawals</SelectItem>
-                        <SelectItem value="earning">Earnings</SelectItem>
+                        <SelectItem value="Deposit">Deposits</SelectItem>
+                        <SelectItem value="Withdraw">Withdrawals</SelectItem>
+                        <SelectItem value="Earning">Earnings</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -644,7 +660,8 @@ export default function WalletPage() {
                 <CardContent>
                   <div className="space-y-4">
                     <div className="rounded-md border">
-                      <div className="grid grid-cols-5 bg-muted/50 p-3 text-sm font-medium">
+                      <div className="grid grid-cols-6 bg-muted/50 p-3 text-sm font-medium">
+                        <div>Transaction ID</div>
                         <div>Type</div>
                         <div>Date</div>
                         <div>Amount</div>
@@ -653,38 +670,46 @@ export default function WalletPage() {
                       </div>
                       {filteredTransactions.length > 0 ? (
                         filteredTransactions.map((transaction) => (
-                          <div key={transaction.id} className="grid grid-cols-5 items-center p-3 text-sm border-t">
+                          <div 
+                            key={`${transaction.category}-${transaction.id || transaction.date}`} 
+                            className="grid grid-cols-6 items-center p-3 text-sm border-t"
+                          >
+                            <div className="text-gray-600 font-mono text-xs">
+                              {transaction.id || `EARN-${transaction.date.substring(0, 10)}`}
+                            </div>
                             <div className="font-medium flex items-center">
-                              {transaction.type === "deposit" ? (
+                              {transaction.type === "Deposit" ? (
                                 <ArrowUp className="h-4 w-4 text-green-500 mr-2" />
-                              ) : transaction.type === "withdrawal" ? (
+                              ) : transaction.type === "Withdraw" ? (
                                 <ArrowDown className="h-4 w-4 text-red-500 mr-2" />
                               ) : (
                                 <DollarSign className="h-4 w-4 text-blue-500 mr-2" />
                               )}
-                              {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
+                              {transaction.type}
                             </div>
                             <div className="text-gray-500">{new Date(transaction.date).toLocaleDateString()}</div>
                             <div
                               className={`font-medium ${
-                                transaction.type === "deposit" || transaction.type === "earning"
+                                transaction.type === "Deposit" || transaction.type === "Earning"
                                   ? "text-green-600"
                                   : "text-red-600"
                               }`}
                             >
-                              {transaction.type === "deposit" || transaction.type === "earning" ? "+" : "-"}$
+                              {transaction.type === "Deposit" || transaction.type === "Earning" ? "+" : "-"}₹
                               {transaction.amount.toFixed(2)}
                             </div>
                             <div>{transaction.method}</div>
                             <div>
                               <Badge
                                 className={
-                                  transaction.status === "completed"
+                                  transaction.status === "Completed"
                                     ? "bg-green-100 text-green-800 hover:bg-green-100 border-green-200"
+                                    : transaction.status === "Rejected"
+                                    ? "bg-red-100 text-red-800 hover:bg-red-100 border-red-200"
                                     : "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200"
                                 }
                               >
-                                {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                                {transaction.status}
                               </Badge>
                             </div>
                           </div>

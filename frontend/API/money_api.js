@@ -24,7 +24,7 @@ export const getBalance = async () => {
 // Function to get user balance history
 export const getBalanceHistory = async () => {
   try {
-    const response = await axios.get(`${BASE_URL}/balance/history`, {
+    const response = await axios.get(`${BASE_URL}/balance/money-history`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }

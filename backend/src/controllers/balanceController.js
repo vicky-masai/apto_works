@@ -4,7 +4,7 @@ const prismaClient = new PrismaClient();
 
 const addBalance = async (req, res) => {
   try {
-    const { amount } = req.body;
+    const { amount, paymentMethodId } = req.body;
     const user = req.user;
 
     if (amount <= 0) {
@@ -17,7 +17,8 @@ const addBalance = async (req, res) => {
         userId: user.id,
         amount,
         type: 'Add',
-        status: 'Pending'
+        status: 'Pending',
+        paymentMethodId
       }
     });
 
@@ -29,7 +30,7 @@ const addBalance = async (req, res) => {
 
 const withdrawBalance = async (req, res) => {
   try {
-    const { amount } = req.body;
+    const { amount, paymentMethodId } = req.body;
     const user = req.user;
 
     if (amount <= 0) {
@@ -46,7 +47,8 @@ const withdrawBalance = async (req, res) => {
         userId: user.id,
         amount,
         type: 'Withdraw',
-        status: 'Pending'
+        status: 'Pending',
+        paymentMethodId
       }
     });
 
@@ -69,15 +71,124 @@ const getBalanceHistory = async (req, res) => {
   }
 };
 
+const getMoneyHistory = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Get all transactions for the user
+    const transactions = await prisma.transaction.findMany({
+      where: { 
+        userId,
+        OR: [
+          { type: 'Add' },
+          { type: 'Withdraw' }
+        ]
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // Get user's payment methods
+    const paymentMethods = await prisma.userPaymentMethod.findMany({
+      where: { userId }
+    });
+
+    // Get user's earnings from accepted tasks
+    const userWithEarnings = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        acceptedTasks: {
+          select: {
+            acceptedId: true,
+            status: true,
+            task: {
+              select: {
+                taskTitle: true,
+                createdAt: true,
+                price: true,
+                taskStatus: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Format transaction history
+    const transactionHistory = transactions.map(transaction => {
+      const paymentMethod = paymentMethods.find(pm => pm.id === transaction.paymentMethodId);
+      return {
+        id: transaction.id,
+        type: transaction.type === 'Add' ? 'Deposit' : 'Withdraw',
+        date: transaction.createdAt,
+        amount: transaction.amount,
+        status: transaction.status,
+        method: paymentMethod ? `${paymentMethod.methodType} (${paymentMethod.upiId})` : 'UPI',
+        category: 'transaction'
+      };
+    });
+
+    // Format earning history
+    const earningHistory = userWithEarnings?.acceptedTasks.map(task => ({
+      id: task.acceptedId,
+      type: 'Earning',
+      date: task.task.createdAt,
+      amount: task.task.price,
+      status: task.status,
+      taskTitle: task.task.taskTitle,
+      category: 'earning'
+    })) || [];
+
+    // Combine and sort both histories by date
+    const combinedHistory = [...transactionHistory, ...earningHistory]
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    res.json({
+      // transactions: transactionHistory,
+      // earnings: earningHistory,
+      combinedHistory
+    });
+  } catch (error) {
+    console.error('Error fetching money history:', error);
+    res.status(500).json({ error: 'Failed to fetch money history' });
+  }
+};
+
 const getBalance = async (req, res) => {
   try {
     const user = req.user;
     
+    // Get total deposits
+    const totalDeposits = await prisma.transaction.aggregate({
+      where: {
+        userId: user.id,
+        type: 'Add',
+        status: 'Completed'
+      },
+      _sum: {
+        amount: true
+      }
+    });
+
+    // Get total withdrawals
+    const totalWithdrawals = await prisma.transaction.aggregate({
+      where: {
+        userId: user.id,
+        type: 'Withdraw',
+        status: 'Completed'
+      },
+      _sum: {
+        amount: true
+      }
+    });
+
     res.json({ 
       balance: user.balance,
-      userId: user.id
+      userId: user.id,
+      totalDeposits: totalDeposits._sum.amount || 0,
+      totalWithdrawals: totalWithdrawals._sum.amount || 0
     });
   } catch (error) {
+    console.error('Error fetching balance:', error);
     res.status(500).json({ error: 'Failed to fetch balance' });
   }
 };
@@ -413,6 +524,7 @@ module.exports = {
   withdrawBalance,
   getBalanceHistory,
   getBalance,
+  getMoneyHistory,
   addPaymentMethod,
   getAllPaymentMethods,
   getPaymentMethodById,

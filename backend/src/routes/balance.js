@@ -17,7 +17,8 @@ router.post('/withdraw', auth, balanceController.withdrawBalance);
 router.get('/transactions', auth, balanceController.getAllAddMoneyRequestsForUser);
 router.get('/', auth, balanceController.getBalance);
 router.get('/user', auth, balanceController.getUserBalance);
-
+router.get('/history', auth, balanceController.getBalanceHistory);
+router.get('/money-history', auth, balanceController.getMoneyHistory);
 
 
 router.get('/add', auth, balanceController.getAllAddMoneyRequestsForUser);
