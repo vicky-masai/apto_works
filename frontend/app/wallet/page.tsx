@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { ArrowDown, ArrowUp, CreditCard, DollarSign, Plus, Wallet } from "lucide-react"
+import { ArrowDown, ArrowUp, CreditCard, DollarSign, Plus, Wallet, X } from "lucide-react"
+import { toast } from "react-hot-toast"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -23,7 +24,7 @@ import { Footer } from "@/components/Footer"
 import { Header } from "@/components/Header"
 import Leftsidebar from "@/components/Leftsidebar"
 import { getBalance, getBalanceHistory, getUserWithdrawalRequests } from "@/API/money_api.js"
-import { getAllPaymentMethods, addPaymentMethod, updatePaymentMethod } from "@/API/payment_method.js"
+import { getAllPaymentMethods, addPaymentMethod, updatePaymentMethod, deletePaymentMethod } from "@/API/payment_method.js"
 // Mock transaction data
 const transactionsData = [
   {
@@ -68,6 +69,15 @@ const transactionsData = [
   },
 ]
 
+// Add UPI Account interface
+interface UPIAccount {
+  id: number;
+  upiId: string;
+  isDefault: boolean;
+  isActive?: boolean;
+  methodType?: string;
+}
+
 export default function WalletPage() {
   const [balance, setBalance] = useState(0)
   const [depositAmount, setDepositAmount] = useState("")
@@ -82,27 +92,30 @@ export default function WalletPage() {
   const [openWithdrawDialog, setOpenWithdrawDialog] = useState(false)
   const [transactions, setTransactions] = useState(transactionsData)
   const [filter, setFilter] = useState("all")
-  const [upiAccounts, setUpiAccounts] = useState([
-    { id: 1, upiId: "default@upi", isDefault: true }
-  ])
+  const [upiAccounts, setUpiAccounts] = useState<UPIAccount[]>([])
   const [newUpiId, setNewUpiId] = useState("")
   const [openAddUpiDialog, setOpenAddUpiDialog] = useState(false)
+  const [depositStep, setDepositStep] = useState(1)
+  const [transactionRef, setTransactionRef] = useState("")
+  const [paymentScreenshots, setPaymentScreenshots] = useState<Array<{ file: File; preview: string }>>([])
 
   useEffect(() => {
-    const fetchBalance = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getBalance();
-        setBalance(data.balance);
-        const paymentMethods = await getAllPaymentMethods();
-        console.log("paymentMethods", paymentMethods);
+        const [balanceData, paymentMethods] = await Promise.all([
+          getBalance(),
+          getAllPaymentMethods()
+        ]);
         
+        setBalance(balanceData.balance);
         setUpiAccounts(paymentMethods);
       } catch (error) {
-        console.error('Failed to fetch balance:', error);
+        console.error('Error fetching data:', error);
+        toast.error('Failed to load some data. Please try again.');
       }
     };
 
-    fetchBalance();
+    fetchData();
   }, []);
 
   // Filter transactions
@@ -178,40 +191,131 @@ export default function WalletPage() {
   }
 
   const handleAddUpi = async () => {
-    if (newUpiId && !upiAccounts.some(acc => acc.upiId === newUpiId)) {
-      try {
-        const isFirst = upiAccounts.length === 0;
-        
-        // Call the API to add payment method
-        await addPaymentMethod({
-          upiId: newUpiId,
-          methodType: "UPI",
-          isDefault: isFirst
-        });
-        
-        // Refresh payment methods
-        const paymentMethods = await getAllPaymentMethods();
-        setUpiAccounts(paymentMethods);
-        
-        setNewUpiId("");
-        setOpenAddUpiDialog(false);
-      } catch (error) {
-        console.error('Failed to add UPI ID:', error);
-      }
+    if (!newUpiId.trim()) {
+      toast.error("Please enter a valid UPI ID")
+      return
     }
-  };
 
-  const handleMakeDefault = async (account:any) => {
+    // Check for duplicate UPI
+    if (upiAccounts.some(acc => acc.upiId === newUpiId)) {
+      toast.error("This UPI ID already exists")
+      return
+    }
+
     try {
-      // Call the API to set default payment method
-      await updatePaymentMethod(account.id.toString(), { isDefault: true });
+      const isFirst = upiAccounts.length === 0;
+      
+      // Call the API to add payment method
+      await addPaymentMethod({
+        upiId: newUpiId,
+        methodType: "UPI",
+        isDefault: isFirst // Only set as default if it's the first UPI ID
+      });
+      
       // Refresh payment methods
       const paymentMethods = await getAllPaymentMethods();
       setUpiAccounts(paymentMethods);
+      
+      setNewUpiId("");
+      setOpenAddUpiDialog(false);
+      toast.success("UPI ID added successfully");
     } catch (error) {
-      console.error('Failed to set default UPI ID:', error);
+      console.error('Failed to add UPI ID:', error);
+      toast.error("Failed to add UPI ID. Please try again.");
     }
   };
+
+  const handleMakeDefault = async (account: UPIAccount) => {
+    try {
+      // First, find the current default UPI
+      const currentDefault = upiAccounts.find(acc => acc.isDefault);
+      
+      if (currentDefault?.id === account.id) {
+        toast.success("This UPI ID is already set as default");
+        return;
+      }
+
+      // Update the selected UPI to be default
+      await updatePaymentMethod(account.id.toString(), { isDefault: true });
+      
+      // Refresh payment methods
+      const paymentMethods = await getAllPaymentMethods();
+      setUpiAccounts(paymentMethods);
+      toast.success("Default UPI updated successfully");
+    } catch (error) {
+      console.error('Failed to set default UPI ID:', error);
+      toast.error("Failed to update default UPI. Please try again.");
+    }
+  };
+
+  const handleDeleteUpi = async (id: number) => {
+    try {
+      const upiToDelete = upiAccounts.find(acc => acc.id === id);
+      
+      if (!upiToDelete) {
+        toast.error("UPI ID not found");
+        return;
+      }
+
+      if (upiToDelete.isDefault) {
+        toast.error("Cannot delete default UPI ID. Please set another UPI as default first.");
+        return;
+      }
+
+      // Call API to delete the payment method
+      await deletePaymentMethod(id.toString());
+      
+      // Refresh payment methods
+      const paymentMethods = await getAllPaymentMethods();
+      setUpiAccounts(paymentMethods);
+      toast.success("UPI ID deleted successfully");
+    } catch (error) {
+      console.error('Failed to delete UPI ID:', error);
+      toast.error("Failed to delete UPI ID. Please try again.");
+    }
+  };
+
+  // Clean up previews when component unmounts
+  useEffect(() => {
+    return () => {
+      paymentScreenshots.forEach(screenshot => {
+        URL.revokeObjectURL(screenshot.preview)
+      })
+    }
+  }, [paymentScreenshots])
+
+  // Reset states when dialog closes
+  useEffect(() => {
+    if (!openDepositDialog) {
+      setDepositStep(1)
+      setDepositAmount("")
+      setTransactionRef("")
+      paymentScreenshots.forEach(screenshot => {
+        URL.revokeObjectURL(screenshot.preview)
+      })
+      setPaymentScreenshots([])
+      setDepositSuccess(false)
+    }
+  }, [openDepositDialog])
+
+  const handleScreenshotUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    const newScreenshots = files.map(file => ({
+      file,
+      preview: URL.createObjectURL(file)
+    }))
+    setPaymentScreenshots(prev => [...prev, ...newScreenshots])
+    e.target.value = '' // Reset input
+  }
+
+  const removeScreenshot = (index: number) => {
+    setPaymentScreenshots(prev => {
+      const newScreenshots = [...prev]
+      URL.revokeObjectURL(newScreenshots[index].preview)
+      newScreenshots.splice(index, 1)
+      return newScreenshots
+    })
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -234,56 +338,144 @@ export default function WalletPage() {
                       <DialogHeader>
                         <DialogTitle>Add Money to Wallet</DialogTitle>
                         <DialogDescription>
-                          Enter the amount and your UPI ID to add funds to your wallet.
+                          {depositStep === 1 ? 
+                            "Enter the amount and your UPI ID to add funds to your wallet." :
+                            "Please provide your transaction details for verification."
+                          }
                         </DialogDescription>
                       </DialogHeader>
                       {!depositSuccess ? (
                         <>
-                          <div className="grid gap-4 py-4">
-                            <div className="grid gap-2">
-                              <label htmlFor="amount" className="text-sm font-medium">
-                                Amount (₹)
-                              </label>
-                              <Input
-                                id="amount"
-                                type="number"
-                                min="5"
-                                step="0.01"
-                                placeholder="Enter amount"
-                                value={depositAmount}
-                                onChange={(e) => setDepositAmount(e.target.value)}
-                              />
-                            </div>
-                            <div className="grid gap-2">
-                              <label htmlFor="upi-id" className="text-sm font-medium">
-                                Select UPI ID
-                              </label>
-                              <Select defaultValue={upiAccounts.find(acc => acc.isDefault)?.id.toString()}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select UPI ID" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {upiAccounts.map(acc => (
-                                    <SelectItem key={acc.id} value={acc.id.toString()}>
-                                      {acc.upiId} {acc.isDefault && "(Default)"}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                          <DialogFooter>
-                            <Button variant="outline" onClick={() => setOpenDepositDialog(false)}>
-                              Cancel
-                            </Button>
-                            <Button
-                              onClick={handleDeposit}
-                              disabled={isDepositing || !depositAmount || Number(depositAmount) <= 0}
-                              className="bg-blue-600 hover:bg-blue-700"
-                            >
-                              {isDepositing ? "Processing..." : "Add Funds"}
-                            </Button>
-                          </DialogFooter>
+                          {depositStep === 1 ? (
+                            <>
+                              <div className="grid gap-4 py-4">
+                                <div className="grid gap-2">
+                                  <label htmlFor="amount" className="text-sm font-medium">
+                                    Amount (₹)
+                                  </label>
+                                  <Input
+                                    id="amount"
+                                    type="number"
+                                    min="5"
+                                    step="0.01"
+                                    placeholder="Enter amount"
+                                    value={depositAmount}
+                                    onChange={(e) => setDepositAmount(e.target.value)}
+                                  />
+                                </div>
+                                <div className="grid gap-2">
+                                  <label htmlFor="upi-id" className="text-sm font-medium">
+                                    Select UPI ID
+                                  </label>
+                                  <Select defaultValue={upiAccounts.find(acc => acc.isDefault)?.id.toString()}>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select UPI ID" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {upiAccounts.map(acc => (
+                                        <SelectItem key={acc.id} value={acc.id.toString()}>
+                                          {acc.upiId} {acc.isDefault && "(Default)"}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                              <DialogFooter>
+                                <Button variant="outline" onClick={() => {
+                                  setOpenDepositDialog(false)
+                                  setDepositStep(1)
+                                }}>
+                                  Cancel
+                                </Button>
+                                <Button
+                                  onClick={() => setDepositStep(2)}
+                                  disabled={!depositAmount || Number(depositAmount) <= 0}
+                                  className="bg-blue-600 hover:bg-blue-700"
+                                >
+                                  Proceed to Payment
+                                </Button>
+                              </DialogFooter>
+                            </>
+                          ) : (
+                            <>
+                              <div className="grid gap-4 py-4">
+                                <Alert className="bg-blue-50 text-blue-800 border-blue-200">
+                                  <AlertTitle className="text-blue-800">Payment Instructions</AlertTitle>
+                                  <AlertDescription className="text-blue-700">
+                                    Please complete the payment of ₹{depositAmount} to the selected UPI ID and provide the transaction details below.
+                                  </AlertDescription>
+                                </Alert>
+                                <div className="grid gap-2">
+                                  <label htmlFor="ref-number" className="text-sm font-medium">
+                                    UPI Reference Number
+                                  </label>
+                                  <Input
+                                    id="ref-number"
+                                    placeholder="Enter UPI reference number"
+                                    value={transactionRef}
+                                    onChange={(e) => setTransactionRef(e.target.value)}
+                                  />
+                                </div>
+                                <div className="grid gap-2">
+                                  <label htmlFor="screenshot" className="text-sm font-medium">
+                                    Payment Screenshots
+                                  </label>
+                                  <Input
+                                    id="screenshot"
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleScreenshotUpload}
+                                    className="cursor-pointer"
+                                    multiple
+                                  />
+                                  <p className="text-xs text-gray-500">
+                                    Upload screenshots of your payment confirmation
+                                  </p>
+                                  
+                                  {/* Screenshot Previews */}
+                                  {paymentScreenshots.length > 0 && (
+                                    <div className="mt-4 grid gap-4">
+                                      <div className="text-sm font-medium">Uploaded Screenshots:</div>
+                                      <div className="grid grid-cols-2 gap-4">
+                                        {paymentScreenshots.map((screenshot, index) => (
+                                          <div key={index} className="relative group">
+                                            <img
+                                              src={screenshot.preview}
+                                              alt={`Screenshot ${index + 1}`}
+                                              className="w-full h-40 object-cover rounded-lg border"
+                                            />
+                                            <button
+                                              onClick={() => removeScreenshot(index)}
+                                              className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full 
+                                                opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                            >
+                                              <X className="h-4 w-4" />
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <DialogFooter>
+                                <Button 
+                                  variant="outline" 
+                                  onClick={() => setDepositStep(1)}
+                                >
+                                  Back
+                                </Button>
+                                <Button
+                                  onClick={handleDeposit}
+                                  disabled={isDepositing || !transactionRef || paymentScreenshots.length === 0}
+                                  className="bg-blue-600 hover:bg-blue-700"
+                                >
+                                  {isDepositing ? "Processing..." : "Submit for Verification"}
+                                </Button>
+                              </DialogFooter>
+                            </>
+                          )}
                         </>
                       ) : (
                         <div className="flex flex-col items-center justify-center py-6 space-y-4">
@@ -298,9 +490,9 @@ export default function WalletPage() {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
                           </div>
-                          <h3 className="text-xl font-medium text-center">Funds Added Successfully!</h3>
+                          <h3 className="text-xl font-medium text-center">Payment Verification Submitted!</h3>
                           <p className="text-center text-gray-500">
-                            ${Number(depositAmount).toFixed(2)} has been added to your wallet.
+                            Your payment of ₹{Number(depositAmount).toFixed(2)} is being verified. Funds will be added to your wallet once verified.
                           </p>
                         </div>
                       )}
@@ -513,9 +705,9 @@ export default function WalletPage() {
                 <CardContent>
                   <div className="space-y-4">
                     {upiAccounts.map((account) => (
-                      <div key={account.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div key={account.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50">
                         <div className="flex items-center gap-3">
-                          <div className="bg-blue-100 p-2 rounded-md">
+                          <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-md">
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
                               width="20"
@@ -526,7 +718,7 @@ export default function WalletPage() {
                               strokeWidth="2"
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              className="text-blue-600"
+                              className="text-blue-600 dark:text-blue-400"
                             >
                               <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                               <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
@@ -534,31 +726,30 @@ export default function WalletPage() {
                           </div>
                           <div>
                             <div className="font-medium">{account.upiId}</div>
-                            <div className="text-sm text-gray-500">UPI ID</div>
+                            <div className="text-sm text-muted-foreground">UPI ID</div>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           {account.isDefault ? (
-                            <Badge className="bg-blue-100 text-blue-800 border-blue-200">Default</Badge>
+                            <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-400">Default</Badge>
                           ) : (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleMakeDefault(account)}
-                            >
-                              Make Default
-                            </Button>
-                          )}
-                          {!account.isDefault && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setUpiAccounts(upiAccounts.filter(acc => acc.id !== account.id))
-                              }}
-                            >
-                              Remove
-                            </Button>
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleMakeDefault(account)}
+                              >
+                                Make Default
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                onClick={() => handleDeleteUpi(account.id)}
+                              >
+                                Delete
+                              </Button>
+                            </>
                           )}
                         </div>
                       </div>

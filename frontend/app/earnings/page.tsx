@@ -23,11 +23,20 @@ import { Footer } from "@/components/Footer"
 import { Header } from "@/components/Header"
 import Leftsidebar from "@/components/Leftsidebar"
 import { getUserBalance } from "@/API/money_api"
+import { getAllPaymentMethods, addPaymentMethod, updatePaymentMethod, deletePaymentMethod } from "@/API/payment_method.js"
 
+// Add these interfaces at the top of the file after imports
+interface UPIAccount {
+  id: number;
+  upiId: string;
+  isDefault: boolean;
+  isActive?: boolean;
+  methodType?: string;
+}
 
 export default function EarningsPage() {
   const [withdrawAmount, setWithdrawAmount] = useState("")
-  const [withdrawMethod, setWithdrawMethod] = useState("paypal")
+  const [selectedUpiId, setSelectedUpiId] = useState("")
   const [isWithdrawing, setIsWithdrawing] = useState(false)
   const [withdrawSuccess, setWithdrawSuccess] = useState(false)
   const [openDialog, setOpenDialog] = useState(false)
@@ -40,9 +49,7 @@ export default function EarningsPage() {
   const [totalEarned, settotalEarned]= useState(0);
   const [availableBalance, setAvailableBalance] = useState(0);
   const [pendingBalance, setPendingBalance] = useState(0);
-  const [upiAccounts, setUpiAccounts] = useState([
-    { id: 1, upiId: "user@upi", isDefault: true }
-  ])
+  const [upiAccounts, setUpiAccounts] = useState<UPIAccount[]>([])
 
   useEffect(() => {
     if (filter === "all") {
@@ -51,39 +58,61 @@ export default function EarningsPage() {
       setFilteredEarnings(earningsData.filter((item: any) => item.status.toLowerCase() === filter))
     }
   }, [filter, earningsData])
-    const fetchUserBalance = async () => {
+
+  useEffect(() => {
+    const fetchData = async () => {
       try {
-        const data = await getUserBalance();
-        // Assuming the data structure returned from the API is similar to earningsData
-        setFilteredEarnings(data.earningsHistory);
-        setEarningsData(data.earningsHistory);
-        settotalEarned(data.totalEarnings)
-        setAvailableBalance(data.availableBalance)
-        setPendingBalance(data.pending)
+        const [balanceData, paymentMethods] = await Promise.all([
+          getUserBalance(),
+          getAllPaymentMethods()
+        ]);
+
+        setFilteredEarnings(balanceData.earningsHistory);
+        setEarningsData(balanceData.earningsHistory);
+        settotalEarned(balanceData.totalEarnings);
+        setAvailableBalance(balanceData.availableBalance);
+        setPendingBalance(balanceData.pending);
+        setUpiAccounts(paymentMethods);
       } catch (error) {
-        console.error('Error fetching user balance:', error);
+        console.error('Error fetching data:', error);
+        toast.error('Failed to load some data. Please try again.');
       }
     };
-    useEffect(() => {
-      fetchUserBalance();
-    }, []);
 
-    const handleWithdraw = () => {
-      setIsWithdrawing(true)
+    fetchData();
+  }, []);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsWithdrawing(false)
-      setWithdrawSuccess(true)
+  const handleWithdraw = async () => {
+    if (!selectedUpiId || !withdrawAmount) {
+      toast.error("Please select a UPI ID and enter an amount");
+      return;
+    }
+
+    setIsWithdrawing(true);
+    try {
+      // You'll need to implement this API function
+      // await initiateWithdrawal({
+      //   amount: Number(withdrawAmount),
+      //   upiId: selectedUpiId,
+      // });
+
+      setWithdrawSuccess(true);
+      toast.success("Withdrawal request initiated successfully");
 
       // Reset after showing success message
       setTimeout(() => {
-        setOpenDialog(false)
-        setWithdrawSuccess(false)
-        setWithdrawAmount("")
-      }, 2000)
-    }, 1500)
-  }
+        setOpenDialog(false);
+        setWithdrawSuccess(false);
+        setWithdrawAmount("");
+        setSelectedUpiId("");
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to initiate withdrawal:', error);
+      toast.error("Failed to initiate withdrawal. Please try again.");
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
 
   const downloadEarningsCSV = () => {
     // Define CSV headers
@@ -117,7 +146,7 @@ export default function EarningsPage() {
     document.body.removeChild(link);
   };
 
-  const handleAddUpi = () => {
+  const handleAddUpi = async () => {
     if (!upiId.trim()) {
       toast.error("Please enter a valid UPI ID")
       return
@@ -129,41 +158,78 @@ export default function EarningsPage() {
       return
     }
 
-    const newUpi = {
-      id: Date.now(),
-      upiId: upiId,
-      isDefault: upiAccounts.length === 0
+    try {
+      const isFirst = upiAccounts.length === 0;
+      
+      // Call the API to add payment method
+      await addPaymentMethod({
+        upiId: upiId,
+        methodType: "UPI",
+        isDefault: isFirst // Only set as default if it's the first UPI ID
+      });
+      
+      // Refresh payment methods
+      const paymentMethods = await getAllPaymentMethods();
+      setUpiAccounts(paymentMethods);
+      
+      setUpiId("");
+      setOpenPaymentDialog(false);
+      toast.success("UPI ID added successfully");
+    } catch (error) {
+      console.error('Failed to add UPI ID:', error);
+      toast.error("Failed to add UPI ID. Please try again.");
     }
+  };
 
-    setUpiAccounts([...upiAccounts, newUpi])
-    setUpiId("")
-    setOpenPaymentDialog(false)
-    toast.success("UPI added successfully")
-  }
-
-  const makeDefault = (id: number) => {
-    setUpiAccounts(upiAccounts.map(acc => ({
-      ...acc,
-      isDefault: acc.id === id
-    })))
-  }
-
-  const removeUpi = (id: number) => {
-    const isDefault = upiAccounts.find(acc => acc.id === id)?.isDefault
-    if (isDefault && upiAccounts.length > 1) {
-      toast.error("Please set another UPI as default first")
-      return
-    }
-    
-    setUpiAccounts(prev => {
-      const filtered = prev.filter(acc => acc.id !== id)
-      // If we removed default and have other UPIs, make first one default
-      if (isDefault && filtered.length > 0) {
-        filtered[0].isDefault = true
+  const makeDefault = async (id: number) => {
+    try {
+      // First, find the current default UPI
+      const currentDefault = upiAccounts.find(acc => acc.isDefault);
+      
+      if (currentDefault?.id === id) {
+        toast.success("This UPI ID is already set as default");
+        return;
       }
-      return filtered
-    })
-  }
+
+      // Update the selected UPI to be default
+      await updatePaymentMethod(id.toString(), { isDefault: true });
+      
+      // Refresh payment methods
+      const paymentMethods = await getAllPaymentMethods();
+      setUpiAccounts(paymentMethods);
+      toast.success("Default UPI updated successfully");
+    } catch (error) {
+      console.error('Failed to set default UPI ID:', error);
+      toast.error("Failed to update default UPI. Please try again.");
+    }
+  };
+
+  const deleteUpi = async (id: number) => {
+    try {
+      const upiToDelete = upiAccounts.find(acc => acc.id === id);
+      
+      if (!upiToDelete) {
+        toast.error("UPI ID not found");
+        return;
+      }
+
+      if (upiToDelete.isDefault) {
+        toast.error("Cannot delete default UPI ID. Please set another UPI as default first.");
+        return;
+      }
+
+      // Call API to delete the payment method
+      await deletePaymentMethod(id.toString());
+      
+      // Refresh payment methods
+      const paymentMethods = await getAllPaymentMethods();
+      setUpiAccounts(paymentMethods);
+      toast.success("UPI ID deleted successfully");
+    } catch (error) {
+      console.error('Failed to delete UPI ID:', error);
+      toast.error("Failed to delete UPI ID. Please try again.");
+    }
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -183,7 +249,7 @@ export default function EarningsPage() {
                     <DialogHeader>
                       <DialogTitle>Withdraw Funds</DialogTitle>
                       <DialogDescription>
-                        Enter the amount you want to withdraw and select your preferred payment method.
+                        Enter the amount and select your UPI ID for withdrawal.
                       </DialogDescription>
                     </DialogHeader>
                     {!withdrawSuccess ? (
@@ -191,7 +257,7 @@ export default function EarningsPage() {
                         <div className="grid gap-4 py-4">
                           <div className="grid gap-2">
                             <label htmlFor="amount" className="text-sm font-medium">
-                              Amount (Available: ${availableBalance.toFixed(2)})
+                              Amount (Available: ₹{availableBalance.toFixed(2)})
                             </label>
                             <Input
                               id="amount"
@@ -205,55 +271,37 @@ export default function EarningsPage() {
                             />
                           </div>
                           <div className="grid gap-2">
-                            <label htmlFor="method" className="text-sm font-medium">
-                              Payment Method
+                            <label htmlFor="upi-id" className="text-sm font-medium">
+                              Select UPI ID
                             </label>
-                            <Select value={withdrawMethod} onValueChange={setWithdrawMethod}>
-                              <SelectTrigger id="method">
-                                <SelectValue placeholder="Select method" />
+                            <Select 
+                              value={selectedUpiId} 
+                              onValueChange={setSelectedUpiId}
+                            >
+                              <SelectTrigger id="upi-id">
+                                <SelectValue placeholder="Select UPI ID" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="paypal">PayPal</SelectItem>
-                                <SelectItem value="bank">Bank Transfer</SelectItem>
-                                <SelectItem value="crypto">Cryptocurrency</SelectItem>
+                                {upiAccounts.map(acc => (
+                                  <SelectItem key={acc.id} value={acc.id.toString()}>
+                                    {acc.upiId} {acc.isDefault && "(Default)"}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
+                            {upiAccounts.length === 0 && (
+                              <p className="text-sm text-yellow-600">
+                                Please add a UPI ID in the Payment Methods section below.
+                              </p>
+                            )}
                           </div>
-                          {withdrawMethod === "paypal" && (
-                            <div className="grid gap-2">
-                              <label htmlFor="paypal-email" className="text-sm font-medium">
-                                PayPal Email
-                              </label>
-                              <Input id="paypal-email" type="email" placeholder="your-email@example.com" />
-                            </div>
-                          )}
-                          {withdrawMethod === "bank" && (
-                            <div className="space-y-2">
-                              <div className="grid gap-2">
-                                <label htmlFor="account-name" className="text-sm font-medium">
-                                  Account Holder Name
-                                </label>
-                                <Input id="account-name" placeholder="John Doe" />
-                              </div>
-                              <div className="grid gap-2">
-                                <label htmlFor="account-number" className="text-sm font-medium">
-                                  Account Number
-                                </label>
-                                <Input id="account-number" placeholder="XXXXXXXXXXXX" />
-                              </div>
-                            </div>
-                          )}
-                          {withdrawMethod === "crypto" && (
-                            <div className="grid gap-2">
-                              <label htmlFor="wallet-address" className="text-sm font-medium">
-                                Wallet Address
-                              </label>
-                              <Input id="wallet-address" placeholder="Enter your wallet address" />
-                            </div>
-                          )}
                         </div>
                         <DialogFooter>
-                          <Button variant="outline" onClick={() => setOpenDialog(false)}>
+                          <Button variant="outline" onClick={() => {
+                            setOpenDialog(false)
+                            setWithdrawAmount("")
+                            setSelectedUpiId("")
+                          }}>
                             Cancel
                           </Button>
                           <Button
@@ -261,6 +309,7 @@ export default function EarningsPage() {
                             disabled={
                               isWithdrawing ||
                               !withdrawAmount ||
+                              !selectedUpiId ||
                               Number(withdrawAmount) <= 0 ||
                               Number(withdrawAmount) > availableBalance
                             }
@@ -282,9 +331,9 @@ export default function EarningsPage() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
                         </div>
-                        <h3 className="text-xl font-medium text-center">Withdrawal Successful!</h3>
+                        <h3 className="text-xl font-medium text-center">Withdrawal Initiated!</h3>
                         <p className="text-center text-muted-foreground">
-                          Your withdrawal request for ${Number(withdrawAmount).toFixed(2)} has been processed.
+                          Your withdrawal request for ₹{Number(withdrawAmount).toFixed(2)} will be processed to your selected UPI ID.
                         </p>
                       </div>
                     )}
@@ -399,9 +448,9 @@ export default function EarningsPage() {
                 <CardContent>
                   <div className="space-y-4">
                     {upiAccounts.map((account) => (
-                      <div key={account.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                      <div key={account.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50">
                         <div className="flex items-center gap-3">
-                          <div className="bg-blue-100 p-2 rounded-md">
+                          <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-md">
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
                               width="24"
@@ -412,7 +461,7 @@ export default function EarningsPage() {
                               strokeWidth="2"
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              className="text-blue-600"
+                              className="text-blue-600 dark:text-blue-400"
                             >
                               <rect width="20" height="12" x="2" y="6" rx="2" />
                               <path d="M12 12h.01" />
@@ -420,13 +469,15 @@ export default function EarningsPage() {
                             </svg>
                           </div>
                           <div>
-                            <div className="font-medium">UPI ID</div>
-                            <div className="text-sm text-muted-foreground">{account.upiId}</div>
+                            <div className="font-medium">{account.upiId}</div>
+                            <div className="text-sm text-muted-foreground">UPI ID</div>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           {account.isDefault ? (
-                            <Badge variant="secondary" className="bg-blue-50 text-blue-700">Default</Badge>
+                            <Badge variant="secondary" className="bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400">
+                              Default
+                            </Badge>
                           ) : (
                             <>
                               <Button 
@@ -439,10 +490,10 @@ export default function EarningsPage() {
                               <Button 
                                 variant="outline" 
                                 size="sm"
-                                className="text-red-500 hover:bg-red-50"
-                                onClick={() => removeUpi(account.id)}
+                                className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                onClick={() => deleteUpi(account.id)}
                               >
-                                Remove
+                                Delete
                               </Button>
                             </>
                           )}

@@ -212,6 +212,19 @@ const updatePaymentMethod = async (req, res) => {
       return res.status(404).json({ error: 'Payment method not found' });
     }
 
+    // If setting this payment method as default, set all other payment methods to non-default
+    if (isDefault) {
+      await prisma.userPaymentMethod.updateMany({
+        where: { 
+          userId: user.id,
+          isDefault: true
+        },
+        data: { 
+          isDefault: false 
+        },
+      });
+    }
+
     const updatedPaymentMethod = await prisma.userPaymentMethod.update({
       where: { id },
       data: {
