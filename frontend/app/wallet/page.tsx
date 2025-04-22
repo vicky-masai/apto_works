@@ -23,7 +23,7 @@ import { Footer } from "@/components/Footer"
 import { Header } from "@/components/Header"
 import Leftsidebar from "@/components/Leftsidebar"
 import { getBalance, getBalanceHistory, getUserWithdrawalRequests } from "@/API/money_api.js"
-
+import { getAllPaymentMethods, addPaymentMethod, updatePaymentMethod } from "@/API/payment_method.js"
 // Mock transaction data
 const transactionsData = [
   {
@@ -93,6 +93,10 @@ export default function WalletPage() {
       try {
         const data = await getBalance();
         setBalance(data.balance);
+        const paymentMethods = await getAllPaymentMethods();
+        console.log("paymentMethods", paymentMethods);
+        
+        setUpiAccounts(paymentMethods);
       } catch (error) {
         console.error('Failed to fetch balance:', error);
       }
@@ -172,6 +176,42 @@ export default function WalletPage() {
       }, 2000)
     }, 1500)
   }
+
+  const handleAddUpi = async () => {
+    if (newUpiId && !upiAccounts.some(acc => acc.upiId === newUpiId)) {
+      try {
+        const isFirst = upiAccounts.length === 0;
+        
+        // Call the API to add payment method
+        await addPaymentMethod({
+          upiId: newUpiId,
+          methodType: "UPI",
+          isDefault: isFirst
+        });
+        
+        // Refresh payment methods
+        const paymentMethods = await getAllPaymentMethods();
+        setUpiAccounts(paymentMethods);
+        
+        setNewUpiId("");
+        setOpenAddUpiDialog(false);
+      } catch (error) {
+        console.error('Failed to add UPI ID:', error);
+      }
+    }
+  };
+
+  const handleMakeDefault = async (account:any) => {
+    try {
+      // Call the API to set default payment method
+      await updatePaymentMethod(account.id.toString(), { isDefault: true });
+      // Refresh payment methods
+      const paymentMethods = await getAllPaymentMethods();
+      setUpiAccounts(paymentMethods);
+    } catch (error) {
+      console.error('Failed to set default UPI ID:', error);
+    }
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -504,12 +544,7 @@ export default function WalletPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => {
-                                setUpiAccounts(upiAccounts.map(acc => ({
-                                  ...acc,
-                                  isDefault: acc.id === account.id
-                                })))
-                              }}
+                              onClick={() => handleMakeDefault(account)}
                             >
                               Make Default
                             </Button>
@@ -560,18 +595,7 @@ export default function WalletPage() {
                             Cancel
                           </Button>
                           <Button
-                            onClick={() => {
-                              if (newUpiId && !upiAccounts.some(acc => acc.upiId === newUpiId)) {
-                                const isFirst = upiAccounts.length === 0;
-                                setUpiAccounts([...upiAccounts, {
-                                  id: upiAccounts.length + 1,
-                                  upiId: newUpiId,
-                                  isDefault: isFirst
-                                }]);
-                                setNewUpiId("");
-                                setOpenAddUpiDialog(false);
-                              }
-                            }}
+                            onClick={handleAddUpi}
                             disabled={!newUpiId || upiAccounts.some(acc => acc.upiId === newUpiId)}
                           >
                             Add UPI
@@ -590,4 +614,3 @@ export default function WalletPage() {
     </div>
   )
 }
-
