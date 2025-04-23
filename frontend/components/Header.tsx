@@ -1,6 +1,6 @@
 "use client"
 import Link from "next/link"
-import { DollarSign, Home, LogIn, LogOut, Shield, Upload, User, UserPlus, Wallet, Clipboard, Bell } from "lucide-react"
+import { DollarSign, Home, LogIn, LogOut, Shield, Upload, User, UserPlus, Wallet, Clipboard, Bell, Users } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import Cookies from "js-cookie"
@@ -9,6 +9,7 @@ import socket from '../utils/socket'; // import singleton instance
 import { getNotification } from "@/API/profile"
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import Image from 'next/image'
 
 dayjs.extend(relativeTime);
 
@@ -27,30 +28,37 @@ type Notification = {
 export function Header({ isLoggedIn = true }: HeaderProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(3);
+  const [notificationCount, setNotificationCount] = useState(0);
   const [isBlinking, setIsBlinking] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const fetchNotifications = async () => {
+    if (!Cookies.get("token")) return; // Don't fetch if no token exists
     try {
-      const response = await getNotification()
+      const response = await getNotification();
       setNotifications(response.notifications);
+      setNotificationCount(response.notifications.filter((n: Notification) => !n.isRead).length);
     } catch (err) {
       console.error('Error fetching notifications', err);
+      setNotifications([]);
+      setNotificationCount(0);
     }
   };
 
   useEffect(() => {
-    fetchNotifications();
+    if (Cookies.get("token")) {
+      fetchNotifications();
 
-    socket.on('getNotification', (data: Notification) => {
-      setNotifications((prev) => [data, ...prev]);
-    });
+      socket.on('getNotification', (data: Notification) => {
+        setNotifications((prev) => [data, ...prev]);
+        setNotificationCount(prev => prev + 1);
+      });
 
-    // Cleanup (optional but good practice)
-    return () => {
-      socket.off('getNotification');
-    };
+      return () => {
+        socket.off('getNotification');
+      };
+    }
   }, []);
 
   
@@ -112,29 +120,68 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-20 w-full border-b bg-white">
+    <header className="sticky top-0 z-20 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
       <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-2 font-bold text-xl text-primary">
-          {/* <Shield className="h-6 w-6" /> */}
-          {/* <Link href="/">TaskHub</Link> */}
-        </div>
-        {isLoggedIn ? (
-          <>
-            {/* <nav className="hidden md:flex items-center gap-6">
-              <button 
-                onClick={() => handleProtectedNavigation("/dashboard")} 
-                className="text-sm font-medium text-gray-900 hover:text-primary"
+        <Link href="/" className="flex items-center gap-2">
+        </Link>
+
+        <div className="flex items-center gap-4">
+          {/* About Us Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-purple-600 transition-colors"
+            >
+              <Users className="h-4 w-4" />
+              <span className="text-sm font-medium">About Us</span>
+              <svg
+                className={`w-4 h-4 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                Dashboard
-              </button>
-              <Link href="/tasks" className="text-sm font-medium text-gray-600 hover:text-gray-900">
-                Tasks
-              </Link>
-              <Link href="/provider/tasks" className="text-sm font-medium text-gray-600 hover:text-gray-900">
-                My Posted Tasks
-              </Link>
-            </nav> */}
-            <div className="relative flex items-center gap-4">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {isMenuOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1">
+                <Link
+                  href="/about"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const aboutSection = document.getElementById('about');
+                    if (aboutSection) {
+                      aboutSection.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                      window.location.href = '/about';
+                    }
+                  }}
+                >
+                  About Us
+                </Link>
+                <Link
+                  href="/#contact"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const contactSection = document.getElementById('contact');
+                    if (contactSection) {
+                      contactSection.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                      window.location.href = '/#contact';
+                    }
+                  }}
+                >
+                  Contact Us
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Notifications and User Menu */}
+          {isLoggedIn ? (
+            <>
               <div className="relative" ref={notificationRef}>
                 <button 
                   onClick={toggleNotifications}
@@ -170,7 +217,7 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
                   </div>
                 )}
               </div>
-              <div className="relative flex items-center gap-4" ref={dropdownRef}>
+              <div className="relative" ref={dropdownRef}>
                 <div className="relative">
                   <button 
                     onClick={toggleDropdown}
@@ -200,7 +247,7 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
                           <Link href="/signup" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                             <span className="flex items-center">
                               <UserPlus className="h-4 w-4 mr-2" />
-                              Signup
+                              Sign Up
                             </span>
                           </Link>
                         </>
@@ -209,36 +256,22 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
                   </div>
                 )}
               </div>
-            </div>
-          </>
-        ) : (
-          <>
-            <nav className="hidden md:flex items-center gap-6">
-              <Link href="#features" className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900">
-                Features
-              </Link>
-              <Link
-                href="#how-it-works"
-                className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
-              >
-                How It Works
-              </Link>
-              <Link href="#pricing" className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900">
-                Pricing
-              </Link>
-            </nav>
-            <div className="flex items-center gap-4">
+            </>
+          ) : (
+            <>
               <Link href="/login">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="text-gray-700 hover:text-purple-600">
                   Log in
                 </Button>
               </Link>
               <Link href="/signup">
-                <Button size="sm">Sign up</Button>
+                <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                  Sign up
+                </Button>
               </Link>
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
     </header>
   )
