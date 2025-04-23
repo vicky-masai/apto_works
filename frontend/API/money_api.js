@@ -66,8 +66,6 @@ export const getUserBalanceDetails = async () => {
   }
 };
 
-
-
 // Function to get user withdrawal requests
 export const getUserWithdrawalRequests = async () => {
   try {
@@ -80,6 +78,47 @@ export const getUserWithdrawalRequests = async () => {
   } catch (error) {
     console.error('Error fetching user withdrawal requests:', error);
     throw error;
+  }
+};
+
+/**
+ * Interface for the deposit request payload
+ */
+export interface DepositRequestPayload {
+  amount: number;
+  upiId: string;
+  adminUpiId: string;
+  upiRefNumber: string;
+  proofImages: Array<{
+    fileName: string;
+    base64Data: string;
+  }>;
+}
+
+/**
+ * Function to submit a deposit request
+ * @param depositData - The deposit request data including amount, UPIs, and proof images
+ * @returns The response from the server with transaction details
+ */
+export const requestDeposit = async (depositData: DepositRequestPayload) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/balance/deposit-request`,
+      depositData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error submitting deposit request:', error);
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || 'Failed to submit deposit request');
+    }
+    throw new Error('Failed to submit deposit request');
   }
 };
 

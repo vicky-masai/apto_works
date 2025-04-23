@@ -23,7 +23,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Footer } from "@/components/Footer"
 import { Header } from "@/components/Header"
 import Leftsidebar from "@/components/Leftsidebar"
-import { getBalance, getBalanceHistory, getUserWithdrawalRequests } from "@/API/money_api.js"
+import { getBalance, getBalanceHistory, getUserWithdrawalRequests, requestDeposit, type DepositRequestPayload, type Transaction } from "@/API/money_api"
 import { getAllPaymentMethods, addPaymentMethod, updatePaymentMethod, deletePaymentMethod } from "@/API/payment_method.js"
 // Mock transaction data
 
@@ -37,17 +37,72 @@ interface UPIAccount {
   methodType?: string;
 }
 
-// Add Transaction interface
-interface Transaction {
-  id: string | null;
-  type: "Deposit" | "Withdraw" | "Earning";
-  date: string;
-  amount: number;
-  status: "Completed" | "Rejected" | "Review" | "Pending";
-  method?: string;
-  taskTitle?: string;
-  category: "transaction" | "earning";
+// Add AdminUPI interface
+interface AdminUPI {
+  upiId: string;
+  name: string;
+  isActive: boolean;
 }
+
+// Function to compress image
+const compressImage = async (file: File): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 1024;
+        const MAX_HEIGHT = 1024;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error('Canvas to Blob conversion failed'));
+            }
+          },
+          'image/jpeg',
+          0.7 // compression quality
+        );
+      };
+      img.onerror = reject;
+    };
+    reader.onerror = reject;
+  });
+};
+
+// Function to convert Blob to base64
+const blobToBase64 = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
 
 export default function WalletPage() {
   const [balance, setBalance] = useState(0)
@@ -79,6 +134,12 @@ export default function WalletPage() {
   const [depositStep, setDepositStep] = useState(1)
   const [transactionRef, setTransactionRef] = useState("")
   const [paymentScreenshots, setPaymentScreenshots] = useState<Array<{ file: File; preview: string }>>([])
+  const [selectedAdminUpi, setSelectedAdminUpi] = useState<string>("")
+  const [adminUPIs] = useState<AdminUPI[]>([
+    { upiId: "admin1@upi", name: "Admin Payment 1", isActive: true },
+    { upiId: "admin2@upi", name: "Admin Payment 2", isActive: true },
+  ])
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -126,43 +187,93 @@ export default function WalletPage() {
     setFilter(value);
   };
 
-  const handleDeposit = () => {
-    setIsDepositing(true)
+  const handleDeposit = async () => {
+    try {
+      setIsDepositing(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsDepositing(false)
-      setDepositSuccess(true)
-
-      // Update balance
-      const amount = Number.parseFloat(depositAmount)
-      setBalance((prevBalance) => prevBalance + amount)
-
-      // Add transaction
-      const newTransaction: Transaction = {
-        id: (transactions.transactions.length + 1).toString(),
-        type: "Deposit",
-        amount: amount,
-        date: new Date().toISOString(),
-        status: "Completed",
-        method: "UPI",
-        category: "transaction"
+      if (!selectedAdminUpi) {
+        toast.error("Please select an admin UPI ID to pay to");
+        setIsDepositing(false);
+        return;
       }
 
-      setTransactions(prev => ({
-        ...prev,
-        transactions: [newTransaction, ...prev.transactions],
-        combinedHistory: [newTransaction, ...prev.combinedHistory]
-      }))
+      // Compress and convert images to base64
+      const base64Images = await Promise.all(
+        paymentScreenshots.map(async (screenshot) => {
+          const compressedBlob = await compressImage(screenshot.file);
+          const base64Data = await blobToBase64(compressedBlob);
+          return {
+            fileName: screenshot.file.name,
+            base64Data: base64Data
+          };
+        })
+      );
 
-      // Reset after showing success message
+      const selectedUpiId = upiAccounts.find(acc => acc.isDefault)?.upiId || upiAccounts[0]?.upiId;
+      
+      if (!selectedUpiId) {
+        toast.error("No UPI ID available. Please add a UPI ID first.");
+        setIsDepositing(false);
+        return;
+      }
+
+      // Prepare request payload
+      const depositData: DepositRequestPayload = {
+        amount: parseFloat(depositAmount),
+        upiId: selectedUpiId,
+        adminUpiId: selectedAdminUpi,
+        upiRefNumber: transactionRef,
+        proofImages: base64Images
+      };
+
+      // Make API call using the new function
+      const response = await requestDeposit(depositData);
+
+      setDepositSuccess(true);
+      toast.success('Deposit request submitted successfully');
+
+      // Update UI with new transaction
+      const newTransaction: Transaction = {
+        id: response.transaction.id,
+        type: "Deposit",
+        amount: parseFloat(depositAmount),
+        date: new Date().toISOString(),
+        status: "Pending",
+        method: `UPI (${selectedUpiId})`,
+        category: "transaction"
+      };
+
+      // Update transactions state safely
+      setTransactions(prev => {
+        const updatedTransactions = Array.isArray(prev.transactions) ? prev.transactions : [];
+        const updatedCombinedHistory = Array.isArray(prev.combinedHistory) ? prev.combinedHistory : [];
+        
+        return {
+          ...prev,
+          transactions: [newTransaction, ...updatedTransactions],
+          combinedHistory: [newTransaction, ...updatedCombinedHistory],
+          earnings: Array.isArray(prev.earnings) ? prev.earnings : []
+        };
+      });
+
+      // Reset form after success
       setTimeout(() => {
-        setOpenDepositDialog(false)
-        setDepositSuccess(false)
-        setDepositAmount("")
-      }, 2000)
-    }, 1500)
-  }
+        setOpenDepositDialog(false);
+        setDepositSuccess(false);
+        setDepositAmount("");
+        setTransactionRef("");
+        setSelectedAdminUpi("");
+        setPaymentScreenshots([]);
+        setDepositStep(1);
+      }, 2000);
+
+    } catch (error) {
+      console.error('Deposit error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to process deposit');
+    } finally {
+      setIsDepositing(false);
+    }
+  };
 
   const handleWithdraw = () => {
     setIsWithdrawing(true)
@@ -351,7 +462,7 @@ export default function WalletPage() {
                         <DialogTitle>Add Money to Wallet</DialogTitle>
                         <DialogDescription>
                           {depositStep === 1 ? 
-                            "Enter the amount and your UPI ID to add funds to your wallet." :
+                            "Enter the amount and select admin UPI to add funds to your wallet." :
                             "Please provide your transaction details for verification."
                           }
                         </DialogDescription>
@@ -376,8 +487,32 @@ export default function WalletPage() {
                                   />
                                 </div>
                                 <div className="grid gap-2">
-                                  <label htmlFor="upi-id" className="text-sm font-medium">
-                                    Select UPI ID
+                                  <label htmlFor="admin-upi" className="text-sm font-medium">
+                                    Select Admin UPI to Pay
+                                  </label>
+                                  <Select
+                                    value={selectedAdminUpi}
+                                    onValueChange={setSelectedAdminUpi}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select Admin UPI" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {adminUPIs.map((adminUpi) => (
+                                        <SelectItem
+                                          key={adminUpi.upiId}
+                                          value={adminUpi.upiId}
+                                          disabled={!adminUpi.isActive}
+                                        >
+                                          {adminUpi.name} ({adminUpi.upiId})
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="grid gap-2">
+                                  <label htmlFor="user-upi" className="text-sm font-medium">
+                                    Your UPI ID
                                   </label>
                                   <Select defaultValue={upiAccounts.find(acc => acc.isDefault)?.id.toString()}>
                                     <SelectTrigger>
@@ -395,14 +530,14 @@ export default function WalletPage() {
                               </div>
                               <DialogFooter>
                                 <Button variant="outline" onClick={() => {
-                                  setOpenDepositDialog(false)
-                                  setDepositStep(1)
+                                  setOpenDepositDialog(false);
+                                  setDepositStep(1);
                                 }}>
                                   Cancel
                                 </Button>
                                 <Button
                                   onClick={() => setDepositStep(2)}
-                                  disabled={!depositAmount || Number(depositAmount) <= 0}
+                                  disabled={!depositAmount || Number(depositAmount) <= 0 || !selectedAdminUpi}
                                   className="bg-blue-600 hover:bg-blue-700"
                                 >
                                   Proceed to Payment
@@ -415,7 +550,9 @@ export default function WalletPage() {
                                 <Alert className="bg-blue-50 text-blue-800 border-blue-200">
                                   <AlertTitle className="text-blue-800">Payment Instructions</AlertTitle>
                                   <AlertDescription className="text-blue-700">
-                                    Please complete the payment of ₹{depositAmount} to the selected UPI ID and provide the transaction details below.
+                                    <p>Please complete the payment of ₹{depositAmount} to:</p>
+                                    <p className="font-medium mt-2">{selectedAdminUpi}</p>
+                                    <p className="text-sm mt-2">After payment, provide the transaction details below.</p>
                                   </AlertDescription>
                                 </Alert>
                                 <div className="grid gap-2">

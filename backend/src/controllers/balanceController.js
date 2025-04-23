@@ -518,6 +518,179 @@ const getAllAddMoneyRequestsForUser = async (req, res) => {
   }
 };
 
+const requestDeposit = async (req, res) => {
+  try {
+    const { amount, upiId, upiRefNumber } = req.body;
+    const user = req.user;
+    const files = req.files;
+
+    if (!amount || !upiId || !upiRefNumber || !files || files.length === 0) {
+      return res.status(400).json({ 
+        error: 'Missing required fields. Please provide amount, UPI ID, reference number, and at least one proof image.' 
+      });
+    }
+
+    if (amount <= 0) {
+      return res.status(400).json({ error: 'Amount must be greater than 0' });
+    }
+
+    // Get or create payment method
+    let paymentMethod = await prisma.userPaymentMethod.findFirst({
+      where: {
+        userId: user.id,
+        upiId: upiId
+      }
+    });
+
+    if (!paymentMethod) {
+      paymentMethod = await prisma.userPaymentMethod.create({
+        data: {
+          userId: user.id,
+          methodType: 'UPI',
+          upiId: upiId,
+          isDefault: false
+        }
+      });
+    }
+
+    // Create transaction record with proof images
+    const transaction = await prisma.transaction.create({
+      data: {
+        userId: user.id,
+        amount: parseFloat(amount),
+        type: 'Add',
+        status: 'Pending',
+        paymentMethodId: paymentMethod.id,
+        upiRefNumber: upiRefNumber,
+        proofImages: {
+          create: files.map(file => ({
+            imageUrl: file.path,
+            fileName: file.filename
+          }))
+        }
+      },
+      include: {
+        proofImages: true
+      }
+    });
+
+    res.status(201).json({
+      message: 'Deposit request created successfully and is pending approval',
+      transaction: {
+        id: transaction.id,
+        amount: transaction.amount,
+        status: transaction.status,
+        upiRefNumber: transaction.upiRefNumber,
+        proofImages: transaction.proofImages
+      }
+    });
+  } catch (error) {
+    console.error('Error in requestDeposit:', error);
+    res.status(500).json({ error: 'Failed to create deposit request' });
+  }
+};
+
+const requestDepositJson = async (req, res) => {
+  try {
+    const { amount, upiId, upiRefNumber, adminUpiId, proofImages } = req.body;
+    const user = req.user;
+
+    if (!amount || !upiId || !upiRefNumber || !adminUpiId || !proofImages || !Array.isArray(proofImages) || proofImages.length === 0) {
+      return res.status(400).json({ 
+        error: 'Missing required fields. Please provide amount, UPI ID, admin UPI ID, reference number, and at least one proof image.' 
+      });
+    }
+
+    if (amount <= 0) {
+      return res.status(400).json({ error: 'Amount must be greater than 0' });
+    }
+
+    // Get or create payment method
+    let paymentMethod = await prisma.userPaymentMethod.findFirst({
+      where: {
+        userId: user.id,
+        upiId: upiId
+      }
+    });
+
+    if (!paymentMethod) {
+      paymentMethod = await prisma.userPaymentMethod.create({
+        data: {
+          userId: user.id,
+          methodType: 'UPI',
+          upiId: upiId,
+          isDefault: false
+        }
+      });
+    }
+
+    // Save base64 images to files
+    const savedImages = await Promise.all(proofImages.map(async (image) => {
+      try {
+        // Remove data URI scheme prefix if present
+        const base64Data = image.base64Data.replace(/^data:image\/\w+;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        
+        // Generate unique filename
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const fileName = `proof-${uniqueSuffix}.jpeg`;
+        const filePath = `uploads/payment-proofs/${fileName}`;
+        
+        // Ensure directory exists
+        const fs = require('fs').promises;
+        await fs.mkdir('uploads/payment-proofs', { recursive: true });
+        
+        // Write file
+        await fs.writeFile(filePath, buffer);
+        
+        return {
+          imageUrl: filePath,
+          fileName: fileName
+        };
+      } catch (error) {
+        console.error('Error saving image:', error);
+        throw new Error('Failed to save proof image');
+      }
+    }));
+
+    // Create transaction record with proof images
+    const transaction = await prisma.transaction.create({
+      data: {
+        userId: user.id,
+        amount: parseFloat(amount),
+        type: 'Add',
+        status: 'Pending',
+        paymentMethodId: paymentMethod.id,
+        upiRefNumber: upiRefNumber,
+        adminUpiId: adminUpiId,
+        proofImages: {
+          create: savedImages
+        }
+      },
+      include: {
+        proofImages: true,
+        paymentMethod: true
+      }
+    });
+
+    res.status(201).json({
+      message: 'Deposit request created successfully and is pending approval',
+      transaction: {
+        id: transaction.id,
+        amount: transaction.amount,
+        status: transaction.status,
+        upiRefNumber: transaction.upiRefNumber,
+        adminUpiId: transaction.adminUpiId,
+        userUpiId: transaction.paymentMethod.upiId,
+        proofImages: transaction.proofImages
+      }
+    });
+  } catch (error) {
+    console.error('Error in requestDepositJson:', error);
+    res.status(500).json({ error: error.message || 'Failed to create deposit request' });
+  }
+};
+
 module.exports = {
   getUserBalance,
   addBalance,
@@ -535,5 +708,7 @@ module.exports = {
   getAllAddMoneyRequest,
   getAllTransactionsForUser,
   getAllWithdrawalRequestsForUser,
-  getAllAddMoneyRequestsForUser
+  getAllAddMoneyRequestsForUser,
+  requestDeposit,
+  requestDepositJson
 }; 
