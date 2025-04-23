@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useEffect, useRef, useState } from "react"
-import { ArrowRight, CheckCircle, DollarSign, Star, Users, ChevronLeft, ChevronRight, ChevronDown, Search, Calculator, CheckCircle2, Clock4, Code, FileText, Paintbrush, Settings2, Smartphone } from "lucide-react"
+import { ArrowRight, CheckCircle, DollarSign, Star, Users, ChevronLeft, ChevronRight, ChevronDown, Search, Calculator, CheckCircle2, Clock4, Code, FileText, Paintbrush, Settings2, Smartphone, Mail, Phone, Send, Shield } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import * as THREE from "three"
@@ -43,6 +43,7 @@ export const LandingPage = () => {
   const newsletterRef = useRef<HTMLDivElement>(null)
   const faqRef = useRef<HTMLDivElement>(null)
   const ctaRef = useRef<HTMLDivElement>(null)
+  const contactRef = useRef<HTMLDivElement>(null)
 
   const [isMounted, setIsMounted] = useState(false)
   const [taskAmounts, setTaskAmounts] = useState<number[]>([])
@@ -58,6 +59,12 @@ export const LandingPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("development")
   const [hoursPerWeek, setHoursPerWeek] = useState(20)
   const [earnings, setEarnings] = useState({ min: 2400, max: 4800 })
+  const [contactForm, setContactForm] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: ""
+  })
 
   // Scroll progress for parallax effects
   const { scrollYProgress } = useScroll()
@@ -66,6 +73,7 @@ export const LandingPage = () => {
   const newsletterInView = useInView(newsletterRef, { once: false, amount: 0.3 })
   const faqInView = useInView(faqRef, { once: false, amount: 0.3 })
   const ctaInView = useInView(ctaRef, { once: false, amount: 0.3 })
+  const contactInView = useInView(contactRef, { once: false, amount: 0.3 })
 
   // Smooth scroll progress for animations
   const smoothScrollProgress = useSpring(scrollYProgress, {
@@ -758,8 +766,6 @@ export const LandingPage = () => {
         </div>
       </section>
 
-
-
       {/* Featured Tasks Section */}
       <section className="w-full py-16 space-bg relative overflow-hidden">
         <motion.div className="container px-4 md:px-6 mx-auto max-w-5xl relative z-10">
@@ -1082,6 +1088,138 @@ export const LandingPage = () => {
         </motion.div>
       </section>
 
+      {/* About Us Section */}
+      <section id="about" className="w-full py-16 space-bg relative overflow-hidden">
+        <motion.div className="container px-4 md:px-6 mx-auto max-w-5xl relative z-10">
+          <motion.div
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <motion.h2 className="text-3xl font-bold mb-4 text-white">About Us</motion.h2>
+            <motion.p className="text-purple-200/60">
+              Empowering the future of work through innovation
+            </motion.p>
+          </motion.div>
+          <motion.div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <motion.div
+              className="relative"
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <div className="feature-card p-6">
+                <h3 className="text-2xl font-bold text-white mb-4">Our Mission</h3>
+                <p className="text-purple-200/80 mb-6">
+                  At AptoWorks, we're revolutionizing the way people work and earn. Our platform connects talented individuals with meaningful tasks, creating opportunities for growth and success in the digital age.
+                </p>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1 p-1 rounded-full bg-purple-500/10">
+                      <CheckCircle className="h-5 w-5 text-purple-400" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-semibold">Quality First</h4>
+                      <p className="text-purple-200/60">We ensure the highest standards in every task completed</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1 p-1 rounded-full bg-purple-500/10">
+                      <Users className="h-5 w-5 text-purple-400" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-semibold">Community Driven</h4>
+                      <p className="text-purple-200/60">Building a supportive network of professionals</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1 p-1 rounded-full bg-purple-500/10">
+                      <Shield className="h-5 w-5 text-purple-400" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-semibold">Secure & Reliable</h4>
+                      <p className="text-purple-200/60">Your security and satisfaction are our top priorities</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+            <motion.div
+              className="relative"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <div className="feature-card p-6">
+                <h3 className="text-2xl font-bold text-white mb-4">Why Choose Us</h3>
+                <div className="space-y-6">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-white font-semibold">Task Completion Rate</span>
+                      <span className="text-purple-400">98%</span>
+                    </div>
+                    <div className="h-2 bg-purple-500/10 rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full bg-purple-500"
+                        initial={{ width: "0%" }}
+                        animate={{ width: "98%" }}
+                        transition={{ duration: 1, delay: 0.5 }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-white font-semibold">Client Satisfaction</span>
+                      <span className="text-purple-400">95%</span>
+                    </div>
+                    <div className="h-2 bg-purple-500/10 rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full bg-purple-500"
+                        initial={{ width: "0%" }}
+                        animate={{ width: "95%" }}
+                        transition={{ duration: 1, delay: 0.7 }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-white font-semibold">Payment Success Rate</span>
+                      <span className="text-purple-400">99%</span>
+                    </div>
+                    <div className="h-2 bg-purple-500/10 rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full bg-purple-500"
+                        initial={{ width: "0%" }}
+                        animate={{ width: "99%" }}
+                        transition={{ duration: 1, delay: 0.9 }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-8">
+                  <h4 className="text-white font-semibold mb-4">Our Growth</h4>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-white">50K+</div>
+                      <div className="text-purple-200/60 text-sm">Active Users</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-white">100K+</div>
+                      <div className="text-purple-200/60 text-sm">Tasks Done</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-white">30+</div>
+                      <div className="text-purple-200/60 text-sm">Countries</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      </section>
+
       {/* FAQ Section */}
       <section ref={faqRef} className="w-full py-16 space-bg relative overflow-hidden">
         <motion.div className="container px-4 md:px-6 mx-auto max-w-5xl relative z-10" style={{ y: faqParallax }}>
@@ -1234,6 +1372,179 @@ export const LandingPage = () => {
           </motion.div>
         </motion.div>
       </section>
+
+      {/* Contact Us Section */}
+      <section ref={contactRef} id="contact" className="w-full py-16 space-bg relative overflow-hidden border-t border-purple-500/10">
+        <motion.div
+          className="container px-4 md:px-6 mx-auto max-w-6xl relative z-10"
+          initial={{ opacity: 0 }}
+          animate={contactInView ? { opacity: 1 } : { opacity: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left side animation */}
+            <motion.div
+              className="relative hidden lg:block"
+              initial={{ opacity: 0, x: -50 }}
+              animate={contactInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -50 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              <motion.div 
+                className="absolute top-0 left-0 w-64 h-64 bg-purple-500/30 rounded-full blur-3xl"
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [0.3, 0.5, 0.3],
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              <motion.div 
+                className="absolute bottom-0 right-0 w-48 h-48 bg-indigo-500/30 rounded-full blur-3xl"
+                animate={{
+                  scale: [1, 1.3, 1],
+                  opacity: [0.3, 0.6, 0.3],
+                }}
+                transition={{
+                  duration: 5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 1
+                }}
+              />
+              <div className="relative z-10 text-center lg:text-left">
+                <motion.h3 
+                  className="text-4xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={contactInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                >
+                  Let's Connect
+                </motion.h3>
+                <motion.p 
+                  className="text-purple-200/60 mb-8 text-lg"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={contactInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                >
+                  Have a question or want to learn more? We're here to help you get started on your journey.
+                </motion.p>
+                <motion.div 
+                  className="grid grid-cols-2 gap-6 max-w-md mx-auto lg:mx-0"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={contactInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                  transition={{ duration: 0.6, delay: 0.5 }}
+                >
+                  <div className="feature-card p-4 text-center">
+                    <motion.div 
+                      className="mx-auto mb-3 w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center"
+                      whileHover={{ scale: 1.1 }}
+                    >
+                      <Mail className="h-6 w-6 text-purple-400" />
+                    </motion.div>
+                    <h4 className="text-white font-semibold">Email Us</h4>
+                    <p className="text-purple-200/60 text-sm">support@aptoworks.com</p>
+                  </div>
+                  <div className="feature-card p-4 text-center">
+                    <motion.div 
+                      className="mx-auto mb-3 w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center"
+                      whileHover={{ scale: 1.1 }}
+                    >
+                      <Phone className="h-6 w-6 text-purple-400" />
+                    </motion.div>
+                    <h4 className="text-white font-semibold">Call Us</h4>
+                    <p className="text-purple-200/60 text-sm">+1 (555) 123-4567</p>
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+
+            {/* Right side form */}
+            <motion.div
+              className="lg:pl-12"
+              initial={{ opacity: 0, x: 50 }}
+              animate={contactInView ? { opacity: 1, x: 0 } : { opacity: 0, x: 50 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              <div className="feature-card backdrop-blur-xl">
+                <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-white mb-2 block font-medium">Name</label>
+                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <input
+                          type="text"
+                          value={contactForm.name}
+                          onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                          className="w-full px-4 py-3 rounded-lg bg-purple-500/10 border border-purple-500/20 text-white placeholder-purple-200/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-200"
+                          placeholder="Your name"
+                        />
+                      </motion.div>
+                    </div>
+                    <div>
+                      <label className="text-white mb-2 block font-medium">Email</label>
+                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <input
+                          type="email"
+                          value={contactForm.email}
+                          onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                          className="w-full px-4 py-3 rounded-lg bg-purple-500/10 border border-purple-500/20 text-white placeholder-purple-200/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-200"
+                          placeholder="your@email.com"
+                        />
+                      </motion.div>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-white mb-2 block font-medium">Subject</label>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <input
+                        type="text"
+                        value={contactForm.subject}
+                        onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
+                        className="w-full px-4 py-3 rounded-lg bg-purple-500/10 border border-purple-500/20 text-white placeholder-purple-200/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-200"
+                        placeholder="How can we help?"
+                      />
+                    </motion.div>
+                  </div>
+                  <div>
+                    <label className="text-white mb-2 block font-medium">Message</label>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <textarea
+                        value={contactForm.message}
+                        onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                        rows={4}
+                        className="w-full px-4 py-3 rounded-lg bg-purple-500/10 border border-purple-500/20 text-white placeholder-purple-200/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none transition-all duration-200"
+                        placeholder="Your message..."
+                      />
+                    </motion.div>
+                  </div>
+                  <motion.div
+                    className="flex justify-center"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button className="bg-purple-500 hover:bg-purple-600 text-white relative overflow-hidden group px-8 py-3 text-lg w-full sm:w-auto">
+                      <span className="relative z-10 flex items-center justify-center gap-2">
+                        Send Message
+                        <Send className="h-5 w-5" />
+                      </span>
+                      <motion.span
+                        className="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        initial={{ x: "-100%" }}
+                        whileHover={{ x: 0 }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    </Button>
+                  </motion.div>
+                </form>
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+      </section>
+
       {/* Newsletter Section */}
       <section ref={newsletterRef} className="w-full py-16 space-bg relative overflow-hidden border-t border-purple-500/10">
         <motion.div
@@ -1290,9 +1601,6 @@ export const LandingPage = () => {
           </motion.div>
         </motion.div>
       </section>
-
-
-
     </main>
   )
 }

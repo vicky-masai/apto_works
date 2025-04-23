@@ -148,12 +148,30 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
                 <Link
                   href="/about"
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const aboutSection = document.getElementById('about');
+                    if (aboutSection) {
+                      aboutSection.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                      window.location.href = '/about';
+                    }
+                  }}
                 >
                   About Us
                 </Link>
                 <Link
-                  href="/contact"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
+                  href="/#contact"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const contactSection = document.getElementById('contact');
+                    if (contactSection) {
+                      contactSection.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                      window.location.href = '/#contact';
+                    }
+                  }}
                 >
                   Contact Us
                 </Link>
