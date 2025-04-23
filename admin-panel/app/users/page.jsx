@@ -1,42 +1,26 @@
 "use client"
 
+import Layout from "@/components/Layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Search, Loader2, X } from "lucide-react"
-import { auth } from "@/API/auth"
+import { Search, UserPlus, X } from "lucide-react"
+import { useState, useEffect } from "react"
+import { toast } from "react-hot-toast"
 import { getUsers, deleteUser, updateUser } from "@/API/api"
-import { useEffect, useState, useRef, useCallback } from "react"
-import DeleteModal from "./DeleteModal"
+import { auth } from "@/API/auth"
 
 export default function UsersPage() {
-  const [users, setUsers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [userId, setUserId] = useState(null);
-  const [totalPages, setTotalPages] = useState(1);
-  const [isOpen, setIsOpen] = useState(false);
+  const [users, setUsers] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [page, setPage] = useState(1)
   const [filters, setFilters] = useState({
     role: "",
     status: "",
     sortBy: "createdAt",
     sortOrder: "desc"
-  });
-  const [searchField, setSearchField] = useState("name");
-  const observer = useRef();
-  const lastUserElementRef = useCallback(node => {
-    if (isLoading) return;
-    if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        setPage(prevPage => prevPage + 1);
-      }
-    });
-    if (node) observer.current.observe(node);
-  }, [isLoading, hasMore]);
+  })
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingUser, setEditingUser] = useState(null)
   const [editForm, setEditForm] = useState({
@@ -45,174 +29,34 @@ export default function UsersPage() {
     balance: ""
   })
 
-  const searchFields = [
-    { value: "name", label: "Name" },
-    { value: "email", label: "Email" },
-    { value: "role", label: "Role" }
-  ];
-
-  const roleOptions = [
-    { value: "", label: "All Roles" },
-    { value: "Admin", label: "Admin" },
-    { value: "User", label: "User" },
-    { value: "TaskProvider", label: "Task Provider" }
-  ];
-
-  const statusOptions = [
-    { value: "", label: "All Status" },
-    { value: "Active", label: "Active" },
-    { value: "Deleted", label: "Deleted" },
-  ];
-
-  const sortOptions = [
-    { value: "createdAt", label: "Join Date" },
-    { value: "name", label: "Name" },
-    { value: "email", label: "Email" },
-    { value: "role", label: "Role" }
-  ];
-
-  const fetchUsers = async (pageNum = 1, search = "", field = "name", filterParams = {}) => {
+  const fetchUsers = async (pageNum = 1, search = "", filterParams = {}) => {
     try {
-      setIsLoading(true);
+      setIsLoading(true)
       const params = {
         page: pageNum,
         limit: 10,
         search,
-        searchField: field,
         ...filterParams
-      };
-      
-      console.log("Fetching users with params:", params);
-      
-      const data = await getUsers(auth.getToken(), params);
-      
-      console.log("Received users data:", data);
-      
-      if (pageNum === 1) {
-        setUsers(data.users || []);
-      } else {
-        setUsers(prevUsers => [...prevUsers, ...(data.users || [])]);
       }
-      setHasMore(data.pagination && data.pagination.page < data.pagination.totalPages);
-      setTotalPages(data.pagination ? data.pagination.totalPages : 1);
+      
+      const data = await getUsers(auth.getToken(), params)
+      setUsers(data.users || [])
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Error fetching users:', error)
+      toast.error("Failed to fetch users")
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchUsers(1, searchQuery, searchField, filters);
-  }, [searchQuery, searchField, filters]);
-
-  useEffect(() => {
-    if (page > 1) {
-      fetchUsers(page, searchQuery, searchField, filters);
-    }
-  }, [page]);
-
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-    setPage(1);
-  };
-
-  const handleFilterChange = (field, value) => {
-    setFilters(prev => ({ ...prev, [field]: value }));
-    setPage(1);
-  };
-
-  const handleSearchFieldChange = (value) => {
-    setSearchField(value);
-    setPage(1);
-  };
-
-  const handleSortChange = (field) => {
-    setFilters(prev => ({
-      ...prev,
-      sortBy: field,
-      sortOrder: prev.sortBy === field && prev.sortOrder === "asc" ? "desc" : "asc"
-    }));
-    setPage(1);
-  };
-
-  const handleDeleteConfirmation = async () => {
-    console.log("Confirm");
-    const data = await deleteUser(auth.getToken(), userId);
-    // alert(data.message);
-    
-    setIsOpen(false);
-    fetchUsers();
-
-  }
-
-  const onClickDelete = async (e, userId) => {
-    e.preventDefault();
-    setUserId(userId);
-    console.log(userId);
-    // const data = await deleteUser(auth.getToken(), userId);
-    // alert(data.message);
-    // fetchUsers();
-
-    setIsOpen(true);
-    // console.log(data);
-    // window.location.reload();
-  };
-
-  // Mock data for users
-  // const users = [
-  //   { id: 1, name: "John Doe", email: "john@example.com", role: "Admin", status: "active", joinDate: "2025-01-15" },
-  //   { id: 2, name: "Jane Smith", email: "jane@example.com", role: "User", status: "active", joinDate: "2025-02-20" },
-  //   {
-  //     id: 3,
-  //     name: "Mike Johnson",
-  //     email: "mike@example.com",
-  //     role: "User",
-  //     status: "inactive",
-  //     joinDate: "2025-03-10",
-  //   },
-  //   {
-  //     id: 4,
-  //     name: "Sarah Williams",
-  //     email: "sarah@example.com",
-  //     role: "Moderator",
-  //     status: "active",
-  //     joinDate: "2025-01-05",
-  //   },
-  //   { id: 5, name: "David Brown", email: "david@example.com", role: "User", status: "pending", joinDate: "2025-04-01" },
-  //   { id: 6, name: "Emily Davis", email: "emily@example.com", role: "User", status: "active", joinDate: "2025-02-15" },
-  //   {
-  //     id: 7,
-  //     name: "Robert Wilson",
-  //     email: "robert@example.com",
-  //     role: "Admin",
-  //     status: "active",
-  //     joinDate: "2025-01-20",
-  //   },
-  //   { id: 8, name: "Lisa Taylor", email: "lisa@example.com", role: "User", status: "inactive", joinDate: "2025-03-25" },
-  // ]
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case "active":
-        return <Badge className="w-fit px-3 py-1 rounded-full bg-green-500">Active</Badge>
-      case "inactive":
-        return <Badge className="w-fit px-3 py-1 rounded-full" variant="secondary">Inactive</Badge>
-      case "pending":
-        return (
-          <Badge variant="outline" className="w-fit px-3 py-1 rounded-full text-yellow-500 border-yellow-500">
-            Pending
-          </Badge>
-        )
-      default:
-        return null
+      setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchUsers(1, searchQuery, filters)
+  }, [searchQuery, filters])
 
   const handleEdit = (user) => {
     setEditingUser(user)
     setEditForm({
-      name: user.status,
+      name: user.name,
       email: user.email,
       balance: user.balance
     })
@@ -221,248 +65,125 @@ export default function UsersPage() {
 
   const handleEditSubmit = async () => {
     try {
-      // Add your API call here to update user
-      // const response = await updateUser(auth.getToken(), editingUser.id, editForm);
-      
-      // For now, update locally
-      // setUsers(users.map(user => 
-      //   user.id === editingUser.id 
-      //     ? { 
-      //         ...user, 
-      //         status: editForm.name,
-      //         email: editForm.email,
-      //         balance: editForm.balance
-      //       }
-      //     : user
-      // ))
-
-      const response = await updateUser(auth.getToken(), editingUser.id, editForm);
-      await fetchUsers();
+      await updateUser(auth.getToken(), editingUser.id, editForm)
+      await fetchUsers(page, searchQuery, filters)
       setIsEditDialogOpen(false)
       setEditingUser(null)
       setEditForm({ name: "", email: "", balance: "" })
+      toast.success("User updated successfully")
     } catch (error) {
       console.error('Error updating user:', error)
+      toast.error("Failed to update user")
     }
   }
 
-  const handleFormChange = (field, value) => {
-    setEditForm(prev => ({
-      ...prev,
-      [field]: value
-    }))
+  const handleDelete = async (userId) => {
+    try {
+      await deleteUser(auth.getToken(), userId)
+      await fetchUsers(page, searchQuery, filters)
+      toast.success("User deleted successfully")
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      toast.error("Failed to delete user")
+    }
   }
 
   return (
-  
-    <div className="space-y-6">
-      <DeleteModal isOpen={isOpen} onCancel={() => setIsOpen(false)} onConfirm={() => handleDeleteConfirmation()} />
-      {isEditDialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black/50"></div>
-          <div className="relative bg-white rounded-lg w-[500px] shadow-lg">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold">Edit User Details</h2>
-                <button 
-                  onClick={() => {
-                    setIsEditDialogOpen(false)
-                    setEditingUser(null)
-                    setEditForm({ name: "", email: "", balance: "" })
-                  }}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">Name</label>
-                  <Input
-                    type="text"
-                    placeholder="Enter name"
-                    value={editForm.name}
-                    onChange={(e) => handleFormChange('name', e.target.value)}
-                    className="mt-1.5"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium">Email Address</label>
-                  <Input
-                    type="email"
-                    placeholder="Enter email"
-                    value={editForm.email}
-                    onChange={(e) => handleFormChange('email', e.target.value)}
-                    className="mt-1.5"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium">Balance</label>
-                  <Input
-                    type="number"
-                    placeholder="Enter balance"
-                    value={editForm.balance}
-                    onChange={(e) => handleFormChange('balance', e.target.value)}
-                    className="mt-1.5"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 mt-8">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsEditDialogOpen(false)
-                    setEditingUser(null)
-                    setEditForm({ name: "", email: "", balance: "" })
-                  }}
-                  className="px-4 py-2 text-sm"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleEditSubmit}
-                  disabled={!editForm.name.trim() || !editForm.email.trim() || editForm.balance === ""}
-                  className="px-4 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white"
-                >
-                  Save Changes
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      <div className="flex justify-between items-center">
-        <div>
+    <Layout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">Users</h1>
-          <p className="text-muted-foreground">Manage system users and their permissions</p>
-        </div>
-        <Button className="w-fit px-3 py-1 rounded-full">Add New User</Button>
-      </div>
-
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input 
-              type="search" 
-              placeholder="Search users..." 
-              className="pl-8" 
-              value={searchQuery}
-              onChange={handleSearchChange}
-            />
-          </div>
-          <select
-            value={searchField}
-            onChange={(e) => handleSearchFieldChange(e.target.value)}
-            className="h-10 rounded-md border border-input bg-background px-3 py-2"
-          >
-            {searchFields.map(field => (
-              <option key={field.value} value={field.value}>{field.label}</option>
-            ))}
-          </select>
+          <Button className="bg-blue-600 hover:bg-blue-700">
+            <UserPlus className="h-4 w-4 mr-2" />
+            Add User
+          </Button>
         </div>
 
-        <div className="flex items-center gap-4">
-          <select
-            value={filters.role}
-            onChange={(e) => handleFilterChange('role', e.target.value)}
-            className="h-10 rounded-md border border-input bg-background px-3 py-2"
-          >
-            {roleOptions.map(option => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle>All Users</CardTitle>
+              <Button variant="outline">Export Data</Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 max-w-sm">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input 
+                    type="search" 
+                    placeholder="Search users..." 
+                    className="pl-10"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <select
+                  value={filters.status}
+                  onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                  className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">All Status</option>
+                  <option value="Active">Active</option>
+                  <option value="Deleted">Deleted</option>
+                </select>
+              </div>
 
-          <select
-            value={filters.status}
-            onChange={(e) => handleFilterChange('status', e.target.value)}
-            className="h-10 rounded-md border border-input bg-background px-3 py-2"
-          >
-            {statusOptions.map(option => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
-
-          <div className="flex items-center gap-2">
-            <select
-              value={filters.sortBy}
-              onChange={(e) => handleSortChange(e.target.value)}
-              className="h-10 rounded-md border border-input bg-background px-3 py-2"
-            >
-              {sortOptions.map(option => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => handleSortChange(filters.sortBy)}
-            >
-              {filters.sortOrder === "asc" ? "↑" : "↓"}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>All Users</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="w-full">
-            {/* Table with sticky header and scrollable body */}
-            <div className="border rounded-md">
               <div className="overflow-x-auto">
-                <div className="max-h-[500px] overflow-y-auto">
-                  <table className="w-full border-collapse">
-                    <thead className="sticky top-0 bg-background border-b z-10">
-                      <tr>
-                        <th className="text-left py-3 px-4 font-medium">Name</th>
-                        <th className="text-left py-3 px-4 font-medium">Email</th>
-                        <th className="text-left py-3 px-4 font-medium">Role</th>
-                        <th className="text-left py-3 px-4 font-medium">Balance</th>
-                        <th className="text-left py-3 px-4 font-medium">Join Date</th>
-                        <th className="text-left py-3 px-4 font-medium">Actions</th>
+                {isLoading ? (
+                  <div className="flex items-center justify-center p-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  </div>
+                ) : (
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">ID</th>
+                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Name</th>
+                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Email</th>
+                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Role</th>
+                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Balance</th>
+                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Status</th>
+                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Joined Date</th>
+                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {users?.map((user, index) => (
-                        <tr 
-                          key={user.id} 
-                          className="border-b last:border-0 hover:bg-muted/50"
-                          ref={index === users.length - 1 ? lastUserElementRef : null}
-                        >
-                          <td className="py-3 px-4 font-medium">{user.name}</td>
-                          <td className="py-3 px-4">{user.email}</td>
-                          <td className="py-3 px-4">{user.role || user.userType}</td>
-                          <td className="py-3 px-4">{user.balance}</td>
-                          <td className="py-3 px-4">{new Date(user.createdAt).toLocaleString('en-GB', {
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                            hour12: false
-                          })}</td>
-                          <td className="py-3 px-4">
+                      {users.map((user) => (
+                        <tr key={user.id} className="border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors">
+                          <td className="py-4 px-6">#{user.id}</td>
+                          <td className="py-4 px-6 font-medium text-gray-900">{user.name}</td>
+                          <td className="py-4 px-6 text-gray-600">{user.email}</td>
+                          <td className="py-4 px-6 text-gray-600">{user.role || user.userType}</td>
+                          <td className="py-4 px-6 font-medium">₹{user.balance?.toFixed(2) || '0.00'}</td>
+                          <td className="py-4 px-6">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              user.status === "Active" 
+                                ? "bg-green-100 text-green-800" 
+                                : "bg-gray-100 text-gray-800"
+                            }`}>
+                              {user.status}
+                            </span>
+                          </td>
+                          <td className="py-4 px-6 text-gray-600">
+                            {new Date(user.createdAt).toLocaleDateString()}
+                          </td>
+                          <td className="py-4 px-6">
                             <div className="flex gap-2">
-                              <Button
+                              <Button 
+                                variant="outline" 
+                                size="sm"
                                 onClick={() => handleEdit(user)}
-                                className="px-4 py-2 text-sm border border-gray-300 hover:bg-gray-50 rounded-full"
-                                variant="outline"
                               >
                                 Edit
                               </Button>
                               {user.status === "Active" && (
-                                <Button
-                                  onClick={(e) => onClickDelete(e, user.id)}
-                                  className="px-4 py-2 text-sm border border-red-500 text-red-500 hover:bg-red-50 rounded-full"
-                                  variant="outline"
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleDelete(user.id)}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
                                 >
                                   Delete
                                 </Button>
@@ -473,18 +194,84 @@ export default function UsersPage() {
                       ))}
                     </tbody>
                   </table>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Edit Dialog */}
+        {isEditDialogOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg w-[500px]">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">Edit User</h2>
+                  <button 
+                    onClick={() => {
+                      setIsEditDialogOpen(false)
+                      setEditingUser(null)
+                      setEditForm({ name: "", email: "", balance: "" })
+                    }}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium">Name</label>
+                    <Input
+                      type="text"
+                      value={editForm.name}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Email</label>
+                    <Input
+                      type="email"
+                      value={editForm.email}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Balance</label>
+                    <Input
+                      type="number"
+                      value={editForm.balance}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, balance: e.target.value }))}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 mt-6">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsEditDialogOpen(false)
+                      setEditingUser(null)
+                      setEditForm({ name: "", email: "", balance: "" })
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleEditSubmit}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Save Changes
+                  </Button>
                 </div>
               </div>
             </div>
-            
-            {isLoading && (
-              <div className="flex justify-center items-center h-32">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            )}
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        )}
+      </div>
+    </Layout>
   )
 }

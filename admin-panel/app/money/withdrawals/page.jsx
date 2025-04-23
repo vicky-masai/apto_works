@@ -4,10 +4,10 @@ import Layout from "@/components/Layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Plus, X, CheckSquare, Square } from "lucide-react"
+import { Search, X, CheckSquare, Square } from "lucide-react"
 import { useState, useEffect } from "react"
 import { toast } from "react-hot-toast"
-import { getTasks, approveTask, rejectTask } from "@/API/api"
+import { getTransactions, updateTransactionStatus } from "@/API/api"
 import { auth } from "@/API/auth"
 
 // Helper function to get status chip color
@@ -15,29 +15,30 @@ const getStatusColor = (status) => {
   switch (status?.toLowerCase()) {
     case 'approved':
     case 'completed':
-    case 'published':
+    case 'success':
       return 'bg-green-100 text-green-800'
     case 'review':
     case 'pending':
       return 'bg-yellow-100 text-yellow-800'
     case 'rejected':
+    case 'failed':
       return 'bg-red-100 text-red-800'
     default:
       return 'bg-gray-100 text-gray-800'
   }
 }
 
-export default function TasksPage() {
-  const [tasks, setTasks] = useState([])
+export default function WithdrawalsPage() {
+  const [withdrawals, setWithdrawals] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [isBulkRejectDialogOpen, setIsBulkRejectDialogOpen] = useState(false)
-  const [selectedTask, setSelectedTask] = useState(null)
+  const [selectedWithdrawal, setSelectedWithdrawal] = useState(null)
   const [rejectReason, setRejectReason] = useState("")
   const [filter, setFilter] = useState("")
-  const [selectedTasks, setSelectedTasks] = useState([])
+  const [selectedWithdrawals, setSelectedWithdrawals] = useState([])
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -45,19 +46,27 @@ export default function TasksPage() {
     return () => setMounted(false)
   }, [])
 
-  const fetchTasks = async () => {
+  const fetchWithdrawals = async () => {
     setIsLoading(true)
     try {
-      const response = await getTasks(auth.getToken(), { 
-        page: 1, 
+      const response = await getTransactions(auth.getToken(), {
+        type: 'Withdraw',
+        status: filter,
         search: searchQuery,
-        status: filter
+        page: 1,
+        limit: 100
       })
-      setTasks(response.tasks || [])
-      setSelectedTasks([])
+      
+      if (response && response.transactions) {
+        setWithdrawals(response.transactions)
+      } else {
+        setWithdrawals([])
+        console.error('Invalid response format:', response)
+      }
     } catch (error) {
-      console.error('Error fetching tasks:', error)
-      toast.error("Failed to fetch tasks")
+      console.error('Error fetching withdrawals:', error)
+      toast.error("Failed to fetch withdrawals")
+      setWithdrawals([])
     } finally {
       setIsLoading(false)
     }
@@ -65,39 +74,45 @@ export default function TasksPage() {
 
   useEffect(() => {
     if (mounted) {
-      fetchTasks()
+      fetchWithdrawals()
     }
   }, [searchQuery, filter, mounted])
 
-  const handleApprove = async (taskId) => {
+  const handleApprove = async (withdrawalId) => {
     try {
-      await approveTask(auth.getToken(), taskId)
-      await fetchTasks()
-      toast.success("Task approved successfully")
+      const response = await updateTransactionStatus(auth.getToken(), withdrawalId, "Approved")
+      if (response.success) {
+        await fetchWithdrawals()
+        toast.success("Withdrawal approved successfully")
+      } else {
+        toast.error("Failed to approve withdrawal")
+      }
     } catch (error) {
-      console.error('Error approving task:', error)
-      toast.error("Failed to approve task")
+      console.error('Error approving withdrawal:', error)
+      toast.error("Failed to approve withdrawal")
     }
   }
 
   const handleBulkApprove = async () => {
     try {
-      const reviewTasks = selectedTasks.filter(taskId => 
-        tasks.find(task => task.id === taskId)?.taskStatus === "Review"
+      const pendingWithdrawals = selectedWithdrawals.filter(id => 
+        withdrawals.find(w => w.id === id)?.status === "Pending"
       )
       
-      if (reviewTasks.length === 0) {
-        toast.error("No tasks in review status selected")
+      if (pendingWithdrawals.length === 0) {
+        toast.error("No pending withdrawals selected")
         return
       }
 
       setIsLoading(true)
-      await Promise.all(reviewTasks.map(taskId => approveTask(auth.getToken(), taskId)))
-      await fetchTasks()
-      toast.success(`${reviewTasks.length} tasks approved successfully`)
+      await Promise.all(pendingWithdrawals.map(id => 
+        updateTransactionStatus(auth.getToken(), id, "Approved")
+      ))
+      await fetchWithdrawals()
+      toast.success(`${pendingWithdrawals.length} withdrawals approved successfully`)
     } catch (error) {
       console.error('Error in bulk approve:', error)
-      toast.error("Failed to approve some tasks")
+      toast.error("Failed to approve some withdrawals")
     } finally {
       setIsLoading(false)
     }
@@ -110,36 +125,38 @@ export default function TasksPage() {
     }
 
     try {
-      const reviewTasks = selectedTasks.filter(taskId => 
-        tasks.find(task => task.id === taskId)?.taskStatus === "Review"
+      const pendingWithdrawals = selectedWithdrawals.filter(id => 
+        withdrawals.find(w => w.id === id)?.status === "Pending"
       )
       
-      if (reviewTasks.length === 0) {
-        toast.error("No tasks in review status selected")
+      if (pendingWithdrawals.length === 0) {
+        toast.error("No pending withdrawals selected")
         return
       }
 
       setIsLoading(true)
-      await Promise.all(reviewTasks.map(taskId => rejectTask(auth.getToken(), taskId, rejectReason)))
+      await Promise.all(pendingWithdrawals.map(id => 
+        updateTransactionStatus(auth.getToken(), id, "Rejected", rejectReason)
+      ))
       setIsBulkRejectDialogOpen(false)
       setRejectReason("")
-      await fetchTasks()
-      toast.success(`${reviewTasks.length} tasks rejected successfully`)
+      await fetchWithdrawals()
+      toast.success(`${pendingWithdrawals.length} withdrawals rejected successfully`)
     } catch (error) {
       console.error('Error in bulk reject:', error)
-      toast.error("Failed to reject some tasks")
+      toast.error("Failed to reject some withdrawals")
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleReject = (task) => {
-    setSelectedTask(task)
+  const handleReject = (withdrawal) => {
+    setSelectedWithdrawal(withdrawal)
     setIsRejectDialogOpen(true)
   }
 
-  const handleView = (task) => {
-    setSelectedTask(task)
+  const handleView = (withdrawal) => {
+    setSelectedWithdrawal(withdrawal)
     setIsViewDialogOpen(true)
   }
 
@@ -150,36 +167,40 @@ export default function TasksPage() {
     }
 
     try {
-      await rejectTask(auth.getToken(), selectedTask.id, rejectReason)
-      await fetchTasks()
-      setIsRejectDialogOpen(false)
-      setRejectReason("")
-      setSelectedTask(null)
-      toast.success("Task rejected successfully")
+      const response = await updateTransactionStatus(auth.getToken(), selectedWithdrawal.id, "Rejected", rejectReason)
+      if (response.success) {
+        await fetchWithdrawals()
+        setIsRejectDialogOpen(false)
+        setRejectReason("")
+        setSelectedWithdrawal(null)
+        toast.success("Withdrawal rejected successfully")
+      } else {
+        toast.error("Failed to reject withdrawal")
+      }
     } catch (error) {
-      console.error('Error rejecting task:', error)
-      toast.error("Failed to reject task")
+      console.error('Error rejecting withdrawal:', error)
+      toast.error("Failed to reject withdrawal")
     }
   }
 
-  const toggleTaskSelection = (taskId) => {
-    setSelectedTasks(prev => 
-      prev.includes(taskId) 
-        ? prev.filter(id => id !== taskId)
-        : [...prev, taskId]
+  const toggleWithdrawalSelection = (id) => {
+    setSelectedWithdrawals(prev => 
+      prev.includes(id) 
+        ? prev.filter(wId => wId !== id)
+        : [...prev, id]
     )
   }
 
-  const toggleAllTasks = () => {
-    if (selectedTasks.length === tasks.length) {
-      setSelectedTasks([])
+  const toggleAllWithdrawals = () => {
+    if (selectedWithdrawals.length === withdrawals.length) {
+      setSelectedWithdrawals([])
     } else {
-      setSelectedTasks(tasks.map(task => task.id))
+      setSelectedWithdrawals(withdrawals.map(w => w.id))
     }
   }
 
-  const selectedReviewTasksCount = selectedTasks.filter(taskId => 
-    tasks.find(task => task.id === taskId)?.taskStatus === "Review"
+  const selectedPendingCount = selectedWithdrawals.filter(id => 
+    withdrawals.find(w => w.id === id)?.status === "Pending"
   ).length
 
   if (!mounted) {
@@ -190,35 +211,31 @@ export default function TasksPage() {
     <Layout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight">Tasks</h1>
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Task
-          </Button>
+          <h1 className="text-3xl font-bold tracking-tight">Withdrawals</h1>
         </div>
 
         <Card>
           <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle>All Tasks</CardTitle>
+              <CardTitle>All Withdrawals</CardTitle>
               <div className="flex gap-2">
-                {selectedTasks.length > 0 && (
+                {selectedWithdrawals.length > 0 && (
                   <>
                     <Button
                       variant="outline"
                       className="text-green-600 hover:text-green-700 hover:bg-green-50"
                       onClick={handleBulkApprove}
-                      disabled={selectedReviewTasksCount === 0}
+                      disabled={selectedPendingCount === 0}
                     >
-                      Approve Selected ({selectedReviewTasksCount})
+                      Approve Selected ({selectedPendingCount})
                     </Button>
                     <Button
                       variant="outline"
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       onClick={() => setIsBulkRejectDialogOpen(true)}
-                      disabled={selectedReviewTasksCount === 0}
+                      disabled={selectedPendingCount === 0}
                     >
-                      Reject Selected ({selectedReviewTasksCount})
+                      Reject Selected ({selectedPendingCount})
                     </Button>
                   </>
                 )}
@@ -233,7 +250,7 @@ export default function TasksPage() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input 
                     type="search" 
-                    placeholder="Search tasks..." 
+                    placeholder="Search withdrawals..." 
                     className="pl-10"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -245,7 +262,7 @@ export default function TasksPage() {
                   className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All Status</option>
-                  <option value="Review">Review</option>
+                  <option value="Pending">Pending</option>
                   <option value="Approved">Approved</option>
                   <option value="Rejected">Rejected</option>
                 </select>
@@ -262,10 +279,10 @@ export default function TasksPage() {
                       <tr className="bg-gray-50">
                         <th className="py-4 px-6 text-sm font-semibold text-gray-600">
                           <button 
-                            onClick={toggleAllTasks}
+                            onClick={toggleAllWithdrawals}
                             className="hover:bg-gray-100 p-1 rounded"
                           >
-                            {selectedTasks.length === tasks.length ? (
+                            {selectedWithdrawals.length === withdrawals.length ? (
                               <CheckSquare className="h-5 w-5 text-blue-600" />
                             ) : (
                               <Square className="h-5 w-5 text-gray-400" />
@@ -273,59 +290,59 @@ export default function TasksPage() {
                           </button>
                         </th>
                         <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">ID</th>
-                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Title</th>
-                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Author</th>
-                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Difficulty</th>
+                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">User</th>
+                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Amount</th>
+                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">UPI ID</th>
                         <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Status</th>
-                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Created</th>
+                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Date</th>
                         <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {tasks.map((task) => (
-                        <tr key={task.id} className="border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors">
+                      {withdrawals.map((withdrawal) => (
+                        <tr key={withdrawal.id} className="border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors">
                           <td className="py-4 px-6">
                             <button 
-                              onClick={() => toggleTaskSelection(task.id)}
+                              onClick={() => toggleWithdrawalSelection(withdrawal.id)}
                               className="hover:bg-gray-100 p-1 rounded"
                             >
-                              {selectedTasks.includes(task.id) ? (
+                              {selectedWithdrawals.includes(withdrawal.id) ? (
                                 <CheckSquare className="h-5 w-5 text-blue-600" />
                               ) : (
                                 <Square className="h-5 w-5 text-gray-400" />
                               )}
                             </button>
                           </td>
-                          <td className="py-4 px-6">#{task.id}</td>
-                          <td className="py-4 px-6 font-medium text-gray-900">{task.taskTitle}</td>
-                          <td className="py-4 px-6 text-gray-600">{task.user?.name}</td>
-                          <td className="py-4 px-6 text-gray-600">{task.difficulty}</td>
+                          <td className="py-4 px-6">#{withdrawal.id}</td>
+                          <td className="py-4 px-6 font-medium text-gray-900">{withdrawal.user?.name}</td>
+                          <td className="py-4 px-6 font-medium">₹{withdrawal.amount?.toFixed(2)}</td>
+                          <td className="py-4 px-6 text-gray-600">{withdrawal.upiId}</td>
                           <td className="py-4 px-6">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              getStatusColor(task.taskStatus)
+                              getStatusColor(withdrawal.status)
                             }`}>
-                              {task.taskStatus}
+                              {withdrawal.status}
                             </span>
                           </td>
                           <td className="py-4 px-6 text-gray-600">
-                            {new Date(task.createdAt).toLocaleDateString()}
+                            {new Date(withdrawal.createdAt).toLocaleDateString()}
                           </td>
                           <td className="py-4 px-6">
                             <div className="flex gap-2">
                               <Button 
                                 variant="outline" 
                                 size="sm"
-                                onClick={() => handleView(task)}
+                                onClick={() => handleView(withdrawal)}
                                 className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                               >
                                 View
                               </Button>
-                              {task.taskStatus === "Review" && (
+                              {withdrawal.status === "Pending" && (
                                 <>
                                   <Button 
                                     variant="outline" 
                                     size="sm"
-                                    onClick={() => handleApprove(task.id)}
+                                    onClick={() => handleApprove(withdrawal.id)}
                                     className="text-green-600 hover:text-green-700 hover:bg-green-50"
                                   >
                                     Approve
@@ -333,7 +350,7 @@ export default function TasksPage() {
                                   <Button 
                                     variant="outline" 
                                     size="sm"
-                                    onClick={() => handleReject(task)}
+                                    onClick={() => handleReject(withdrawal)}
                                     className="text-red-600 hover:text-red-700 hover:bg-red-50"
                                   >
                                     Reject
@@ -353,16 +370,16 @@ export default function TasksPage() {
         </Card>
 
         {/* View Dialog */}
-        {isViewDialogOpen && selectedTask && (
+        {isViewDialogOpen && selectedWithdrawal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg w-[800px] max-h-[80vh] overflow-y-auto">
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">View Task Details</h2>
+                  <h2 className="text-xl font-semibold">View Withdrawal Details</h2>
                   <button 
                     onClick={() => {
                       setIsViewDialogOpen(false)
-                      setSelectedTask(null)
+                      setSelectedWithdrawal(null)
                     }}
                     className="text-gray-500 hover:text-gray-700"
                   >
@@ -371,64 +388,64 @@ export default function TasksPage() {
                 </div>
 
                 <div className="space-y-4">
-                  <div>
-                    <h3 className="font-medium text-gray-900">Task Title</h3>
-                    <p className="mt-1">{selectedTask.taskTitle}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="font-medium text-gray-900">Description</h3>
-                    <p className="mt-1 whitespace-pre-wrap">{selectedTask.description}</p>
-                  </div>
-
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <h3 className="font-medium text-gray-900">Author</h3>
-                      <p className="mt-1">{selectedTask.user?.name}</p>
+                      <h3 className="font-medium text-gray-900">User</h3>
+                      <p className="mt-1">{selectedWithdrawal.user?.name}</p>
                     </div>
                     <div>
-                      <h3 className="font-medium text-gray-900">Difficulty</h3>
-                      <p className="mt-1">{selectedTask.difficulty}</p>
+                      <h3 className="font-medium text-gray-900">Amount</h3>
+                      <p className="mt-1">₹{selectedWithdrawal.amount?.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-900">UPI ID</h3>
+                      <p className="mt-1">{selectedWithdrawal.upiId}</p>
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900">Status</h3>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 ${
-                        getStatusColor(selectedTask.taskStatus)
+                        getStatusColor(selectedWithdrawal.status)
                       }`}>
-                        {selectedTask.taskStatus}
+                        {selectedWithdrawal.status}
                       </span>
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900">Created At</h3>
-                      <p className="mt-1">{new Date(selectedTask.createdAt).toLocaleString()}</p>
+                      <p className="mt-1">{new Date(selectedWithdrawal.createdAt).toLocaleString()}</p>
                     </div>
+                    {selectedWithdrawal.rejectionReason && (
+                      <div className="col-span-2">
+                        <h3 className="font-medium text-gray-900">Rejection Reason</h3>
+                        <p className="mt-1 text-red-600">{selectedWithdrawal.rejectionReason}</p>
+                      </div>
+                    )}
                   </div>
 
-                  {selectedTask.taskStatus === "Review" && (
+                  {selectedWithdrawal.status === "Pending" && (
                     <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
                       <Button
                         variant="outline"
                         onClick={() => {
                           setIsViewDialogOpen(false)
-                          setSelectedTask(null)
+                          setSelectedWithdrawal(null)
                         }}
                       >
                         Close
                       </Button>
                       <Button
-                        onClick={() => handleApprove(selectedTask.id)}
+                        onClick={() => handleApprove(selectedWithdrawal.id)}
                         className="bg-green-600 hover:bg-green-700 text-white"
                       >
-                        Approve Task
+                        Approve Withdrawal
                       </Button>
                       <Button
                         onClick={() => {
                           setIsViewDialogOpen(false)
-                          handleReject(selectedTask)
+                          handleReject(selectedWithdrawal)
                         }}
                         className="bg-red-600 hover:bg-red-700 text-white"
                       >
-                        Reject Task
+                        Reject Withdrawal
                       </Button>
                     </div>
                   )}
@@ -444,12 +461,12 @@ export default function TasksPage() {
             <div className="bg-white rounded-lg w-[500px]">
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Reject Task</h2>
+                  <h2 className="text-xl font-semibold">Reject Withdrawal</h2>
                   <button 
                     onClick={() => {
                       setIsRejectDialogOpen(false)
                       setRejectReason("")
-                      setSelectedTask(null)
+                      setSelectedWithdrawal(null)
                     }}
                     className="text-gray-500 hover:text-gray-700"
                   >
@@ -473,7 +490,7 @@ export default function TasksPage() {
                     onClick={() => {
                       setIsRejectDialogOpen(false)
                       setRejectReason("")
-                      setSelectedTask(null)
+                      setSelectedWithdrawal(null)
                     }}
                   >
                     Cancel
@@ -483,7 +500,7 @@ export default function TasksPage() {
                     disabled={!rejectReason.trim()}
                     className="bg-red-600 hover:bg-red-700"
                   >
-                    Reject Task
+                    Reject Withdrawal
                   </Button>
                 </div>
               </div>
@@ -497,7 +514,7 @@ export default function TasksPage() {
             <div className="bg-white rounded-lg w-[500px]">
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Reject Selected Tasks</h2>
+                  <h2 className="text-xl font-semibold">Reject Selected Withdrawals</h2>
                   <button 
                     onClick={() => {
                       setIsBulkRejectDialogOpen(false)
@@ -510,7 +527,7 @@ export default function TasksPage() {
                 </div>
 
                 <div className="mt-4">
-                  <label className="text-sm font-medium">Rejection Reason (will be applied to all selected tasks)</label>
+                  <label className="text-sm font-medium">Rejection Reason (will be applied to all selected withdrawals)</label>
                   <textarea
                     placeholder="Enter reason for rejection"
                     value={rejectReason}
@@ -531,10 +548,10 @@ export default function TasksPage() {
                   </Button>
                   <Button
                     onClick={handleBulkReject}
-                    disabled={!rejectReason.trim() || selectedReviewTasksCount === 0}
+                    disabled={!rejectReason.trim() || selectedPendingCount === 0}
                     className="bg-red-600 hover:bg-red-700"
                   >
-                    Reject {selectedReviewTasksCount} Tasks
+                    Reject {selectedPendingCount} Withdrawals
                   </Button>
                 </div>
               </div>
@@ -544,4 +561,4 @@ export default function TasksPage() {
       </div>
     </Layout>
   )
-}
+} 

@@ -150,6 +150,19 @@ model AcceptedTask {
   @@index([status])
 }
 
+model AdminUPI {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  upiId         String    @unique
+  name          String
+  isActive      Boolean   @default(true)
+  totalReceived Float     @default(0)
+  transactions  Transaction[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([isActive])
+}
+
 model Transaction {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
   userId        String    @db.ObjectId
@@ -161,12 +174,14 @@ model Transaction {
   user          User      @relation(fields: [userId], references: [id])
   paymentMethodId String? @db.ObjectId
   paymentMethod UserPaymentMethod? @relation(fields: [paymentMethodId], references: [id])
+  adminUpiId    String?   @db.ObjectId
+  adminUpi      AdminUPI? @relation(fields: [adminUpiId], references: [id])
   upiRefNumber  String?
-  adminUpiId    String?   // Admin's UPI ID that user paid to
   proofImages   ProofImage[]
 
   @@index([userId])
   @@index([paymentMethodId])
+  @@index([adminUpiId])
 }
 
 model ProofImage {

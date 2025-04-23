@@ -1,123 +1,144 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, CheckSquare, Users, DollarSign, Settings, ChevronDown } from "lucide-react"
+import { 
+  LayoutDashboard, 
+  Users, 
+  Briefcase, 
+  Wallet,
+  Settings,
+  LogOut,
+  X
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose, isMobile }) {
   const pathname = usePathname()
-  const [isMoneyManagementOpen, setIsMoneyManagementOpen] = useState(false)
 
   const isActive = (path) => {
     return pathname === path
   }
 
+  const menuItems = [
+    {
+      title: "Dashboard",
+      icon: LayoutDashboard,
+      href: "/dashboard",
+    },
+    {
+      title: "Users",
+      icon: Users,
+      href: "/users",
+    },
+    {
+      title: "Tasks",
+      icon: Briefcase,
+      href: "/tasks",
+    },
+    {
+      title: "Money Management",
+      icon: Wallet,
+      items: [
+        {
+          title: "Added Money",
+          href: "/money/added",
+        },
+        {
+          title: "Withdrawals",
+          href: "/money/withdrawals",
+        },
+        {
+          title: "UPI Management",
+          href: "/upi-management",
+        },
+      ],
+    },
+    {
+      title: "Settings",
+      icon: Settings,
+      href: "/settings",
+    },
+  ]
+
   return (
-    <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-full flex flex-col">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h1 className="text-xl font-bold text-gray-800 dark:text-white">Super Admin</h1>
+    <aside 
+      className={`fixed top-0 left-0 z-40 h-screen w-64 bg-white border-r border-gray-200 pt-16 transition-transform duration-300 ease-in-out transform ${
+        isOpen ? 'translate-x-0' : '-translate-x-full'
+      } ${!isMobile && 'lg:translate-x-0'}`}
+    >
+      {isMobile && (
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700 lg:hidden"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      )}
+
+      <div className="flex flex-col h-full">
+        <div className="flex-1 px-3 py-4 overflow-y-auto">
+          <ul className="space-y-1">
+            {menuItems.map((item, index) => (
+              <li key={index}>
+                {item.items ? (
+                  <div className="space-y-1">
+                    <div className="px-3 py-2">
+                      <div className="flex items-center text-sm font-medium text-gray-500">
+                        <item.icon className="h-4 w-4 mr-3" />
+                        {item.title}
+                      </div>
+                    </div>
+                    <ul className="space-y-1 pl-7">
+                      {item.items.map((subItem, subIndex) => (
+                        <li key={subIndex}>
+                          <Link
+                            href={subItem.href}
+                            className={`block px-3 py-2 rounded-md text-sm ${
+                              isActive(subItem.href)
+                                ? "bg-blue-50 text-blue-600 font-medium"
+                                : "text-gray-700 hover:bg-gray-50"
+                            }`}
+                            onClick={isMobile ? onClose : undefined}
+                          >
+                            {subItem.title}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <Link
+                    href={item.href}
+                    className={`flex items-center px-3 py-2 rounded-md ${
+                      isActive(item.href)
+                        ? "bg-blue-50 text-blue-600 font-medium"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                    onClick={isMobile ? onClose : undefined}
+                  >
+                    <item.icon className="h-4 w-4 mr-3" />
+                    <span className="text-sm">{item.title}</span>
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="p-4 border-t border-gray-200">
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+            onClick={() => {
+              // Add logout logic here
+            }}
+          >
+            <LogOut className="h-4 w-4 mr-3" />
+            <span className="text-sm">Logout</span>
+          </Button>
+        </div>
       </div>
-      <nav className="flex-1 overflow-y-auto p-2">
-        <ul className="space-y-1">
-          <li>
-            <Link
-              href="/"
-              className={`flex items-center p-2 rounded-lg ${
-                isActive("/")
-                  ? "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
-                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-              }`}
-            >
-              <LayoutDashboard className="w-5 h-5 mr-3" />
-              <span>Dashboard</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/tasks"
-              className={`flex items-center p-2 rounded-lg ${
-                isActive("/tasks")
-                  ? "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
-                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-              }`}
-            >
-              <CheckSquare className="w-5 h-5 mr-3" />
-              <span>Tasks List</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/users"
-              className={`flex items-center p-2 rounded-lg ${
-                isActive("/users")
-                  ? "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
-                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-              }`}
-            >
-              <Users className="w-5 h-5 mr-3" />
-              <span>Users</span>
-            </Link>
-          </li>
-          <li>
-            <button
-              onClick={() => setIsMoneyManagementOpen(!isMoneyManagementOpen)}
-              className={`flex items-center justify-between w-full p-2 rounded-lg ${
-                pathname.includes("/money")
-                  ? "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
-                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-              }`}
-            >
-              <div className="flex items-center">
-                <DollarSign className="w-5 h-5 mr-3" />
-                <span>Money Management</span>
-              </div>
-              <ChevronDown className={`w-4 h-4 transition-transform ${isMoneyManagementOpen ? "rotate-180" : ""}`} />
-            </button>
-            {isMoneyManagementOpen && (
-              <ul className="pl-10 mt-1 space-y-1">
-                <li>
-                  <Link
-                    href="/money/added"
-                    className={`flex items-center p-2 rounded-lg ${
-                      isActive("/money/added")
-                        ? "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
-                        : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    <span>Added Money</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/money/withdraw"
-                    className={`flex items-center p-2 rounded-lg ${
-                      isActive("/money/withdraw")
-                        ? "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
-                        : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    <span>Withdraw Money</span>
-                  </Link>
-                </li>
-              </ul>
-            )}
-          </li>
-          <li>
-            <Link
-              href="/settings"
-              className={`flex items-center p-2 rounded-lg ${
-                isActive("/settings")
-                  ? "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
-                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-              }`}
-            >
-              <Settings className="w-5 h-5 mr-3" />
-              <span>Settings</span>
-            </Link>
-          </li>
-        </ul>
-      </nav>
-    </div>
+    </aside>
   )
 }

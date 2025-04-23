@@ -70,6 +70,7 @@ app.use('/api/task-providers', require('./routes/taskProviders'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/balance', require('./routes/balance'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/admin/upi', require('./routes/adminUpiRoutes'));
 // app.use('/api/withdrawals', require('./routes/withdrawalRoutes'));
 
 // Error handling middleware
