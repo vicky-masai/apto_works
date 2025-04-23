@@ -56,26 +56,14 @@ export default function TasksPage() {
   const [acceptedTasks, setAcceptedTasks] = useState([])
 
   const getAcceptedTasksFetch = async () => {
-    try {
-      const token = Cookies.get("token");
-      if (!token) {
-        setAcceptedTasks([]);
-        return;
-      }
-      const data = await getAcceptedTasks();
-      setAcceptedTasks(data);
-    } catch (error) {
-      console.error('Error fetching accepted tasks:', error);
-      setAcceptedTasks([]);
-    }
+    const data = await getAcceptedTasks(Cookies.get("token"))
+    setAcceptedTasks(data)
   }
 
+
   useEffect(() => {
-    const token = Cookies.get("token");
-    if (token) {
-      getAcceptedTasksFetch();
-    }
-  }, [getAllTasks]);
+    getAcceptedTasksFetch()
+  }, [getAllTasks])
 
   const tasksPerPage = 5
   const [isLoading, setIsLoading] = useState(true)

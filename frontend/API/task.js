@@ -3,14 +3,10 @@ import Cookies from 'js-cookie';
 
 // Base URL for API requests, set via environment variable
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+const token = Cookies.get("token");
 
 // Function to get accepted tasks for a worker
 export const getAcceptedTasks = async () => {
-  const token = Cookies.get("token");
-  if (!token) {
-    throw new Error('No authentication token found');
-  }
-  
   try {
     const response = await axios.get(`${BASE_URL}/workers/accepted-tasks`, {
       headers: {
