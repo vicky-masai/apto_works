@@ -56,6 +56,7 @@ export interface DepositRequestPayload {
 }
 
 export interface DepositResponse {
+  success: boolean;
   message: string;
   transaction: {
     id: string;
@@ -120,28 +121,72 @@ export const getUserBalance = async (): Promise<UserBalanceResponse> => {
 // Function to submit a deposit request
 export const requestDeposit = async (depositData: DepositRequestPayload): Promise<DepositResponse> => {
   try {
+    // Validate the deposit data
+    if (!depositData.amount || depositData.amount <= 0) {
+      throw new Error('Invalid amount');
+    }
+    if (!depositData.upiId) {
+      throw new Error('UPI ID is required');
+    }
+    if (!depositData.adminUpiId) {
+      throw new Error('Admin UPI ID is required');
+    }
+    if (!depositData.upiRefNumber) {
+      throw new Error('UPI Reference number is required');
+    }
+    if (!depositData.proofImages || depositData.proofImages.length === 0) {
+      throw new Error('Payment proof images are required');
+    }
+
+    // Format the request data
+    const formattedData = {
+      amount: Number(depositData.amount),
+      userUpiId: depositData.upiId,
+      adminUpiId: depositData.adminUpiId,
+      upiRefNumber: depositData.upiRefNumber,
+      proofImages: depositData.proofImages.map(img => ({
+        fileName: img.fileName,
+        base64Data: img.base64Data.replace(/^data:image\/(png|jpeg|jpg);base64,/, '')
+      }))
+    };
+
+    // Make the API request
     const response = await axios.post(
       `${BASE_URL}/balance/deposit-request`,
-      depositData,
+      formattedData,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        timeout: 30000 // 30 seconds timeout for large images
       }
     );
-    return response.data;
+
+    return {
+      success: true,
+      message: response.data.message || 'Deposit request submitted successfully',
+      transaction: response.data.transaction
+    };
   } catch (error) {
     console.error('Error submitting deposit request:', error);
+    
     if (axios.isAxiosError(error)) {
-      // Handle Axios error with response
+      // Handle specific API errors
       if (error.response) {
-        throw new Error(error.response.data.error || 'Failed to submit deposit request');
+        const errorMessage = error.response.data?.message || error.response.data?.error || 'Failed to submit deposit request';
+        throw new Error(errorMessage);
       }
-      // Handle Axios error without response (network error)
+      // Handle network errors
       throw new Error('Network error occurred while submitting deposit request');
     }
-    // Handle non-Axios error
+    
+    // Re-throw validation errors
+    if (error instanceof Error) {
+      throw error;
+    }
+    
+    // Handle unexpected errors
     throw new Error('An unexpected error occurred while submitting deposit request');
   }
 };

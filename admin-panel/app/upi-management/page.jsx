@@ -6,9 +6,15 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { toast } from "react-hot-toast"
-import { auth } from "@/API/auth"
 import Layout from "@/components/Layout"
-import { Plus } from "lucide-react"
+import { Plus, Pause, Play } from "lucide-react"
+import { auth } from "@/API/auth"
+import { 
+  createAdminUPI, 
+  getAllAdminUPIs, 
+  updateAdminUPI, 
+  deleteAdminUPI 
+} from "@/API/upi"
 
 export default function UPIManagementPage() {
   const [upiAccounts, setUpiAccounts] = useState([])
@@ -25,12 +31,12 @@ export default function UPIManagementPage() {
   const fetchUPIAccounts = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch('/api/admin/upi/all', {
-        headers: {
-          'Authorization': `Bearer ${auth.getToken()}`
-        }
-      })
-      const data = await response.json()
+      const token = auth.getToken();
+      if (!token) {
+        window.location.href = '/login';
+        return;
+      }
+      const data = await getAllAdminUPIs(token)
       setUpiAccounts(data)
     } catch (error) {
       console.error('Error fetching UPI accounts:', error)
@@ -51,24 +57,20 @@ export default function UPIManagementPage() {
         return
       }
 
-      const response = await fetch('/api/admin/upi', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${auth.getToken()}`
-        },
-        body: JSON.stringify(formData)
-      })
+      const token = auth.getToken();
+      if (!token) {
+        window.location.href = '/login';
+        return;
+      }
 
-      if (!response.ok) throw new Error('Failed to add UPI')
-
+      await createAdminUPI(token, formData)
       toast.success('UPI account added successfully')
       setIsAddDialogOpen(false)
       setFormData({ upiId: "", name: "", isActive: true })
       fetchUPIAccounts()
     } catch (error) {
       console.error('Error adding UPI:', error)
-      toast.error('Failed to add UPI account')
+      toast.error(error.message || 'Failed to add UPI account')
     }
   }
 
@@ -79,17 +81,13 @@ export default function UPIManagementPage() {
         return
       }
 
-      const response = await fetch(`/api/admin/upi/${selectedUPI.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${auth.getToken()}`
-        },
-        body: JSON.stringify(formData)
-      })
+      const token = auth.getToken();
+      if (!token) {
+        window.location.href = '/login';
+        return;
+      }
 
-      if (!response.ok) throw new Error('Failed to update UPI')
-
+      await updateAdminUPI(token, selectedUPI.id, formData)
       toast.success('UPI account updated successfully')
       setIsEditDialogOpen(false)
       setSelectedUPI(null)
@@ -97,7 +95,7 @@ export default function UPIManagementPage() {
       fetchUPIAccounts()
     } catch (error) {
       console.error('Error updating UPI:', error)
-      toast.error('Failed to update UPI account')
+      toast.error(error.message || 'Failed to update UPI account')
     }
   }
 
@@ -105,41 +103,38 @@ export default function UPIManagementPage() {
     if (!confirm('Are you sure you want to delete this UPI account?')) return
 
     try {
-      const response = await fetch(`/api/admin/upi/${upiId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${auth.getToken()}`
-        }
-      })
+      const token = auth.getToken();
+      if (!token) {
+        window.location.href = '/login';
+        return;
+      }
 
-      if (!response.ok) throw new Error('Failed to delete UPI')
-
+      await deleteAdminUPI(token, upiId)
       toast.success('UPI account deleted successfully')
       fetchUPIAccounts()
     } catch (error) {
       console.error('Error deleting UPI:', error)
-      toast.error('Failed to delete UPI account')
+      toast.error(error.message || 'Failed to delete UPI account')
     }
   }
 
   const handleToggleActive = async (upi) => {
     try {
-      const response = await fetch(`/api/admin/upi/${upi.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${auth.getToken()}`
-        },
-        body: JSON.stringify({ ...upi, isActive: !upi.isActive })
+      const token = auth.getToken();
+      if (!token) {
+        window.location.href = '/login';
+        return;
+      }
+
+      await updateAdminUPI(token, upi.id, { 
+        ...upi, 
+        isActive: !upi.isActive 
       })
-
-      if (!response.ok) throw new Error('Failed to update UPI status')
-
-      toast.success(`UPI account ${!upi.isActive ? 'activated' : 'deactivated'} successfully`)
+      toast.success(`UPI account ${!upi.isActive ? 'activated' : 'paused'} successfully`)
       fetchUPIAccounts()
     } catch (error) {
       console.error('Error updating UPI status:', error)
-      toast.error('Failed to update UPI status')
+      toast.error(error.message || 'Failed to update UPI status')
     }
   }
 
@@ -148,7 +143,10 @@ export default function UPIManagementPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">UPI Management</h1>
-          <Button onClick={() => setIsAddDialogOpen(true)}>
+          <Button 
+            onClick={() => setIsAddDialogOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add UPI
           </Button>
@@ -181,11 +179,30 @@ export default function UPIManagementPage() {
                         <td className="py-4 px-6 font-medium text-gray-900">{upi.upiId}</td>
                         <td className="py-4 px-6 text-gray-600">{upi.name}</td>
                         <td className="py-4 px-6">
-                          <Switch
-                            checked={upi.isActive}
-                            onCheckedChange={() => handleToggleActive(upi)}
-                            className="data-[state=checked]:bg-green-500"
-                          />
+                          <div className="flex items-center gap-3">
+                            <Button
+                              size="sm"
+                              variant={upi.isActive ? "outline" : "default"}
+                              onClick={() => handleToggleActive(upi)}
+                              className={`flex items-center gap-2 ${
+                                upi.isActive 
+                                  ? 'text-green-600 border-green-600 hover:bg-green-50' 
+                                  : 'bg-yellow-500 hover:bg-yellow-600 text-white border-none'
+                              }`}
+                            >
+                              {upi.isActive ? (
+                                <>
+                                  <Play className="h-4 w-4" />
+                                  Active
+                                </>
+                              ) : (
+                                <>
+                                  <Pause className="h-4 w-4" />
+                                  Paused
+                                </>
+                              )}
+                            </Button>
+                          </div>
                         </td>
                         <td className="py-4 px-6 font-medium">₹{upi.totalReceived?.toFixed(2) || '0.00'}</td>
                         <td className="py-4 px-6">
@@ -202,6 +219,7 @@ export default function UPIManagementPage() {
                                 })
                                 setIsEditDialogOpen(true)
                               }}
+                              className="text-blue-600 border-blue-600 hover:bg-blue-50"
                             >
                               Edit
                             </Button>
@@ -209,6 +227,7 @@ export default function UPIManagementPage() {
                               variant="destructive"
                               size="sm"
                               onClick={() => handleDeleteUPI(upi.id)}
+                              className="bg-red-600 hover:bg-red-700"
                             >
                               Delete
                             </Button>
@@ -267,7 +286,9 @@ export default function UPIManagementPage() {
                       onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
                       className="data-[state=checked]:bg-green-500"
                     />
-                    <label className="text-sm font-medium text-gray-700">Active</label>
+                    <label className="text-sm font-medium text-gray-700">
+                      {formData.isActive ? 'Active' : 'Paused'}
+                    </label>
                   </div>
                 </div>
               </div>
@@ -278,10 +299,16 @@ export default function UPIManagementPage() {
                     setIsAddDialogOpen(false)
                     setFormData({ upiId: "", name: "", isActive: true })
                   }}
+                  className="text-gray-600 border-gray-300 hover:bg-gray-50"
                 >
                   Cancel
                 </Button>
-                <Button onClick={handleAddUPI}>Add UPI</Button>
+                <Button 
+                  onClick={handleAddUPI}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  Add UPI
+                </Button>
               </div>
             </div>
           </div>
@@ -332,7 +359,9 @@ export default function UPIManagementPage() {
                       onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
                       className="data-[state=checked]:bg-green-500"
                     />
-                    <label className="text-sm font-medium text-gray-700">Active</label>
+                    <label className="text-sm font-medium text-gray-700">
+                      {formData.isActive ? 'Active' : 'Paused'}
+                    </label>
                   </div>
                 </div>
               </div>
@@ -344,10 +373,16 @@ export default function UPIManagementPage() {
                     setSelectedUPI(null)
                     setFormData({ upiId: "", name: "", isActive: true })
                   }}
+                  className="text-gray-600 border-gray-300 hover:bg-gray-50"
                 >
                   Cancel
                 </Button>
-                <Button onClick={handleUpdateUPI}>Update UPI</Button>
+                <Button 
+                  onClick={handleUpdateUPI}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  Update UPI
+                </Button>
               </div>
             </div>
           </div>

@@ -139,6 +139,7 @@ export default function WalletPage() {
     { upiId: "admin1@upi", name: "Admin Payment 1", isActive: true },
     { upiId: "admin2@upi", name: "Admin Payment 2", isActive: true },
   ])
+  const [selectedUserUpiId, setSelectedUserUpiId] = useState<string>("")
 
   useEffect(() => {
     const fetchData = async () => {
@@ -191,42 +192,73 @@ export default function WalletPage() {
     try {
       setIsDepositing(true);
 
+      // Validate all required fields
+      if (!depositAmount || parseFloat(depositAmount) <= 0) {
+        toast.error("Please enter a valid amount");
+        setIsDepositing(false);
+        return;
+      }
+
+      if (!selectedUserUpiId) {
+        toast.error("Please select your UPI ID");
+        setIsDepositing(false);
+        return;
+      }
+
       if (!selectedAdminUpi) {
         toast.error("Please select an admin UPI ID to pay to");
         setIsDepositing(false);
         return;
       }
 
-      // Compress and convert images to base64
-      const base64Images = await Promise.all(
-        paymentScreenshots.map(async (screenshot) => {
-          const compressedBlob = await compressImage(screenshot.file);
-          const base64Data = await blobToBase64(compressedBlob);
-          return {
-            fileName: screenshot.file.name,
-            base64Data: base64Data
-          };
-        })
-      );
-
-      const selectedUpiId = upiAccounts.find(acc => acc.isDefault)?.upiId || upiAccounts[0]?.upiId;
-      
-      if (!selectedUpiId) {
-        toast.error("No UPI ID available. Please add a UPI ID first.");
+      if (!transactionRef || transactionRef.trim() === '') {
+        toast.error("Please enter UPI reference number");
         setIsDepositing(false);
         return;
       }
 
+      if (paymentScreenshots.length === 0) {
+        toast.error("Please upload payment screenshot");
+        setIsDepositing(false);
+        return;
+      }
+
+      // Log the values for debugging
+      console.log('Deposit Data:', {
+        amount: depositAmount,
+        userUpiId: selectedUserUpiId,
+        adminUpiId: selectedAdminUpi,
+        upiRefNumber: transactionRef,
+        screenshots: paymentScreenshots.length
+      });
+
+      // Process images
+      const base64Images = await Promise.all(
+        paymentScreenshots.map(async (screenshot) => {
+          try {
+            const compressedBlob = await compressImage(screenshot.file);
+            const base64Data = await blobToBase64(compressedBlob);
+            return {
+              fileName: screenshot.file.name,
+              base64Data: base64Data.split(',')[1] // Remove data:image/jpeg;base64, prefix
+            };
+          } catch (error) {
+            console.error('Error processing image:', error);
+            throw new Error('Failed to process payment screenshot');
+          }
+        })
+      );
+
       // Prepare request payload
       const depositData: DepositRequestPayload = {
         amount: parseFloat(depositAmount),
-        upiId: selectedUpiId,
+        upiId: selectedUserUpiId,
         adminUpiId: selectedAdminUpi,
-        upiRefNumber: transactionRef,
+        upiRefNumber: transactionRef.trim(),
         proofImages: base64Images
       };
 
-      // Make API call using the new function
+      // Make API call
       const response = await requestDeposit(depositData);
 
       setDepositSuccess(true);
@@ -239,7 +271,7 @@ export default function WalletPage() {
         amount: parseFloat(depositAmount),
         date: new Date().toISOString(),
         status: "Pending",
-        method: `UPI (${selectedUpiId})`,
+        method: `UPI (${selectedUserUpiId})`,
         category: "transaction"
       };
 
@@ -263,6 +295,7 @@ export default function WalletPage() {
         setDepositAmount("");
         setTransactionRef("");
         setSelectedAdminUpi("");
+        setSelectedUserUpiId("");
         setPaymentScreenshots([]);
         setDepositStep(1);
       }, 2000);
@@ -270,6 +303,7 @@ export default function WalletPage() {
     } catch (error) {
       console.error('Deposit error:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to process deposit');
+      setDepositSuccess(false);
     } finally {
       setIsDepositing(false);
     }
@@ -492,7 +526,10 @@ export default function WalletPage() {
                                   </label>
                                   <Select
                                     value={selectedAdminUpi}
-                                    onValueChange={setSelectedAdminUpi}
+                                    onValueChange={(value) => {
+                                      console.log('Selected Admin UPI:', value);
+                                      setSelectedAdminUpi(value);
+                                    }}
                                   >
                                     <SelectTrigger>
                                       <SelectValue placeholder="Select Admin UPI" />
@@ -514,13 +551,19 @@ export default function WalletPage() {
                                   <label htmlFor="user-upi" className="text-sm font-medium">
                                     Your UPI ID
                                   </label>
-                                  <Select defaultValue={upiAccounts.find(acc => acc.isDefault)?.id.toString()}>
+                                  <Select
+                                    value={selectedUserUpiId}
+                                    onValueChange={(value) => {
+                                      console.log('Selected UPI:', value);
+                                      setSelectedUserUpiId(value);
+                                    }}
+                                  >
                                     <SelectTrigger>
                                       <SelectValue placeholder="Select UPI ID" />
                                     </SelectTrigger>
                                     <SelectContent>
                                       {upiAccounts.map(acc => (
-                                        <SelectItem key={acc.id} value={acc.id.toString()}>
+                                        <SelectItem key={acc.id} value={acc.upiId}>
                                           {acc.upiId} {acc.isDefault && "(Default)"}
                                         </SelectItem>
                                       ))}

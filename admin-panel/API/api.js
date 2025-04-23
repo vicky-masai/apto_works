@@ -2,7 +2,8 @@
 import axios from 'axios';
 
 // Base URL for API requests, set via environment variable
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000/api/admin';
+const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000/api';
+const ADMIN_BASE_URL = `${API_BASE_URL}/admin`;
 
 // Define API endpoints
 const endpoints = {
@@ -16,10 +17,9 @@ const endpoints = {
   transactions: 'transactions',
 };
 
-
 export const login = async (email, password) => {
   try {
-    const response = await axios.post(`http://localhost:4000/api/${endpoints.login}`, {
+    const response = await axios.post(`${API_BASE_URL}/${endpoints.login}`, {
       email,
       password,
     });
@@ -32,120 +32,102 @@ export const login = async (email, password) => {
 
 // Function to handle user login
 export const dashboard = async (authToken) => {
-    try {
-      const response = await axios.get(`${BASE_URL}/${endpoints.dashboard}`, {
-        headers: {
-          'Authorization': `Bearer ${authToken}`
-        }
-      });
-      console.log(response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching task:', error);
-      throw error;
-    }
-  };
-
-
-
-  export const getUsers = async (authToken, params = {}) => {
-    try {
-      // Map frontend params to backend expected params
-      const queryParams = {
-        page: params.page || 1,
-        limit: params.limit || 10,
-        search: params.search || '',
-        searchBy: params.searchField || 'name',
-        sortOrder: params.sortOrder || 'desc'
-      };
-      
-      // Only add these params if they have values
-      if (params.role) queryParams.role = params.role;
-      if (params.status) queryParams.status = params.status;
-      
-      // Map sortBy correctly (frontend value may be different than backend)
-      if (params.sortBy) {
-        // Check if sortBy is 'role' - which needs to be mapped to 'userType' in backend
-        queryParams.sortBy = params.sortBy;
+  try {
+    const response = await axios.get(`${ADMIN_BASE_URL}/${endpoints.dashboard}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
       }
-      
-      console.log("Search params:", queryParams); // For debugging
-      
-      const response = await axios.get(`${BASE_URL}/${endpoints.users}`, {
-        headers: {
-          'Authorization': `Bearer ${authToken}`
-        },
-        params: queryParams
-      });
-      
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      throw error;
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching dashboard:', error);
+    throw error;
+  }
+};
+
+export const getUsers = async (authToken, params = {}) => {
+  try {
+    // Map frontend params to backend expected params
+    const queryParams = {
+      page: params.page || 1,
+      limit: params.limit || 10,
+      search: params.search || '',
+      searchBy: params.searchField || 'name',
+      sortOrder: params.sortOrder || 'desc'
+    };
+    
+    // Only add these params if they have values
+    if (params.role) queryParams.role = params.role;
+    if (params.status) queryParams.status = params.status;
+    
+    // Map sortBy correctly
+    if (params.sortBy) {
+      queryParams.sortBy = params.sortBy;
     }
-  };
+    
+    const response = await axios.get(`${ADMIN_BASE_URL}/${endpoints.users}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      },
+      params: queryParams
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw error;
+  }
+};
 
+export const getTasks = async (authToken, params = {}) => {
+  try {
+    const response = await axios.get(`${ADMIN_BASE_URL}/${endpoints.tasks}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      },
+      params: {
+        page: params.page || 1,
+        search: params.search || ''
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+    throw error;
+  }
+};
 
-  export const getTasks = async (authToken, params = {}) => {
-    try {
-      console.log("pandey")
-      const response = await axios.get(`${BASE_URL}/${endpoints.tasks}`, {
-        headers: {
-          'Authorization': `Bearer ${authToken}`
-        },
-        params: {
-          page: params.page || 1,
-          search: params.search || ''
-        }
-      });
-      console.log(response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching task:', error);
-      throw error;
-    }
-  };
+export const deleteUser = async (authToken, userId) => {
+  try {
+    const response = await axios.delete(`${ADMIN_BASE_URL}/${endpoints.deleteUser}/${userId}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    return response.data.msg;
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    throw error;
+  }
+};
 
-
-
-
-  export const deleteUser = async (authToken, userId) => {
-    console.log(userId,"suraj");
-    try {
-      const response = await axios.delete(`${BASE_URL}/${endpoints.deleteUser}/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${authToken}`
-        }
-      });
-      console.log(response.data);
-      return response.data.msg;
-    } catch (error) {
-      console.error('Error fetching task:', error);
-      throw error;
-    }
-  };
-
-
-  export const getAllWithDrawal = async (authToken) => {
-    // console.log(userId,"suraj");
-    try {
-      const response = await axios.delete(`${BASE_URL}/${endpoints.getAllWithDrawal}/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${authToken}`
-        }
-      });
-      console.log(response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching task:', error);
-      throw error;
-    }
-  };
-
+export const getAllWithDrawal = async (authToken) => {
+  try {
+    const response = await axios.get(`${ADMIN_BASE_URL}/${endpoints.getAllWithDrawal}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching withdrawals:', error);
+    throw error;
+  }
+};
 
 export const approveTask = async (authToken, taskId) => {
   try {
-    const response = await axios.put(`${BASE_URL}/${endpoints.taskPUT}/${taskId}`, {
+    const response = await axios.put(`${ADMIN_BASE_URL}/${endpoints.taskPUT}/${taskId}`, {
       taskStatus: "Published"
     }, {
       headers: {
@@ -160,7 +142,7 @@ export const approveTask = async (authToken, taskId) => {
 
 export const rejectTask = async (authToken, taskId, rejectedReason) => {
   try {
-    const response = await axios.put(`${BASE_URL}/${endpoints.taskPUT}/${taskId}`, {
+    const response = await axios.put(`${ADMIN_BASE_URL}/${endpoints.taskPUT}/${taskId}`, {
       taskStatus: "Rejected",
       rejectedReason: rejectedReason
     }, {
@@ -174,10 +156,9 @@ export const rejectTask = async (authToken, taskId, rejectedReason) => {
   }
 };
 
-
 export const updateUser = async (authToken, userId, userData) => {
   try {
-    const response = await axios.put(`${BASE_URL}/${endpoints.users}/${userId}`, userData, {
+    const response = await axios.put(`${ADMIN_BASE_URL}/${endpoints.users}/${userId}`, userData, {
       headers: {
         'Authorization': `Bearer ${authToken}`
       }
@@ -188,35 +169,16 @@ export const updateUser = async (authToken, userId, userData) => {
   }
 };
 
-export const getTransactions = async (authToken,params = {}) => {
+export const getTransactions = async (authToken, params = {}) => {
   try {
-    const response = await axios.get(`${BASE_URL}/${endpoints.transactions}`, {
+    const response = await axios.get(`${ADMIN_BASE_URL}/${endpoints.transactions}`, {
       headers: {
-        'Authorization': `Bearer ${authToken}`  
+        'Authorization': `Bearer ${authToken}`
       },
       params: {
         type: params.type || 'Add',
         status: params.status || '',
-        search: params.search || '',
-        page: params.page || 1,
-        limit: params.limit || 10000
-      }
-    });
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-
-export const updateTransactionStatus = async (authToken, transactionId, status, rejectionReason) => {
-  try {
-    const response = await axios.put(`${BASE_URL}/${endpoints.transactions}/${transactionId}`, {
-      status,
-      rejectionReason
-    }, {
-      headers: {
-        'Authorization': `Bearer ${authToken}`  
+        search: params.search || ''
       }
     });
     return response.data;
