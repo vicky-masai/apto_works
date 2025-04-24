@@ -1,0 +1,729 @@
+"use client"
+
+import { useState } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import {
+  ArrowRight,
+  CheckCircle,
+  DollarSign,
+  Star,
+  Users,
+  ChevronDown,
+  Search,
+  CheckCircle2,
+  Code,
+  FileText,
+  Paintbrush,
+  Settings2,
+  Smartphone,
+  Upload,
+  Wallet,
+  Clock4,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Slider } from "@/components/ui/slider"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+
+// Rate definitions by category
+const RATES_BY_CATEGORY: {
+  [key: string]: { min: number; max: number }
+} = {
+  development: { min: 30, max: 60 },
+  design: { min: 25, max: 50 },
+  writing: { min: 20, max: 40 },
+  other: { min: 15, max: 35 },
+}
+
+// Static task data to prevent 401 errors
+const SAMPLE_TASKS = [
+  {
+    title: "Website Development",
+    description: "Create a responsive website using React and Tailwind CSS",
+    price: 250,
+    category: "Development",
+    difficulty: "Medium",
+    time: "3-4 days",
+    image: "https://images.unsplash.com/photo-1547658719-da2b51169166?q=80&w=2064&auto=format&fit=crop",
+  },
+  {
+    title: "Content Writing",
+    description: "Write engaging blog posts about technology trends",
+    price: 100,
+    category: "Writing",
+    difficulty: "Easy",
+    time: "1-2 days",
+    image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=2073&auto=format&fit=crop",
+  },
+  {
+    title: "UI/UX Design",
+    description: "Design a mobile app interface with modern aesthetics",
+    price: 300,
+    category: "Design",
+    difficulty: "Hard",
+    time: "4-5 days",
+    image: "https://images.unsplash.com/photo-1559028012-481c04fa702d?q=80&w=2036&auto=format&fit=crop",
+  },
+]
+
+export default function TaskMarketplaceLanding() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState("development")
+  const [hoursPerWeek, setHoursPerWeek] = useState(20)
+  const [earnings, setEarnings] = useState({ min: 2400, max: 4800 })
+  const [contactForm, setContactForm] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  })
+
+  // Testimonials data
+  const testimonials = [
+    {
+      name: "Sarah Johnson",
+      role: "Freelancer",
+      content:
+        "This platform has completely transformed how I earn money online. The tasks are clear and payments are always on time.",
+      rating: 5,
+      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format&fit=crop",
+    },
+    {
+      name: "Michael Chen",
+      role: "Task Provider",
+      content: "I've found reliable workers for all my projects. The quality of work is consistently excellent.",
+      rating: 5,
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format&fit=crop",
+    },
+    {
+      name: "Emma Davis",
+      role: "Student",
+      content: "Perfect for earning extra income while studying. The tasks are flexible and well-paid.",
+      rating: 5,
+      avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1888&auto=format&fit=crop",
+    },
+  ]
+
+  const faqData = [
+    {
+      question: "How do I get started?",
+      answer:
+        "Simply create an account, complete your profile, and start browsing available tasks or post your own tasks. Our platform makes it easy to begin earning or finding help immediately.",
+    },
+    {
+      question: "How are payments processed?",
+      answer:
+        "We use secure payment processors to handle all transactions. Payments are held in escrow until the task is completed and verified. Once approved, payments are released within 24 hours to your connected account.",
+    },
+    {
+      question: "What types of tasks can I post?",
+      answer:
+        "You can post any legal task that can be completed remotely. This includes data entry, content writing, graphic design, web development, virtual assistance, research, and more. All tasks must comply with our platform guidelines.",
+    },
+    {
+      question: "How do I ensure task quality?",
+      answer:
+        "Our platform includes a comprehensive rating system, detailed reviews, and a verification process. We also provide dispute resolution and guarantee satisfaction for all completed tasks. You can view worker profiles, ratings, and past work history.",
+    },
+    {
+      question: "What if I'm not satisfied with the work?",
+      answer:
+        "We have a satisfaction guarantee policy. If you're not satisfied with the completed work, you can request revisions or open a dispute. Our support team will help resolve any issues and ensure fair resolution for both parties.",
+    },
+  ]
+
+  const calculateEarnings = (category: string, hours: number) => {
+    const rate = RATES_BY_CATEGORY[category] || RATES_BY_CATEGORY.other
+    const weeklyMin = hours * rate.min
+    const weeklyMax = hours * rate.max
+    const monthlyMin = Math.round(weeklyMin * 4)
+    const monthlyMax = Math.round(weeklyMax * 4)
+
+    setEarnings({ min: monthlyMin, max: monthlyMax })
+  }
+
+  return (
+    <div className="bg-white text-gray-800">
+      {/* Hero Section */}
+      <section className="py-24 px-4 relative overflow-hidden">
+        <div className="container mx-auto max-w-6xl relative z-10">
+          <div className="flex flex-col md:flex-row items-center gap-16">
+            <div className="flex-1 max-w-2xl">
+              <div className="space-y-8">
+                <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 px-4 py-1.5 text-base font-medium rounded-full">
+                  Trusted by 10,000+ users worldwide
+                </Badge>
+                <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight text-gray-900">
+                  Complete Tasks. <span className="text-purple-600 relative">
+                    Get Paid.
+                    <span className="absolute bottom-0 left-0 w-full h-1 bg-purple-200 transform -skew-x-12"></span>
+                  </span> Simple.
+                </h1>
+                <p className="text-xl md:text-2xl text-gray-700 leading-relaxed max-w-2xl font-medium">
+                  Join our marketplace where you can earn money by completing simple tasks or post tasks to get your
+                  work done.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-5">
+                  <Link href="/tasks" className="flex-1 sm:flex-initial">
+                    <Button
+                      size="lg"
+                      className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-700/30 relative overflow-hidden group w-full h-14 text-lg font-semibold"
+                    >
+                      <span className="relative z-10 flex items-center justify-center">
+                        Find Tasks{" "}
+                        <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                      </span>
+                    </Button>
+                  </Link>
+                  <Link href="/post-task" className="flex-1 sm:flex-initial">
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="text-purple-700 border-2 border-purple-200 hover:bg-purple-50 w-full h-14 text-lg font-semibold"
+                    >
+                      Post a Task
+                    </Button>
+                  </Link>
+                </div>
+                <div className="flex items-center gap-6 pt-6">
+                  <div className="flex -space-x-3">
+                    {[
+                      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1964&auto=format&fit=crop",
+                      "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1887&auto=format&fit=crop",
+                      "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=1887&auto=format&fit=crop",
+                      "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=1780&auto=format&fit=crop",
+                    ].map((src, i) => (
+                      <div
+                        key={i}
+                        className="w-10 h-10 rounded-full border-2 border-white overflow-hidden shadow-md hover:scale-110 transition-transform duration-200"
+                      >
+                        <Image
+                          src={src || "/placeholder.svg"}
+                          alt="User"
+                          width={40}
+                          height={40}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-base text-gray-700 font-medium">
+                    <span className="font-bold text-purple-600">1,000+</span> tasks completed this week
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex-1 relative">
+              <div className="relative z-10 rounded-xl overflow-hidden shadow-2xl transform hover:scale-[1.02] transition-transform duration-300">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-blue-600/10 mix-blend-overlay"></div>
+                <Image
+                  src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop"
+                  alt="People working on tasks"
+                  width={600}
+                  height={400}
+                  className="rounded-xl object-cover w-full h-[500px]"
+                />
+                <div className="absolute -bottom-5 -right-5 bg-purple-600 text-white p-6 rounded-lg shadow-xl transform hover:translate-y-1 transition-transform duration-200">
+                  <p className="text-2xl font-bold">10,000+ Tasks Completed</p>
+                </div>
+              </div>
+              {/* Decorative background elements */}
+              <div className="absolute -z-10 top-10 -right-10 w-72 h-72 bg-purple-200/50 rounded-full opacity-60 blur-3xl animate-pulse"></div>
+              <div className="absolute -z-10 -bottom-10 -left-10 w-72 h-72 bg-blue-200/50 rounded-full opacity-60 blur-3xl animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+        {/* Background decoration */}
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-purple-50/50 to-transparent -z-20"></div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-20 px-4 bg-gray-50">
+        <div className="container mx-auto max-w-6xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              {
+                icon: <Users className="h-8 w-8 text-purple-600" />,
+                label: "Active Users",
+                value: "10,000+",
+              },
+              {
+                icon: <CheckCircle className="h-8 w-8 text-purple-600" />,
+                label: "Tasks Completed",
+                value: "5,000+",
+              },
+              {
+                icon: <DollarSign className="h-8 w-8 text-purple-600" />,
+                label: "Total Earnings",
+                value: "$1,000,000+",
+              },
+              {
+                icon: <Star className="h-8 w-8 text-purple-600" />,
+                label: "Satisfaction Rate",
+                value: "98%",
+              },
+            ].map((stat, index) => (
+              <div key={index} className="w-full">
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-full">
+                  <div className="bg-purple-100 rounded-full p-3 mb-4 w-fit">{stat.icon}</div>
+                  <h3 className="text-3xl font-bold mt-2 text-gray-900">{stat.value}</h3>
+                  <p className="text-gray-600 mt-2">{stat.label}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-20 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4 text-gray-900">What Our Users Say</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Trusted by thousands of users worldwide who have transformed their work and income through our platform
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <div
+                key={index}
+                className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md h-full flex flex-col"
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                  ))}
+                </div>
+                <p className="text-gray-600 mb-6 flex-grow">"{testimonial.content}"</p>
+                <div className="flex items-center gap-4 mt-auto">
+                  <div className="w-12 h-12 rounded-full overflow-hidden image-border-animation">
+                    <Image
+                      src={testimonial.avatar || "/placeholder.svg"}
+                      alt={testimonial.name}
+                      width={48}
+                      height={48}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
+                    <p className="text-gray-600 text-sm">{testimonial.role}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Tasks Section */}
+      <section className="py-20 px-4 bg-gray-50">
+        <div className="container mx-auto max-w-6xl">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-12">
+            <div>
+              <h2 className="text-3xl font-bold mb-4 text-gray-900">Featured Tasks</h2>
+              <p className="text-gray-600">Browse through our most popular and high-paying tasks</p>
+            </div>
+            <Button className="mt-4 md:mt-0 bg-purple-600 hover:bg-purple-700 text-white">
+              View All Tasks <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {SAMPLE_TASKS.map((task, index) => (
+              <div key={index} className="group h-full">
+                <div className="bg-white p-6 rounded-xl border border-gray-100 hover:border-purple-200 transition-all duration-300 shadow-sm hover:shadow-md h-full flex flex-col">
+                  <div className="h-48 mb-6 overflow-hidden rounded-lg image-border-animation">
+                    <Image
+                      src={task.image || "/placeholder.svg"}
+                      alt={task.title}
+                      width={400}
+                      height={200}
+                      className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{task.title}</h3>
+                  <p className="text-gray-600 mb-6 flex-grow">{task.description}</p>
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-200">
+                      {task.category}
+                    </Badge>
+                    <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-200">
+                      {task.difficulty}
+                    </Badge>
+                    <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-200">
+                      {task.time}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between mt-auto">
+                    <span className="text-2xl font-bold text-gray-900">${task.price}</span>
+                    <Button
+                      variant="outline"
+                      className="text-purple-600 border-purple-200 bg-purple-50 hover:bg-purple-100 transition-all duration-300"
+                    >
+                      View Details
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="py-20 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4 text-gray-900">How It Works</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Complete tasks in four simple steps and start earning today
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {[
+              {
+                icon: <Search className="h-8 w-8 text-purple-600" />,
+                title: "Browse Tasks",
+                description: "Find tasks that match your skills and interests",
+              },
+              {
+                icon: <CheckCircle2 className="h-8 w-8 text-purple-600" />,
+                title: "Accept Task",
+                description: "Review requirements and accept the task",
+              },
+              {
+                icon: <Upload className="h-8 w-8 text-purple-600" />,
+                title: "Submit Work",
+                description: "Complete the task and submit your work",
+              },
+              {
+                icon: <Wallet className="h-8 w-8 text-purple-600" />,
+                title: "Get Paid",
+                description: "Receive payment once work is approved",
+              },
+            ].map((step, index) => (
+              <div
+                key={index}
+                className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center h-full flex flex-col items-center"
+              >
+                <div className="mb-6 p-4 rounded-full bg-purple-100 w-fit">{step.icon}</div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">{step.title}</h3>
+                <p className="text-gray-600">{step.description}</p>
+                {index < 3 && (
+                  <div className="hidden md:block absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2">
+                    <ArrowRight className="h-6 w-6 text-gray-300" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Task Categories Section */}
+      <section className="py-20 px-4 bg-gray-50">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4 text-gray-900">Task Categories</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Explore tasks across various categories and find the perfect match for your skills
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              {
+                icon: <Code className="h-8 w-8" />,
+                title: "Development",
+                count: "250+ Tasks",
+                color: "bg-blue-100 text-blue-600",
+              },
+              {
+                icon: <Paintbrush className="h-8 w-8" />,
+                title: "Design",
+                count: "180+ Tasks",
+                color: "bg-pink-100 text-pink-600",
+              },
+              {
+                icon: <FileText className="h-8 w-8" />,
+                title: "Writing",
+                count: "320+ Tasks",
+                color: "bg-green-100 text-green-600",
+              },
+              {
+                icon: <Smartphone className="h-8 w-8" />,
+                title: "Mobile",
+                count: "150+ Tasks",
+                color: "bg-yellow-100 text-yellow-600",
+              },
+              {
+                icon: <Settings2 className="h-8 w-8" />,
+                title: "Technical",
+                count: "200+ Tasks",
+                color: "bg-purple-100 text-purple-600",
+              },
+              {
+                icon: <Clock4 className="h-8 w-8" />,
+                title: "Virtual Assistant",
+                count: "120+ Tasks",
+                color: "bg-indigo-100 text-indigo-600",
+              },
+              {
+                icon: <FileText className="h-8 w-8" />,
+                title: "Data Entry",
+                count: "280+ Tasks",
+                color: "bg-red-100 text-red-600",
+              },
+              {
+                icon: <Settings2 className="h-8 w-8" />,
+                title: "Other",
+                count: "100+ Tasks",
+                color: "bg-orange-100 text-orange-600",
+              },
+            ].map((category, index) => (
+              <div
+                key={index}
+                className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:border-purple-200 transition-all duration-300 cursor-pointer h-full"
+              >
+                <div className={`mb-6 p-3 rounded-full ${category.color} w-fit`}>{category.icon}</div>
+                <h3 className="text-xl font-semibold mb-2 text-gray-900">{category.title}</h3>
+                <p className="text-gray-600">{category.count}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Earnings Calculator Section */}
+      <section className="py-20 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <div className="flex flex-col md:flex-row items-center gap-12">
+            <div className="flex-1">
+              <h2 className="text-3xl font-bold mb-4 text-gray-900">Earnings Calculator</h2>
+              <p className="text-gray-600 mb-8">Calculate your potential earnings based on tasks and hours</p>
+              <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+                <div className="grid gap-6">
+                  <div>
+                    <label className="text-gray-900 mb-2 block font-medium">Task Category</label>
+                    <Select
+                      value={selectedCategory}
+                      onValueChange={(value) => {
+                        setSelectedCategory(value)
+                        calculateEarnings(value, hoursPerWeek)
+                      }}
+                    >
+                      <SelectTrigger className="bg-white border-gray-200 text-gray-900">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="development">Development</SelectItem>
+                        <SelectItem value="design">Design</SelectItem>
+                        <SelectItem value="writing">Writing</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-gray-900 mb-2 block font-medium">Hours per Week</label>
+                    <div className="space-y-4">
+                      <Slider
+                        value={[hoursPerWeek]}
+                        min={1}
+                        max={40}
+                        step={1}
+                        className="py-4"
+                        onValueChange={(value) => {
+                          setHoursPerWeek(value[0])
+                          calculateEarnings(selectedCategory, value[0])
+                        }}
+                      />
+                      <div className="flex justify-between text-gray-600 text-sm">
+                        <span>1 hour</span>
+                        <span>{hoursPerWeek} hours</span>
+                        <span>40 hours</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 p-6 rounded-lg">
+                    <h4 className="text-gray-900 text-lg font-semibold mb-4">Potential Monthly Earnings</h4>
+                    <div className="text-4xl font-bold text-purple-600">
+                      ${earnings.min.toLocaleString()} - ${earnings.max.toLocaleString()}
+                    </div>
+                    <p className="text-gray-600 mt-2">Based on average task rates in selected category</p>
+                    <div className="grid grid-cols-2 gap-4 mt-4 text-sm">
+                      <div className="text-gray-600">
+                        <div>Hourly Rate</div>
+                        <div className="text-gray-900 font-semibold mt-1">
+                          ${RATES_BY_CATEGORY[selectedCategory].min} - ${RATES_BY_CATEGORY[selectedCategory].max}
+                        </div>
+                      </div>
+                      <div className="text-gray-600">
+                        <div>Weekly Hours</div>
+                        <div className="text-gray-900 font-semibold mt-1">{hoursPerWeek} hours</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex-1 relative">
+              <div className="image-border-animation">
+                <Image
+                  src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop"
+                  alt="Earnings illustration"
+                  width={600}
+                  height={600}
+                  className="rounded-xl"
+                />
+              </div>
+              <div className="absolute -z-10 top-10 -right-10 w-64 h-64 bg-purple-200 rounded-full opacity-50 blur-3xl"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 px-4 bg-gray-50">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4 text-gray-900">Frequently Asked Questions</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">Find answers to common questions about our platform</p>
+          </div>
+          <div className="max-w-3xl mx-auto space-y-4">
+            {faqData.map((faq, index) => (
+              <div key={index} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <button
+                  onClick={() => setOpenFaq(openFaq === index ? null : index)}
+                  className="flex items-center justify-between w-full"
+                >
+                  <h3 className="text-lg font-semibold text-gray-900 text-left">{faq.question}</h3>
+                  <div className="bg-purple-100 rounded-full p-1">
+                    <ChevronDown
+                      className={`h-5 w-5 text-purple-600 transition-transform ${openFaq === index ? "rotate-180" : ""}`}
+                    />
+                  </div>
+                </button>
+                {openFaq === index && (
+                  <div className="pt-4 text-gray-600 animate-in fade-in-50 duration-300">{faq.answer}</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 px-4 bg-purple-600">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center space-y-8">
+            <h2 className="text-4xl md:text-5xl font-bold text-white">Ready to transform your workflow?</h2>
+            <p className="text-lg max-w-3xl mx-auto text-white/90">
+              Join thousands of teams and freelancers who are already using our platform to streamline their tasks,
+              collaborate effectively, and get paid securely.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+              <Button size="lg" className="bg-white hover:bg-gray-100 text-purple-600">
+                Get Started for Free
+              </Button>
+              <Button size="lg" variant="outline" className="text-white border-white/30 bg-white/10 hover:bg-white/20">
+                Schedule a Demo
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Us Section */}
+      <section className="py-20 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4 text-gray-900">Contact Us</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">Have questions? We'd love to hear from you.</p>
+          </div>
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+              <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-gray-900 mb-2 block font-medium">Name</label>
+                    <input
+                      type="text"
+                      value={contactForm.name}
+                      onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                      className="w-full px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Your name"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-gray-900 mb-2 block font-medium">Email</label>
+                    <input
+                      type="email"
+                      value={contactForm.email}
+                      onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                      className="w-full px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="your@email.com"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-gray-900 mb-2 block font-medium">Subject</label>
+                  <input
+                    type="text"
+                    value={contactForm.subject}
+                    onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
+                    className="w-full px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="How can we help?"
+                  />
+                </div>
+                <div>
+                  <label className="text-gray-900 mb-2 block font-medium">Message</label>
+                  <textarea
+                    value={contactForm.message}
+                    onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                    rows={4}
+                    className="w-full px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                    placeholder="Your message..."
+                  />
+                </div>
+                <div className="flex justify-center">
+                  <Button className="bg-purple-600 hover:bg-purple-700 text-white px-8">Send Message</Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter Section */}
+      <section className="py-20 px-4 bg-gray-50">
+        <div className="container mx-auto max-w-6xl">
+          <div className="max-w-2xl mx-auto text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Stay Updated</h2>
+            <p className="text-gray-600 mb-8">Subscribe to our newsletter for the latest updates and offers</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="flex-1 max-w-md px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+              <Button className="bg-purple-600 hover:bg-purple-700 text-white">Subscribe</Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <style jsx global>{`
+        @keyframes pulse-border {
+          0% { border-color: rgba(147, 51, 234, 0.2); }
+          50% { border-color: rgba(147, 51, 234, 0.5); }
+          100% { border-color: rgba(147, 51, 234, 0.2); }
+        }
+
+        .image-border-animation {
+          animation: pulse-border 2s infinite;
+        }
+      `}</style>
+    </div>
+  )
+}
