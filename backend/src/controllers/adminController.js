@@ -506,37 +506,65 @@ const updateTransactionsStatus = async (req, res) => {
     
     // Get transaction before update to get amount and userId
     const transaction = await prisma.transaction.findUnique({
-      where: { id }
+      where: { id },
+      include: { user: true }
     });
+
+    if (!transaction) {
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
     
     // Update transaction status
-    const withdrawal = await prisma.transaction.update({
+    const updatedTransaction = await prisma.transaction.update({
       where: { id },
       data: { 
-        status,
-        rejectedReason: status === 'Rejected' ? rejectionReason : null
+        status
       }
     });
     
-    // If approved, update user's balance
-    if (status === 'Approved' && transaction.type === 'Withdraw') {
-      await prisma.user.update({
-        where: { id: transaction.userId },
-        data: {
-          balance: {
-            decrement: transaction.amount
+    // Handle balance updates based on transaction type and status
+    if (status === 'Approved') {
+      if (transaction.type === 'Add') {
+        // For Add money, increment balance when approved
+        await prisma.user.update({
+          where: { id: transaction.userId },
+          data: {
+            balance: {
+              increment: transaction.amount
+            }
           }
-        }
-      });
+        });
+      } else if (transaction.type === 'Withdraw') {
+        // For Withdraw, decrement balance when approved
+        await prisma.user.update({
+          where: { id: transaction.userId },
+          data: {
+            balance: {
+              decrement: transaction.amount
+            }
+          }
+        });
+      }
     }
+
+    // Send appropriate notification
+    let notificationMessage = '';
+    if (status === 'Approved') {
+      notificationMessage = `Your ${transaction.type.toLowerCase()} request of ₹${transaction.amount} has been approved.`;
+    } else if (status === 'Rejected') {
+      notificationMessage = `Your ${transaction.type.toLowerCase()} request of ₹${transaction.amount} was rejected. ${rejectionReason || ''}`;
+    }
+
     await sendNotification({
       receiverId: transaction.userId,
-      heading: `Transaction ${transaction.status}`,
-      message: transaction.rejectedReason,
+      heading: `Transaction ${status}`,
+      message: notificationMessage,
       senderId: req.user.id
     });
-    res.json(withdrawal);
+
+    res.json(updatedTransaction);
   } catch (error) {
+    console.error('Error in updateTransactionsStatus:', error);
     res.status(500).json({ error: error.message });
   }
 };

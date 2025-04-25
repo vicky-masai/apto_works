@@ -13,7 +13,7 @@ import { auth } from "@/API/auth"
 import { useEffect } from "react"
 
 // Add this new import for transaction status update
-import { updateTransaction } from "@/API/api"
+import { updateAddMoneyTransactionStatus } from "@/API/api"
 
 export default function AddedMoneyPage() {
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
@@ -76,12 +76,10 @@ export default function AddedMoneyPage() {
   }
 
   const handleAccept = async(transaction) => {
+    console.log(transaction);
+    
     try {
-      const response = await updateTransaction(auth.getToken(), {
-        transactionId: transaction.id,
-        status: "Approved",
-        reason: null
-      });
+      const response = await updateAddMoneyTransactionStatus(transaction.id, "Approved");
       
       await fetchTransactions();
       
@@ -108,11 +106,7 @@ export default function AddedMoneyPage() {
     }
 
     try {
-      const response = await updateTransaction(auth.getToken(), {
-        transactionId: selectedTransaction.id,
-        status: "Rejected",
-        reason: rejectReason
-      });
+      const response = await updateAddMoneyTransactionStatus(selectedTransaction.id, "Rejected", rejectReason);
       
       await fetchTransactions();
       

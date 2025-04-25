@@ -1,9 +1,10 @@
 // Importing axios for making HTTP requests
 import axios from 'axios';
-
+import Cookies from 'js-cookie';
 // Base URL for API requests, set via environment variable
 const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000/api';
 const ADMIN_BASE_URL = `${API_BASE_URL}/admin`;
+const authToken = Cookies.get('adminToken');
 
 // Define API endpoints
 const endpoints = {
@@ -187,7 +188,7 @@ export const getTransactions = async (authToken, params = {}) => {
   }
 };
 
-export const updateTransactionStatus = async (authToken, transactionId, status, reason = null) => {
+export const updateAddMoneyTransactionStatus = async (transactionId, status, reason = '') => {
   try {
     const response = await axios.put(`${ADMIN_BASE_URL}/${endpoints.transactions}/${transactionId}`, {
       status,
