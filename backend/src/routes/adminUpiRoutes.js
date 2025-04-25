@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { isAdmin } = require('../middleware/auth');
+const { auth, isAdmin } = require('../middleware/auth');
 const {
   createAdminUPI,
   getAllAdminUPIs,
@@ -11,11 +11,11 @@ const {
 } = require('../controllers/adminUpiController');
 
 // Admin-only routes
-router.post('/', createAdminUPI);
-router.get('/all', getAllAdminUPIs);
-router.get('/active', getActiveAdminUPIs); // Public route for active UPIs
-router.put('/:id', updateAdminUPI);
-router.delete('/:id', deleteAdminUPI);
-router.get('/statistics/:id', getUPIStatistics);
+router.post('/', auth, isAdmin, createAdminUPI);
+router.get('/all', auth, isAdmin, getAllAdminUPIs);
+router.get('/active', auth, getActiveAdminUPIs); // Public route for active UPIs
+router.put('/:id', auth, isAdmin, updateAdminUPI);
+router.delete('/:id', auth, isAdmin, deleteAdminUPI);
+router.get('/statistics/:id', auth, isAdmin, getUPIStatistics);
 
 module.exports = router;

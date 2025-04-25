@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo, Key } from "react"
 import Link from "next/link"
 import { ArrowDown, ArrowUp, CreditCard, DollarSign, Plus, Wallet, X } from "lucide-react"
 import { toast } from "react-hot-toast"
@@ -24,7 +24,7 @@ import { Footer } from "@/components/Footer"
 import { Header } from "@/components/Header"
 import Leftsidebar from "@/components/Leftsidebar"
 import { getBalance, getBalanceHistory, getUserWithdrawalRequests, requestDeposit, type DepositRequestPayload, type Transaction } from "@/API/money_api"
-import { getAllPaymentMethods, addPaymentMethod, updatePaymentMethod, deletePaymentMethod } from "@/API/payment_method.js"
+import { getAllPaymentMethods, addPaymentMethod, updatePaymentMethod, deletePaymentMethod, getActiveAdminUPIs } from "@/API/payment_method.js"
 // Mock transaction data
 
 
@@ -39,6 +39,7 @@ interface UPIAccount {
 
 // Add AdminUPI interface
 interface AdminUPI {
+  id: Key | null | undefined
   upiId: string;
   name: string;
   isActive: boolean;
@@ -135,24 +136,25 @@ export default function WalletPage() {
   const [transactionRef, setTransactionRef] = useState("")
   const [paymentScreenshots, setPaymentScreenshots] = useState<Array<{ file: File; preview: string }>>([])
   const [selectedAdminUpi, setSelectedAdminUpi] = useState<string>("")
-  const [adminUPIs] = useState<AdminUPI[]>([
-    { upiId: "admin1@upi", name: "Admin Payment 1", isActive: true },
-    { upiId: "admin2@upi", name: "Admin Payment 2", isActive: true },
-  ])
+  const [adminUPIs, setAdminUPIs] = useState<AdminUPI[]>([])
   const [selectedUserUpiId, setSelectedUserUpiId] = useState<string>("")
 
+  console.log("adminUPIs",adminUPIs);
+  
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [balanceData, paymentMethods] = await Promise.all([
+        const [balanceData, paymentMethods, activeAdminUPIs] = await Promise.all([
           getBalance(),
           getAllPaymentMethods(),
+          getActiveAdminUPIs(),
         ]);
         
         setBalance(balanceData.balance);
         setTotalDeposits(balanceData.totalDeposits);
         setTotalWithdrawals(balanceData.totalWithdrawals);
         setUpiAccounts(paymentMethods);
+        setAdminUPIs(activeAdminUPIs);
       } catch (error) {
         console.error('Error fetching data:', error);
         toast.error('Failed to load some data. Please try again.');
@@ -537,11 +539,10 @@ export default function WalletPage() {
                                     <SelectContent>
                                       {adminUPIs.map((adminUpi) => (
                                         <SelectItem
-                                          key={adminUpi.upiId}
+                                          key={adminUpi.id}
                                           value={adminUpi.upiId}
-                                          disabled={!adminUpi.isActive}
                                         >
-                                          {adminUpi.name} ({adminUpi.upiId})
+                                          {adminUpi.upiId}
                                         </SelectItem>
                                       ))}
                                     </SelectContent>
@@ -554,7 +555,6 @@ export default function WalletPage() {
                                   <Select
                                     value={selectedUserUpiId}
                                     onValueChange={(value) => {
-                                      console.log('Selected UPI:', value);
                                       setSelectedUserUpiId(value);
                                     }}
                                   >
@@ -564,7 +564,7 @@ export default function WalletPage() {
                                     <SelectContent>
                                       {upiAccounts.map(acc => (
                                         <SelectItem key={acc.id} value={acc.upiId}>
-                                          {acc.upiId} {acc.isDefault && "(Default)"}
+                                          {acc.upiId}
                                         </SelectItem>
                                       ))}
                                     </SelectContent>

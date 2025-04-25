@@ -80,3 +80,17 @@ export const updatePaymentMethod = async (paymentMethodId, updatedData) => {
   }
 };
 
+// Function to get active admin UPIs for public use
+export const getActiveAdminUPIs = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/admin/upi/active`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching active admin UPIs:', error);
+    throw error;
+  }
+};
