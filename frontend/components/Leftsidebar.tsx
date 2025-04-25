@@ -1,4 +1,4 @@
-import React, { useState, createContext, useContext } from 'react';
+import React, { useState, createContext, useContext, useEffect } from 'react';
 import { 
   LayoutDashboard,
   PlusSquare,
@@ -15,6 +15,7 @@ import {
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { getBalance } from '@/API/money_api';
 
 interface SidebarItem {
   title: string;
@@ -49,6 +50,19 @@ const Leftsidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const [balance, setBalance] = useState(0);
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        const response = await getBalance();
+        setBalance(response.balance);
+      } catch (error) {
+        console.error('Error fetching balance:', error);
+      }
+    };
+    fetchBalance();
+  }, []);
 
   const toggleSidebar = () => {
     setIsCollapsed(prev => !prev);
@@ -123,7 +137,7 @@ const Leftsidebar = () => {
           {!isCollapsed && <span className="ml-2 font-medium text-blue-600">Wallet</span>}
         </div>
         <div className={`text-blue-700 text-center font-bold ${isCollapsed ? 'text-sm' : 'text-lg'}`}>
-          $100
+        ₹{balance.toFixed(2)}
         </div>
       </div>
 

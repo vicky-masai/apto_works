@@ -8,9 +8,12 @@ import { Input } from "@/components/ui/input"
 import { Search } from "lucide-react"
 import { useState } from "react"
 import { toast } from "react-hot-toast"
-import { getTransactions, updateTransactionStatus } from "@/API/api"
+import { getTransactions } from "@/API/api"
 import { auth } from "@/API/auth"
 import { useEffect } from "react"
+
+// Add this new import for transaction status update
+import { updateTransaction } from "@/API/api"
 
 export default function AddedMoneyPage() {
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
@@ -73,17 +76,24 @@ export default function AddedMoneyPage() {
   }
 
   const handleAccept = async(transaction) => {
-    // setTransactions(transactions.map(t => 
-    //   t.id === transaction.id ? { ...t, status: "completed" } : t
-    // ))
-
-    const response = await updateTransactionStatus(auth.getToken(),transaction.id,"Approved",null);
-    await fetchTransactions();
-    if(response.success){
-      toast.success("Transaction accepted successfully")
-    }else{
-      toast.error("Transaction not accepted")
-    } 
+    try {
+      const response = await updateTransaction(auth.getToken(), {
+        transactionId: transaction.id,
+        status: "Approved",
+        reason: null
+      });
+      
+      await fetchTransactions();
+      
+      if(response.success){
+        toast.success("Transaction accepted successfully")
+      } else {
+        toast.error("Transaction not accepted")
+      } 
+    } catch (error) {
+      console.error('Error accepting transaction:', error);
+      toast.error("Failed to accept transaction");
+    }
   }
 
   const handleReject = (transaction) => {
@@ -97,23 +107,28 @@ export default function AddedMoneyPage() {
       return
     }
 
-    // setTransactions(transactions.map(t => 
-    //   t.id === selectedTransaction.id 
-    //     ? { ...t, status: "rejected", rejectReason: rejectReason } 
-    //     : t
-    // ))
-
-    const response = await updateTransactionStatus(auth.getToken(),selectedTransaction.id,"Rejected",rejectReason);
-    await fetchTransactions();
-    if(response.success){
-      toast.success("Transaction rejected successfully")
-    }else{
-      toast.error("Transaction not rejected")
+    try {
+      const response = await updateTransaction(auth.getToken(), {
+        transactionId: selectedTransaction.id,
+        status: "Rejected",
+        reason: rejectReason
+      });
+      
+      await fetchTransactions();
+      
+      if(response.success){
+        toast.success("Transaction rejected successfully")
+      } else {
+        toast.error("Transaction not rejected")
+      }
+      
+      setIsRejectDialogOpen(false)
+      setRejectReason("")
+      setSelectedTransaction(null)
+    } catch (error) {
+      console.error('Error rejecting transaction:', error);
+      toast.error("Failed to reject transaction");
     }
-    setIsRejectDialogOpen(false)
-    setRejectReason("")
-    setSelectedTransaction(null)
-    
   }
 
   const handleView = (transaction) => {

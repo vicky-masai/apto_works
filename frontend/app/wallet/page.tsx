@@ -202,7 +202,7 @@ export default function WalletPage() {
       }
 
       if (!selectedUserUpiId) {
-        toast.error("Please select your UPI ID");
+        toast.error("Please enter or select your UPI ID");
         setIsDepositing(false);
         return;
       }
@@ -211,6 +211,24 @@ export default function WalletPage() {
         toast.error("Please select an admin UPI ID to pay to");
         setIsDepositing(false);
         return;
+      }
+
+      // If user doesn't have any saved UPI IDs, save the entered UPI ID
+      if (upiAccounts.length === 0 && selectedUserUpiId) {
+        try {
+          await addPaymentMethod({
+            upiId: selectedUserUpiId,
+            methodType: "UPI",
+            isDefault: true
+          });
+          
+          // Refresh payment methods
+          const paymentMethods = await getAllPaymentMethods();
+          setUpiAccounts(paymentMethods);
+        } catch (error) {
+          console.error('Failed to save new UPI ID:', error);
+          toast.error("Failed to save UPI ID, but continuing with deposit");
+        }
       }
 
       if (!transactionRef || transactionRef.trim() === '') {
@@ -552,23 +570,36 @@ export default function WalletPage() {
                                   <label htmlFor="user-upi" className="text-sm font-medium">
                                     Your UPI ID
                                   </label>
-                                  <Select
-                                    value={selectedUserUpiId}
-                                    onValueChange={(value) => {
-                                      setSelectedUserUpiId(value);
-                                    }}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select UPI ID" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {upiAccounts.map(acc => (
-                                        <SelectItem key={acc.id} value={acc.upiId}>
-                                          {acc.upiId}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
+                                  {upiAccounts.length > 0 ? (
+                                    <Select
+                                      value={selectedUserUpiId}
+                                      onValueChange={(value) => {
+                                        setSelectedUserUpiId(value);
+                                      }}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select UPI ID" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {upiAccounts.map(acc => (
+                                          <SelectItem key={acc.id} value={acc.upiId}>
+                                            {acc.upiId}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  ) : (
+                                    <div className="space-y-2">
+                                      <Input
+                                        placeholder="Enter your UPI ID"
+                                        value={selectedUserUpiId}
+                                        onChange={(e) => setSelectedUserUpiId(e.target.value)}
+                                      />
+                                      <p className="text-xs text-gray-500">
+                                        This UPI ID will be saved for future transactions
+                                      </p>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                               <DialogFooter>

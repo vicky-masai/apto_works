@@ -103,6 +103,7 @@ model User {
   role                  UserType       @default(User)
   status                UserStatus     @default(Active)
   paymentMethods        UserPaymentMethod[]
+  withdrawals           Withdrawal[]
 
   @@index([userType])
 }
@@ -178,6 +179,7 @@ model Transaction {
   adminUpi      AdminUPI? @relation(fields: [adminUpiId], references: [id])
   upiRefNumber  String?
   proofImages   ProofImage[]
+  withdrawal    Withdrawal?
 
   @@index([userId])
   @@index([paymentMethodId])
@@ -217,8 +219,30 @@ model UserPaymentMethod {
   updatedAt     DateTime  @updatedAt
   user          User      @relation(fields: [userId], references: [id])
   transactions  Transaction[]
+  withdrawals   Withdrawal[]
 
   @@index([userId])
+}
+
+model Withdrawal {
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String           @db.ObjectId
+  user            User             @relation(fields: [userId], references: [id])
+  amount          Float
+  status          WithdrawalStatus @default(Pending)
+  paymentMethodId String           @db.ObjectId
+  paymentMethod   UserPaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  transactionId   String?          @unique @db.ObjectId
+  transaction     Transaction?     @relation(fields: [transactionId], references: [id])
+  notes           String?
+  adminNotes      String?
+  processedAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([paymentMethodId])
 }
 
 

@@ -187,3 +187,19 @@ export const getTransactions = async (authToken, params = {}) => {
   }
 };
 
+export const updateTransactionStatus = async (authToken, transactionId, status, reason = null) => {
+  try {
+    const response = await axios.put(`${ADMIN_BASE_URL}/${endpoints.transactions}/${transactionId}`, {
+      status,
+      reason
+    }, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
