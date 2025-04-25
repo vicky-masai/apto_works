@@ -262,32 +262,61 @@ const updateTask = async (req, res) => {
 const getTransactions = async (req, res) => {
   try {
     const { page = 1, limit = 10000, search = '', type, status } = req.query;
-    console.log(search);
+    console.log('Query params:', { page, limit, search, type, status });
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    const whereClause = {};
+    // Initialize where clause
+    let whereClause = {};
     
+    // Add search conditions for user
     if (search) {
-      whereClause.user = {
-        OR: [
-          { name: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } }
-        ]
+      whereClause = {
+        user: {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: 'insensitive' } }
+          ]
+        }
       };
     }
 
+    // Add type and status conditions
     if (type) {
-      whereClause.type = type;
+      whereClause = {
+        ...whereClause,
+        type: type
+      };
     }
 
     if (status) {
-      whereClause.status = status;
+      whereClause = {
+        ...whereClause,
+        status: status
+      };
     }
 
+    console.log('Where clause:', JSON.stringify(whereClause, null, 2));
+
+    // First get transactions without problematic relations
     const [transactions, total] = await Promise.all([
       prisma.transaction.findMany({
         where: whereClause,
-        include: { user: true },
+        include: { 
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          },
+          proofImages: {
+            select: {
+              id: true,
+              imageUrl: true,
+              fileName: true
+            }
+          }
+        },
         orderBy: { createdAt: 'desc' },
         skip,
         take: parseInt(limit)
@@ -295,8 +324,118 @@ const getTransactions = async (req, res) => {
       prisma.transaction.count({ where: whereClause })
     ]);
 
+    console.log('Found transactions:', transactions.length);
+
+    // Get the base URL from the request
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    
+    // For debugging: Check if files exist
+    const fs = require('fs');
+    const path = require('path');
+
+    // Get payment methods and admin UPIs separately to handle invalid ObjectIDs
+    const formattedTransactions = await Promise.all(transactions.map(async transaction => {
+      try {
+        let paymentMethod = null;
+        let adminUpi = null;
+
+        // Only try to fetch payment method if the ID looks valid
+        if (transaction.paymentMethodId && /^[0-9a-fA-F]{24}$/.test(transaction.paymentMethodId)) {
+          try {
+            paymentMethod = await prisma.userPaymentMethod.findUnique({
+              where: { id: transaction.paymentMethodId },
+              select: {
+                id: true,
+                upiId: true,
+                methodType: true
+              }
+            });
+          } catch (err) {
+            console.log(`Failed to fetch payment method for transaction ${transaction.id}:`, err.message);
+          }
+        }
+
+        // Only try to fetch admin UPI if the ID looks valid
+        if (transaction.adminUpiId && /^[0-9a-fA-F]{24}$/.test(transaction.adminUpiId)) {
+          try {
+            adminUpi = await prisma.adminUPI.findUnique({
+              where: { id: transaction.adminUpiId },
+              select: {
+                id: true,
+                upiId: true,
+                name: true
+              }
+            });
+          } catch (err) {
+            console.log(`Failed to fetch admin UPI for transaction ${transaction.id}:`, err.message);
+          }
+        }
+
+        const formattedProofImages = (transaction.proofImages || []).map(image => {
+          const fullImagePath = path.join(process.cwd(), image.imageUrl);
+          const fileExists = fs.existsSync(fullImagePath);
+          console.log(`Image path check:
+            URL in DB: ${image.imageUrl}
+            Full path: ${fullImagePath}
+            File exists: ${fileExists}
+          `);
+
+          return {
+            id: image.id || '',
+            imageUrl: image.imageUrl ? `${baseUrl}/${image.imageUrl}` : '',
+            fileName: image.fileName || '',
+            exists: fileExists
+          };
+        });
+
+        // Enhanced payment details formatting
+        const paymentDetails = {
+          upiRefNumber: transaction.upiRefNumber || '',
+          userUpiId: paymentMethod?.upiId || '',
+          userPaymentMethod: paymentMethod?.methodType || '',
+          adminUpiId: adminUpi?.upiId || transaction.adminUpiId || '',
+          adminName: adminUpi?.name || ''
+        };
+
+        return {
+          id: transaction.id || '',
+          amount: transaction.amount || 0,
+          type: transaction.type || '',
+          status: transaction.status || '',
+          createdAt: transaction.createdAt || new Date(),
+          user: transaction.user ? {
+            id: transaction.user.id || '',
+            name: transaction.user.name || '',
+            email: transaction.user.email || ''
+          } : null,
+          paymentDetails,
+          proofImages: formattedProofImages
+        };
+      } catch (err) {
+        console.error('Error formatting transaction:', err, transaction);
+        return {
+          id: transaction.id || '',
+          amount: transaction.amount || 0,
+          type: transaction.type || '',
+          status: transaction.status || '',
+          createdAt: transaction.createdAt || new Date(),
+          user: null,
+          paymentDetails: {
+            upiRefNumber: transaction.upiRefNumber || '',
+            userUpiId: '',
+            userPaymentMethod: '',
+            adminUpiId: transaction.adminUpiId || '',
+            adminName: ''
+          },
+          proofImages: []
+        };
+      }
+    }));
+
+    console.log('Formatted transactions:', formattedTransactions.length);
+
     res.json({
-      transactions,
+      transactions: formattedTransactions,
       pagination: {
         total,
         page: parseInt(page),
@@ -305,7 +444,11 @@ const getTransactions = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Error in getTransactions:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch transactions',
+      details: error.message 
+    });
   }
 };
 
