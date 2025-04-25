@@ -138,10 +138,10 @@ export const requestDeposit = async (depositData: DepositRequestPayload): Promis
       throw new Error('Payment proof images are required');
     }
 
-    // Format the request data
+    // Format the request data according to backend expectations
     const formattedData = {
       amount: Number(depositData.amount),
-      userUpiId: depositData.upiId,
+      upiId: depositData.upiId,
       adminUpiId: depositData.adminUpiId,
       upiRefNumber: depositData.upiRefNumber,
       proofImages: depositData.proofImages.map(img => ({
@@ -152,7 +152,7 @@ export const requestDeposit = async (depositData: DepositRequestPayload): Promis
 
     // Make the API request
     const response = await axios.post(
-      `${BASE_URL}/balance/deposit-request`,
+      `${BASE_URL}/balance/deposit`,
       formattedData,
       {
         headers: {

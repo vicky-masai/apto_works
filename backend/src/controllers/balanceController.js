@@ -605,6 +605,15 @@ const requestDepositJson = async (req, res) => {
       return res.status(400).json({ error: 'Amount must be greater than 0' });
     }
 
+    // Find the AdminUPI record first
+    const adminUpi = await prisma.adminUPI.findUnique({
+      where: { upiId: adminUpiId }
+    });
+
+    if (!adminUpi) {
+      return res.status(400).json({ error: 'Invalid admin UPI ID' });
+    }
+
     // Get or create payment method
     let paymentMethod = await prisma.userPaymentMethod.findFirst({
       where: {
@@ -653,7 +662,7 @@ const requestDepositJson = async (req, res) => {
       }
     }));
 
-    // Create transaction record with proof images
+    // Create transaction record with proof images using adminUpi.id instead of adminUpiId
     const transaction = await prisma.transaction.create({
       data: {
         userId: user.id,
@@ -662,14 +671,15 @@ const requestDepositJson = async (req, res) => {
         status: 'Pending',
         paymentMethodId: paymentMethod.id,
         upiRefNumber: upiRefNumber,
-        adminUpiId: adminUpiId,
+        adminUpiId: adminUpi.id, // Use the AdminUPI document's ID instead of the UPI ID string
         proofImages: {
           create: savedImages
         }
       },
       include: {
         proofImages: true,
-        paymentMethod: true
+        paymentMethod: true,
+        adminUpi: true
       }
     });
 
@@ -680,7 +690,7 @@ const requestDepositJson = async (req, res) => {
         amount: transaction.amount,
         status: transaction.status,
         upiRefNumber: transaction.upiRefNumber,
-        adminUpiId: transaction.adminUpiId,
+        adminUpiId: transaction.adminUpi.upiId, // Return the UPI ID for display
         userUpiId: transaction.paymentMethod.upiId,
         proofImages: transaction.proofImages
       }

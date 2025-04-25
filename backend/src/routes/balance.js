@@ -25,7 +25,7 @@ router.get('/money-history', auth, balanceController.getMoneyHistory);
 
 // Deposit request routes
 // router.post('/deposit-request', auth, upload.array('proofImages', 5), requestDeposit); // Form-data version
-router.post('/deposit-request', auth, requestDepositJson); // JSON version
+router.post('/deposit', auth, requestDepositJson); // JSON version
 
 router.get('/add', auth, balanceController.getAllAddMoneyRequestsForUser);
 router.get('/withdrawal', auth, balanceController.getAllWithdrawalRequestsForUser);
