@@ -146,29 +146,29 @@ export default function TaskMarketplaceLanding() {
   return (
     <div className="bg-white text-gray-800">
       {/* Hero Section */}
-      <section className="py-24 px-4 relative overflow-hidden">
+      <section id="hero-section" className="py-16 sm:py-20 px-4 relative overflow-hidden">
         <div className="container mx-auto max-w-6xl relative z-10">
-          <div className="flex flex-col md:flex-row items-center gap-16">
+          <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
             <div className="flex-1 max-w-2xl">
               <div className="space-y-8">
                 <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 px-4 py-1.5 text-base font-medium rounded-full">
                   Trusted by 10,000+ users worldwide
                 </Badge>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight text-gray-900">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-gray-900">
                   Complete Tasks. <span className="text-purple-600 relative">
                     Get Paid.
                     <span className="absolute bottom-0 left-0 w-full h-1 bg-purple-200 transform -skew-x-12"></span>
                   </span> Simple.
                 </h1>
-                <p className="text-xl md:text-2xl text-gray-700 leading-relaxed max-w-2xl font-medium">
+                <p className="text-base sm:text-lg md:text-2xl text-gray-700 leading-relaxed max-w-xl font-medium">
                   Join our marketplace where you can earn money by completing simple tasks or post tasks to get your
                   work done.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-5">
-                  <Link href="/tasks" className="flex-1 sm:flex-initial">
+                <div className="flex flex-col sm:flex-row gap-4 w-full">
+                  <Link href="/tasks" className="w-full sm:w-auto">
                     <Button
                       size="lg"
-                      className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-700/30 relative overflow-hidden group w-full h-14 text-lg font-semibold"
+                      className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-700/30 relative overflow-hidden group w-full sm:w-auto h-12 sm:h-14 text-base sm:text-lg font-semibold"
                     >
                       <span className="relative z-10 flex items-center justify-center">
                         Find Tasks{" "}
@@ -176,18 +176,18 @@ export default function TaskMarketplaceLanding() {
                       </span>
                     </Button>
                   </Link>
-                  <Link href="/post-task" className="flex-1 sm:flex-initial">
+                  <Link href="/post-task" className="w-full sm:w-auto">
                     <Button
                       size="lg"
                       variant="outline"
-                      className="text-purple-700 border-2 border-purple-200 hover:bg-purple-50 w-full h-14 text-lg font-semibold"
+                      className="text-purple-700 border-2 border-purple-200 hover:bg-purple-50 w-full sm:w-auto h-12 sm:h-14 text-base sm:text-lg font-semibold"
                     >
                       Post a Task
                     </Button>
                   </Link>
                 </div>
-                <div className="flex items-center gap-6 pt-6">
-                  <div className="flex -space-x-3">
+                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 pt-6">
+                  <div className="flex -space-x-3 justify-center">
                     {[
                       "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1964&auto=format&fit=crop",
                       "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1887&auto=format&fit=crop",
@@ -214,23 +214,23 @@ export default function TaskMarketplaceLanding() {
                 </div>
               </div>
             </div>
-            <div className="flex-1 relative">
-              <div className="relative z-10 rounded-xl overflow-hidden shadow-2xl transform hover:scale-[1.02] transition-transform duration-300">
+            <div className="flex-1 w-full relative mt-10 md:mt-0">
+              <div className="relative z-10 rounded-xl overflow-hidden shadow-2xl transform hover:scale-[1.02] transition-transform duration-300 w-full max-w-md mx-auto md:max-w-full">
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-blue-600/10 mix-blend-overlay"></div>
                 <Image
                   src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop"
                   alt="People working on tasks"
                   width={600}
                   height={400}
-                  className="rounded-xl object-cover w-full h-[500px]"
+                  className="rounded-xl object-cover w-full h-56 sm:h-80 md:h-[400px] lg:h-[500px]"
                 />
-                <div className="absolute -bottom-5 -right-5 bg-purple-600 text-white p-6 rounded-lg shadow-xl transform hover:translate-y-1 transition-transform duration-200">
-                  <p className="text-2xl font-bold">10,000+ Tasks Completed</p>
+                <div className="absolute -bottom-3 sm:-bottom-5 -right-3 sm:-right-5 bg-purple-600 text-white p-4 sm:p-6 rounded-lg shadow-xl transform hover:translate-y-1 transition-transform duration-200 text-sm sm:text-2xl font-bold">
+                  10,000+ Tasks Completed
                 </div>
               </div>
               {/* Decorative background elements */}
-              <div className="absolute -z-10 top-10 -right-10 w-72 h-72 bg-purple-200/50 rounded-full opacity-60 blur-3xl animate-pulse"></div>
-              <div className="absolute -z-10 -bottom-10 -left-10 w-72 h-72 bg-blue-200/50 rounded-full opacity-60 blur-3xl animate-pulse"></div>
+              <div className="absolute -z-10 top-10 -right-10 w-40 h-40 sm:w-72 sm:h-72 bg-purple-200/50 rounded-full opacity-60 blur-3xl animate-pulse"></div>
+              <div className="absolute -z-10 -bottom-10 -left-10 w-40 h-40 sm:w-72 sm:h-72 bg-blue-200/50 rounded-full opacity-60 blur-3xl animate-pulse"></div>
             </div>
           </div>
         </div>
@@ -411,11 +411,6 @@ export default function TaskMarketplaceLanding() {
                 <div className="mb-6 p-4 rounded-full bg-purple-100 w-fit">{step.icon}</div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-4">{step.title}</h3>
                 <p className="text-gray-600">{step.description}</p>
-                {index < 3 && (
-                  <div className="hidden md:block absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2">
-                    <ArrowRight className="h-6 w-6 text-gray-300" />
-                  </div>
-                )}
               </div>
             ))}
           </div>
@@ -567,17 +562,17 @@ export default function TaskMarketplaceLanding() {
                 </div>
               </div>
             </div>
-            <div className="flex-1 relative">
-              <div className="image-border-animation">
+            <div className="flex-1 w-full relative mt-8 md:mt-0">
+              <div className="image-border-animation w-full max-w-xs sm:max-w-sm md:max-w-md mx-auto">
                 <Image
                   src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop"
                   alt="Earnings illustration"
                   width={600}
                   height={600}
-                  className="rounded-xl"
+                  className="rounded-xl w-full h-auto"
                 />
               </div>
-              <div className="absolute -z-10 top-10 -right-10 w-64 h-64 bg-purple-200 rounded-full opacity-50 blur-3xl"></div>
+              <div className="absolute -z-10 top-10 -right-10 w-32 h-32 sm:w-64 sm:h-64 bg-purple-200 rounded-full opacity-50 blur-3xl"></div>
             </div>
           </div>
         </div>
@@ -590,7 +585,7 @@ export default function TaskMarketplaceLanding() {
             <h2 className="text-3xl font-bold mb-4 text-gray-900">Frequently Asked Questions</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">Find answers to common questions about our platform</p>
           </div>
-          <div className="max-w-3xl mx-auto space-y-4">
+          <div className="space-y-4">
             {faqData.map((faq, index) => (
               <div key={index} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <button
@@ -622,11 +617,11 @@ export default function TaskMarketplaceLanding() {
               Join thousands of teams and freelancers who are already using our platform to streamline their tasks,
               collaborate effectively, and get paid securely.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <Button size="lg" className="bg-white hover:bg-gray-100 text-purple-600">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2 sm:pt-4 w-full">
+              <Button size="lg" className="bg-white hover:bg-gray-100 text-purple-600 w-full sm:w-auto">
                 Get Started for Free
               </Button>
-              <Button size="lg" variant="outline" className="text-white border-white/30 bg-white/10 hover:bg-white/20">
+              <Button size="lg" variant="outline" className="text-white border-white/30 bg-white/10 hover:bg-white/20 w-full sm:w-auto">
                 Schedule a Demo
               </Button>
             </div>
@@ -635,61 +630,68 @@ export default function TaskMarketplaceLanding() {
       </section>
 
       {/* Contact Us Section */}
-      <section className="py-20 px-4">
+      <section id="contact-section" className="py-20 px-4">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8 sm:mb-12">
             <h2 className="text-3xl font-bold mb-4 text-gray-900">Contact Us</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">Have questions? We'd love to hear from you.</p>
           </div>
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-              <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-gray-900 mb-2 block font-medium">Name</label>
-                    <input
-                      type="text"
-                      value={contactForm.name}
-                      onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                      className="w-full px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="Your name"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-gray-900 mb-2 block font-medium">Email</label>
-                    <input
-                      type="email"
-                      value={contactForm.email}
-                      onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                      className="w-full px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="your@email.com"
-                    />
-                  </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
+            <div className="bg-purple-600 p-8 rounded-xl shadow-lg text-white">
+              <div className="flex flex-col items-center text-center">
+                <div className="bg-white/20 p-4 rounded-full mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
                 </div>
-                <div>
-                  <label className="text-gray-900 mb-2 block font-medium">Subject</label>
-                  <input
-                    type="text"
-                    value={contactForm.subject}
-                    onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
-                    className="w-full px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="How can we help?"
-                  />
+                <h3 className="text-xl font-bold mb-2">ADDRESS</h3>
+                <p className="text-white/90">
+                  No 301, Jeevan Sai Meadows,<br />
+                  13th Cross, Manjunatha Lyt,<br />
+                  Muneakolala, Marathahalli,<br />
+                  Bengaluru, Karnataka 560037
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-purple-600 p-8 rounded-xl shadow-lg text-white">
+              <div className="flex flex-col items-center text-center">
+                <div className="bg-white/20 p-4 rounded-full mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                  </svg>
                 </div>
-                <div>
-                  <label className="text-gray-900 mb-2 block font-medium">Message</label>
-                  <textarea
-                    value={contactForm.message}
-                    onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                    rows={4}
-                    className="w-full px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-                    placeholder="Your message..."
-                  />
+                <h3 className="text-xl font-bold mb-2">PHONE</h3>
+                <div className="space-y-2">
+                  <p className="text-white/90">
+                    Hours: Open · Closes 6 pm
+                  </p>
+                  <a href="tel:+918040405050" className="text-white/90 hover:text-white block">
+                    +91 804 040 5050
+                  </a>
                 </div>
-                <div className="flex justify-center">
-                  <Button className="bg-purple-600 hover:bg-purple-700 text-white px-8">Send Message</Button>
+              </div>
+            </div>
+
+            <div className="bg-purple-600 p-8 rounded-xl shadow-lg text-white">
+              <div className="flex flex-col items-center text-center">
+                <div className="bg-white/20 p-4 rounded-full mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                  </svg>
                 </div>
-              </form>
+                <h3 className="text-xl font-bold mb-2">EMAIL</h3>
+                <div className="space-y-2">
+                  <a href="mailto:info@codeapto.com" className="text-white/90 hover:text-white block">
+                    info@codeapto.com
+                  </a>
+                  <a href="https://codeapto.com" className="text-white/90 hover:text-white block">
+                    codeapto.com
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -701,16 +703,21 @@ export default function TaskMarketplaceLanding() {
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Stay Updated</h2>
             <p className="text-gray-600 mb-8">Subscribe to our newsletter for the latest updates and offers</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center w-full">
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 max-w-md px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="flex-1 w-full max-w-md px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
-              <Button className="bg-purple-600 hover:bg-purple-700 text-white">Subscribe</Button>
+              <Button className="bg-purple-600 hover:bg-purple-700 text-white w-full sm:w-auto">Subscribe</Button>
             </div>
           </div>
         </div>
+      </section>
+
+      {/* About Section */}
+      <section id="about-section" className="py-20 px-4 bg-gray-50">
+        {/* Existing content remains unchanged */}
       </section>
 
       <style jsx global>{`

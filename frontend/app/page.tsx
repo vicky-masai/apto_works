@@ -3,8 +3,9 @@ import { ArrowRight, CheckCircle, DollarSign, Search, Shield } from "lucide-reac
 
 import { Button } from "@/components/ui/button"
 import { Footer } from "@/components/Footer"
-import { Header } from "@/components/Header"
+// import { Header } from "@/components/Header"
 import TaskMarketplaceLanding from "./landingPage"
+import Header from "./header"
 
 export default function Home() {
   return (
