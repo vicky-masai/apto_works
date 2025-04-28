@@ -204,3 +204,21 @@ export const updateAddMoneyTransactionStatus = async (transactionId, status, rea
   }
 };
 
+
+export const updateWithdrawalTransactionStatus = async (transactionId, status, reason = '') => {
+  try {
+    console.log("transactionIds",transactionId);
+    const response = await axios.put(`${ADMIN_BASE_URL}/${endpoints.transactions}/${transactionId}`, {
+      status,
+      reason
+    }, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
