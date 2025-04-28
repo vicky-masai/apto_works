@@ -548,6 +548,7 @@ const updateTransactionsStatus = async (req, res) => {
     });
     
     // Handle balance updates based on transaction type and status
+    console.log("transaction",status,transaction.type);
     if (status === 'Approved') {
       if (transaction.type === 'Add') {
         // For Add money, increment balance when approved
@@ -559,17 +560,18 @@ const updateTransactionsStatus = async (req, res) => {
             }
           }
         });
-      } else if (transaction.type === 'Withdraw') {
-        // For Withdraw, decrement balance when approved
-        await prisma.user.update({
-          where: { id: transaction.userId },
-          data: {
-            balance: {
-              decrement: transaction.amount
-            }
-          }
-        });
       }
+    } else if (status === 'Rejected' && transaction.type === 'Withdraw') {
+      // For Withdraw, increment balance when rejected
+   
+      await prisma.user.update({
+        where: { id: transaction.userId },
+        data: {
+          balance: {
+            increment: transaction.amount
+          }
+        }
+      });
     }
 
     // Send appropriate notification
