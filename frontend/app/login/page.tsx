@@ -49,6 +49,8 @@ export default function LoginPage() {
 
     const email = (e.currentTarget.elements.namedItem("email") as HTMLInputElement).value
     const password = (e.currentTarget.elements.namedItem("password") as HTMLInputElement).value
+console.log("email",email);
+console.log("password",password);
 
     try {
       const response = await login(email, password)

@@ -241,9 +241,9 @@ export default function EarningsPage() {
             <div className="flex flex-col gap-6">
               <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">Earnings</h1>
-                <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+                {/* <Dialog open={openDialog} onOpenChange={setOpenDialog}>
                   <DialogTrigger asChild>
-                    <Button>Withdraw Funds</Button>
+                    <Button onClick={() => window.location.href = "/wallet"}>Withdraw Funds</Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
@@ -338,7 +338,7 @@ export default function EarningsPage() {
                       </div>
                     )}
                   </DialogContent>
-                </Dialog>
+                </Dialog> */}
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">

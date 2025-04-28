@@ -6,6 +6,8 @@ const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const { Server } = require('socket.io');
+const { encryptPayload, decryptPayload } = require('../src/utils/crypto');
+
 const {
   setSocketIO,
   addOnlineUser,
@@ -61,6 +63,28 @@ app.use('/uploads', express.static(uploadDir, {
     res.set('Access-Control-Allow-Origin', '*');
   }
 }));
+
+// Test endpoint for decryption
+app.post('/api/test/decrypt', (req, res) => {
+  try {
+    const encrypted = req.body.encryptedData;
+    const data = decryptPayload(encrypted);
+    res.json({ message: 'Data decrypted successfully', ...data });
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to decrypt data', message: error.message });
+  }
+});
+
+// Test endpoint for encryption
+app.post('/api/test/encrypt', (req, res) => {
+  try {
+    const payload = req.body.payload;
+    const encryptedData = encryptPayload(payload);
+    res.json({ message: 'Data encrypted successfully', encryptedData });
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to encrypt data', message: error.message });
+  }
+});
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
