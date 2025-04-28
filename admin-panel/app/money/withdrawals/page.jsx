@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Search, X, CheckSquare, Square } from "lucide-react"
 import { useState, useEffect } from "react"
 import { toast } from "react-hot-toast"
-import { getTransactions, updateTransactionStatus } from "@/API/api"
+import { getTransactions, updateWithdrawalTransactionStatus } from "@/API/api"
 import { auth } from "@/API/auth"
 
 // Helper function to get status chip color
@@ -80,13 +80,12 @@ export default function WithdrawalsPage() {
 
   const handleApprove = async (withdrawalId) => {
     try {
-      const response = await updateTransactionStatus(auth.getToken(), withdrawalId, "Approved")
-      if (response.success) {
+      console.log("withdrawalId",withdrawalId);
+      const response = await updateWithdrawalTransactionStatus(withdrawalId, "Approved")
+    
         await fetchWithdrawals()
         toast.success("Withdrawal approved successfully")
-      } else {
-        toast.error("Failed to approve withdrawal")
-      }
+    
     } catch (error) {
       console.error('Error approving withdrawal:', error)
       toast.error("Failed to approve withdrawal")
@@ -106,7 +105,7 @@ export default function WithdrawalsPage() {
 
       setIsLoading(true)
       await Promise.all(pendingWithdrawals.map(id => 
-        updateTransactionStatus(auth.getToken(), id, "Approved")
+        updateWithdrawalTransactionStatus(id, "Approved")
       ))
       await fetchWithdrawals()
       toast.success(`${pendingWithdrawals.length} withdrawals approved successfully`)
@@ -136,7 +135,7 @@ export default function WithdrawalsPage() {
 
       setIsLoading(true)
       await Promise.all(pendingWithdrawals.map(id => 
-        updateTransactionStatus(auth.getToken(), id, "Rejected", rejectReason)
+        updateWithdrawalTransactionStatus(id, "Rejected", rejectReason)
       ))
       setIsBulkRejectDialogOpen(false)
       setRejectReason("")
@@ -167,16 +166,18 @@ export default function WithdrawalsPage() {
     }
 
     try {
-      const response = await updateTransactionStatus(auth.getToken(), selectedWithdrawal.id, "Rejected", rejectReason)
-      if (response.success) {
+      console.log("selectedWithdrawal.id",selectedWithdrawal.id);
+      const response = await updateWithdrawalTransactionStatus(selectedWithdrawal.id, "Rejected", rejectReason) 
+      console.log("suraj");
+      console.log("response",response);
+      console.log(response.success);
+    
         await fetchWithdrawals()
         setIsRejectDialogOpen(false)
         setRejectReason("")
         setSelectedWithdrawal(null)
         toast.success("Withdrawal rejected successfully")
-      } else {
-        toast.error("Failed to reject withdrawal")
-      }
+     
     } catch (error) {
       console.error('Error rejecting withdrawal:', error)
       toast.error("Failed to reject withdrawal")
