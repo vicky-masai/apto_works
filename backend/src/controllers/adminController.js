@@ -513,6 +513,31 @@ const updateTransactionsStatus = async (req, res) => {
     if (!transaction) {
       return res.status(404).json({ error: 'Transaction not found' });
     }
+
+    // If trying to approve, check if UPI reference is unique
+    if (status === 'Approved' && transaction.type === 'Add') {
+      // Check if this UPI reference number has been used in any other approved transaction
+      const existingTransaction = await prisma.transaction.findFirst({
+        where: {
+          id: { not: id }, // Exclude current transaction
+          upiRefNumber: transaction.upiRefNumber,
+          type: 'Add',
+          status: 'Approved'
+        }
+      });
+
+      if (existingTransaction) {
+        return res.status(400).json({ 
+          error: 'Invalid UPI reference number. This reference has already been used in another transaction.' 
+        });
+      }
+
+      if (!transaction.upiRefNumber) {
+        return res.status(400).json({ 
+          error: 'UPI reference number is required for approval' 
+        });
+      }
+    }
     
     // Update transaction status
     const updatedTransaction = await prisma.transaction.update({
