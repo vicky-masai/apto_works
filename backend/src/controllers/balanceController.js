@@ -52,6 +52,12 @@ const withdrawBalance = async (req, res) => {
       }
     });
 
+    // Update user's balance immediately
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { balance: { decrement: amount } }
+    });
+
     res.json({ message: 'Transaction created successfully and is pending approval' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to create transaction' });

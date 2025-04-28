@@ -205,3 +205,22 @@ export const getUserWithdrawalRequests = async () => {
     throw error;
   }
 }; 
+
+
+export const requestWithdrawAPI = async (withdrawAmount: number) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/balance/withdraw`, {
+      amount: withdrawAmount
+    }, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error submitting withdrawal request:', error);
+    throw error;  
+  }
+};
+
+export default requestWithdrawAPI;

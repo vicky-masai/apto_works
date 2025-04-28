@@ -23,7 +23,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Footer } from "@/components/Footer"
 import { Header } from "@/components/Header"
 import Leftsidebar from "@/components/Leftsidebar"
-import { getBalance, getBalanceHistory, getUserWithdrawalRequests, requestDeposit, type DepositRequestPayload, type Transaction } from "@/API/money_api"
+import { getBalance, getBalanceHistory, requestWithdrawAPI ,getUserWithdrawalRequests, requestDeposit, type DepositRequestPayload, type Transaction } from "@/API/money_api"
 import { getAllPaymentMethods, addPaymentMethod, updatePaymentMethod, deletePaymentMethod, getActiveAdminUPIs } from "@/API/payment_method.js"
 // Mock transaction data
 
@@ -36,6 +36,7 @@ interface UPIAccount {
   isActive?: boolean;
   methodType?: string;
 }
+
 
 // Add AdminUPI interface
 interface AdminUPI {
@@ -138,6 +139,16 @@ export default function WalletPage() {
   const [selectedAdminUpi, setSelectedAdminUpi] = useState<string>("")
   const [adminUPIs, setAdminUPIs] = useState<AdminUPI[]>([])
   const [selectedUserUpiId, setSelectedUserUpiId] = useState<string>("")
+
+  const withdrawRequest = async () => {
+    try {
+      const response = await  requestWithdrawAPI(Number(withdrawAmount));
+      console.log("Withdrawal request submitted successfully:", response);
+    } catch (error) {
+      console.error("Error submitting withdrawal request:", error); 
+    }
+  };
+  
 
   console.log("adminUPIs",adminUPIs);
   
@@ -365,6 +376,8 @@ export default function WalletPage() {
         setWithdrawAmount("")
       }, 2000)
     }, 1500)
+
+    withdrawRequest();
   }
 
   const handleAddUpi = async () => {
