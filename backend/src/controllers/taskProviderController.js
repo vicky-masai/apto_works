@@ -147,10 +147,10 @@ const verifyProof = async (req, res) => {
           where: { id: workerId },
           data: {
             balance: {
-              increment: updatedTask.task.price
+              increment: updatedTask.task.price*0.9
             },
             totalEarnings: {
-              increment: updatedTask.task.price
+              increment: updatedTask.task.price*0.9
             },
             completedTasks: {
               increment: 1

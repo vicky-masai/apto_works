@@ -142,7 +142,9 @@ const getProviderTasks = async (req, res) => {
         let showingTaskCount = Math.floor(dummyBalance / task.price);
         // Cap showingTaskCount at numWorkersNeeded
         showingTaskCount = Math.min(showingTaskCount, task.numWorkersNeeded);
-        dummyBalance -= task.price * task.numWorkersNeeded;
+        // Ensure dummyBalance does not go negative
+        const totalCost = task.price * showingTaskCount;
+        dummyBalance = Math.max(dummyBalance - totalCost, 0);
         return {
           ...task,
           showingTaskCount
@@ -518,6 +520,7 @@ const getAllTasks = async (req, res) => {
       }
     });
 
+
     // Sort tasks by creation date
     filteredTasks.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
@@ -528,6 +531,7 @@ const getAllTasks = async (req, res) => {
 
     let formattedTasks = paginatedTasks.map(task => ({
       ...task,
+      price: task.price * 0.9,
       acceptedCount: task._count.acceptedUsers,
       _count: undefined
     }));
