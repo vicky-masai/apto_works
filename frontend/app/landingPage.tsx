@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import {
@@ -25,6 +25,21 @@ import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { getAllTasks } from "@/API/api"
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { Navigation, Pagination, Autoplay } from 'swiper/modules'
+import 'swiper/css'
+import 'swiper/css/navigation'
+import 'swiper/css/pagination'
+import 'swiper/css/autoplay'
+import { useRouter } from 'next/navigation'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
 
 // Rate definitions by category
 const RATES_BY_CATEGORY: {
@@ -67,7 +82,33 @@ const SAMPLE_TASKS = [
   },
 ]
 
+interface AcceptedUser {
+  id: string;
+  userId: string;
+}
+
+interface Task {
+  id: string;
+  taskTitle: string;
+  taskDescription: string;
+  category: string;
+  price: number;
+  estimatedTime: string;
+  stepByStepInstructions: string;
+  requiredProof: string;
+  numWorkersNeeded: number;
+  rejectedReason: string;
+  totalAmount: number;
+  difficulty: string;
+  taskStatus: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  acceptedUsers: AcceptedUser[];
+}
+
 export default function TaskMarketplaceLanding() {
+  const router = useRouter()
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [selectedCategory, setSelectedCategory] = useState("development")
   const [hoursPerWeek, setHoursPerWeek] = useState(20)
@@ -78,31 +119,41 @@ export default function TaskMarketplaceLanding() {
     subject: "",
     message: "",
   })
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   // Testimonials data
   const testimonials = [
     {
-      name: "Sarah Johnson",
-      role: "Freelancer",
-      content:
-        "This platform has completely transformed how I earn money online. The tasks are clear and payments are always on time.",
+      name: "Priya Sharma",
+      role: "Freelance Developer",
+      content: "This platform has been a game-changer for me. I've found consistent work opportunities and the payment process is seamless. Perfect for Indian freelancers!",
       rating: 5,
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format&fit=crop",
+      avatar: "https://randomuser.me/api/portraits/women/79.jpg"
     },
     {
-      name: "Michael Chen",
-      role: "Task Provider",
-      content: "I've found reliable workers for all my projects. The quality of work is consistently excellent.",
+      name: "Rajesh Kumar",
+      role: "Digital Marketing Expert",
+      content: "As a digital marketer, I've found great opportunities here. The platform is user-friendly and the support team is very responsive. Highly recommended!",
       rating: 5,
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format&fit=crop",
+      avatar: "https://randomuser.me/api/portraits/men/32.jpg"
     },
     {
-      name: "Emma Davis",
-      role: "Student",
-      content: "Perfect for earning extra income while studying. The tasks are flexible and well-paid.",
+      name: "Ananya Patel",
+      role: "Content Writer",
+      content: "Being a content writer, I love how easy it is to find quality writing projects here. The platform ensures timely payments and great communication with clients.",
       rating: 5,
-      avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1888&auto=format&fit=crop",
+      avatar: "https://randomuser.me/api/portraits/women/31.jpg"
     },
+    {
+      name: "Arjun Mehta",
+      role: "UI/UX Designer",
+      content: "The quality of design projects here is exceptional. I've been able to build a strong portfolio and connect with great clients from around the world.",
+      rating: 5,
+      avatar: "https://randomuser.me/api/portraits/men/85.jpg"
+    }
   ]
 
   const faqData = [
@@ -141,6 +192,31 @@ export default function TaskMarketplaceLanding() {
     const monthlyMax = Math.round(weeklyMax * 4)
 
     setEarnings({ min: monthlyMin, max: monthlyMax })
+  }
+
+  const fetchTasks = async () => {
+    setIsLoading(true);
+    try {
+      const response = await getAllTasks({ status: 'Published' });
+      setTasks(response.tasks);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTasks()
+  }, [])
+
+  const handleViewDetails = (task: Task) => {
+    setSelectedTask(task)
+    setIsModalOpen(true)
+  }
+
+  const handleAcceptTask = (taskId: string) => {
+    router.push(`/tasks/${taskId}/accept`)
   }
 
   return (
@@ -282,25 +358,25 @@ export default function TaskMarketplaceLanding() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4 text-gray-900">What Our Users Say</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Trusted by thousands of users worldwide who have transformed their work and income through our platform
+              Join thousands of satisfied freelancers and businesses who have found success on our platform
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {testimonials.map((testimonial, index) => (
               <div
                 key={index}
-                className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md h-full flex flex-col"
+                className="bg-white p-6 rounded-xl shadow-lg border border-purple-100 hover:border-purple-300 transition-all duration-300"
               >
                 <div className="flex items-center gap-2 mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                    <Star key={i} className="h-4 w-4 text-yellow-400 fill-yellow-400" />
                   ))}
                 </div>
-                <p className="text-gray-600 mb-6 flex-grow">"{testimonial.content}"</p>
-                <div className="flex items-center gap-4 mt-auto">
-                  <div className="w-12 h-12 rounded-full overflow-hidden image-border-animation">
+                <p className="text-gray-600 mb-6 text-sm leading-relaxed">"{testimonial.content}"</p>
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-full overflow-hidden ring-2 ring-purple-100">
                     <Image
-                      src={testimonial.avatar || "/placeholder.svg"}
+                      src={testimonial.avatar}
                       alt={testimonial.name}
                       width={48}
                       height={48}
@@ -309,7 +385,7 @@ export default function TaskMarketplaceLanding() {
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
-                    <p className="text-gray-600 text-sm">{testimonial.role}</p>
+                    <p className="text-sm text-gray-600">{testimonial.role}</p>
                   </div>
                 </div>
               </div>
@@ -326,49 +402,89 @@ export default function TaskMarketplaceLanding() {
               <h2 className="text-3xl font-bold mb-4 text-gray-900">Featured Tasks</h2>
               <p className="text-gray-600">Browse through our most popular and high-paying tasks</p>
             </div>
+            <Link href="/tasks">
             <Button className="mt-4 md:mt-0 bg-purple-600 hover:bg-purple-700 text-white">
               View All Tasks <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
+            </Link>
           </div>
+          
+          {isLoading ? (
+            // Loading skeleton
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {SAMPLE_TASKS.map((task, index) => (
-              <div key={index} className="group h-full">
-                <div className="bg-white p-6 rounded-xl border border-gray-100 hover:border-purple-200 transition-all duration-300 shadow-sm hover:shadow-md h-full flex flex-col">
-                  <div className="h-48 mb-6 overflow-hidden rounded-lg image-border-animation">
-                    <Image
-                      src={task.image || "/placeholder.svg"}
-                      alt={task.title}
-                      width={400}
-                      height={200}
-                      className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
-                    />
+              {Array(3).fill(0).map((_, index) => (
+                <div key={index} className="bg-white p-6 rounded-xl border border-gray-100 animate-pulse">
+                  <div className="h-48 bg-gray-200 rounded-lg mb-6"></div>
+                  <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-6"></div>
+                  <div className="flex gap-2 mb-6">
+                    <div className="h-6 bg-gray-200 rounded w-20"></div>
+                    <div className="h-6 bg-gray-200 rounded w-20"></div>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{task.title}</h3>
-                  <p className="text-gray-600 mb-6 flex-grow">{task.description}</p>
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-200">
-                      {task.category}
-                    </Badge>
-                    <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-200">
-                      {task.difficulty}
-                    </Badge>
-                    <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-200">
-                      {task.time}
-                    </Badge>
+                  <div className="flex justify-between items-center">
+                    <div className="h-8 bg-gray-200 rounded w-24"></div>
+                    <div className="h-10 bg-gray-200 rounded w-32"></div>
                   </div>
-                  <div className="flex items-center justify-between mt-auto">
-                    <span className="text-2xl font-bold text-gray-900">${task.price}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Swiper
+              modules={[Navigation, Pagination, Autoplay]}
+              spaceBetween={30}
+              slidesPerView={1}
+              navigation
+              pagination={{ clickable: true }}
+              autoplay={{ delay: 3000 }}
+              breakpoints={{
+                640: {
+                  slidesPerView: 2,
+                },
+                1024: {
+                  slidesPerView: 3,
+                },
+              }}
+              className="task-slider"
+            >
+              {tasks.map((task) => (
+                <SwiperSlide key={task.id}>
+                  <div className="bg-white rounded-lg shadow-md p-6 h-full flex flex-col">
+                    <h3 className="text-xl font-semibold mb-2">{task.taskTitle}</h3>
+                    <p className="text-gray-600 mb-4 flex-grow">{task.taskDescription}</p>
+                    <div className="flex justify-between items-center mb-4">
+                      <div>
+                        <span className="text-green-600 font-bold">${task.price}</span>
+                        <span className="text-gray-500 ml-4">{task.estimatedTime}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="text-gray-500 mr-2">Workers needed:</span>
+                        <span className="font-semibold">{task.numWorkersNeeded}</span>
+                      </div>
+                    </div>
+                    <div className="mb-4">
+                      <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">{task.category}</span>
+                      <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm ml-2">{task.difficulty}</span>
+                    </div>
+                    <div className="flex gap-3 mt-auto">
                     <Button
                       variant="outline"
-                      className="text-purple-600 border-purple-200 bg-purple-50 hover:bg-purple-100 transition-all duration-300"
+                        className="w-full"
+                        onClick={() => handleViewDetails(task)}
                     >
                       View Details
                     </Button>
+                      <Button 
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                        onClick={() => handleAcceptTask(task.id)}
+                      >
+                        Accept Task
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </SwiperSlide>
             ))}
-          </div>
+            </Swiper>
+          )}
         </div>
       </section>
 
@@ -720,6 +836,71 @@ export default function TaskMarketplaceLanding() {
         {/* Existing content remains unchanged */}
       </section>
 
+      {/* Task Details Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">
+              {selectedTask?.taskTitle}
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 mt-2">
+              {selectedTask?.taskDescription}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h4 className="font-semibold text-gray-900">Price</h4>
+                <p className="text-2xl font-bold text-green-600">
+                  ${selectedTask?.price}
+                </p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-900">Estimated Time</h4>
+                <p className="text-gray-600">{selectedTask?.estimatedTime}</p>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-2">Requirements</h4>
+              <p className="text-gray-600">{selectedTask?.stepByStepInstructions}</p>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-2">Proof Required</h4>
+              <p className="text-gray-600">{selectedTask?.requiredProof}</p>
+            </div>
+
+            <div className="flex gap-2">
+              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                {selectedTask?.category}
+              </span>
+              <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
+                {selectedTask?.difficulty}
+              </span>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                className="bg-purple-600 hover:bg-purple-700 text-white"
+                onClick={() => {
+                  setIsModalOpen(false)
+                  if (selectedTask) {
+                    handleAcceptTask(selectedTask.id)
+                  }
+                }}
+              >
+                Accept Task
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <style jsx global>{`
         @keyframes pulse-border {
           0% { border-color: rgba(147, 51, 234, 0.2); }
@@ -729,6 +910,20 @@ export default function TaskMarketplaceLanding() {
 
         .image-border-animation {
           animation: pulse-border 2s infinite;
+        }
+
+        /* Add these styles for the slider */
+        .task-slider {
+          padding: 20px 10px 50px !important;
+        }
+
+        .swiper-button-next,
+        .swiper-button-prev {
+          color: #9333ea !important;
+        }
+
+        .swiper-pagination-bullet-active {
+          background: #9333ea !important;
         }
       `}</style>
     </div>
