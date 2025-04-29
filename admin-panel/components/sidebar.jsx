@@ -12,10 +12,11 @@ import {
   X
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-
+import Cookies from 'js-cookie';
+import { useRouter } from "next/navigation"
 export default function Sidebar({ isOpen, onClose, isMobile }) {
   const pathname = usePathname()
-
+  const router = useRouter()
   const isActive = (path) => {
     return pathname === path
   }
@@ -60,6 +61,13 @@ export default function Sidebar({ isOpen, onClose, isMobile }) {
       href: "/settings",
     },
   ]
+  const handleLogout = () => {
+    Cookies.remove("adminToken");
+    localStorage.removeItem("token");
+    router.push("/");
+    router.refresh();
+  };
+
 
   return (
     <aside 
@@ -130,9 +138,7 @@ export default function Sidebar({ isOpen, onClose, isMobile }) {
           <Button
             variant="ghost"
             className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-            onClick={() => {
-              // Add logout logic here
-            }}
+              onClick={() => handleLogout()}
           >
             <LogOut className="h-4 w-4 mr-3" />
             <span className="text-sm">Logout</span>
