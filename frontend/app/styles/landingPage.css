@@ -1,0 +1,104 @@
+@keyframes pulse-border {
+  0% { border-color: rgba(147, 51, 234, 0.2); }
+  50% { border-color: rgba(147, 51, 234, 0.5); }
+  100% { border-color: rgba(147, 51, 234, 0.2); }
+}
+
+@keyframes gradient-xy {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient-xy {
+  background-size: 200% 200%;
+  animation: gradient-xy 15s ease infinite;
+}
+
+.image-border-animation {
+  animation: pulse-border 2s infinite;
+}
+
+/* Add these styles for the slider */
+.task-slider {
+  padding: 20px 10px 50px !important;
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+  color: #9333ea !important;
+}
+
+.swiper-pagination-bullet-active {
+  background: #9333ea !important;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.task-slider .swiper-slide {
+  height: auto !important;
+}
+
+.task-slider .swiper-slide > div {
+  height: 100%;
+}
+
+/* Enhance slider navigation */
+.task-slider .swiper-button-next,
+.task-slider .swiper-button-prev {
+  background-color: white;
+  padding: 24px;
+  border-radius: 50%;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s;
+}
+
+.task-slider .swiper-button-next:hover,
+.task-slider .swiper-button-prev:hover {
+  background-color: #4F46E5;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.task-slider .swiper-button-next:after,
+.task-slider .swiper-button-prev:after {
+  font-size: 20px;
+  color: #4F46E5;
+}
+
+.task-slider .swiper-button-next:hover:after,
+.task-slider .swiper-button-prev:hover:after {
+  color: white;
+}
+
+.task-slider .swiper-pagination-bullet {
+  width: 8px;
+  height: 8px;
+  background: #E0E7FF;
+  opacity: 1;
+  transition: all 0.3s;
+}
+
+.task-slider .swiper-pagination-bullet-active {
+  width: 24px;
+  border-radius: 4px;
+  background: #4F46E5;
+} 
