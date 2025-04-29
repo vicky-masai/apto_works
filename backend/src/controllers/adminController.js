@@ -656,6 +656,40 @@ const updateTransactionsStatus = async (req, res) => {
   }
 };
 
+const addProfitPercent = async (req, res) => {
+  try {
+    const { profitPercent } = req.body;
+
+    // Check if a SuperAdmin entry with the same profitPercent already exists
+    const existingEntry = await prisma.SuperAdmin.findMany();
+
+    if (existingEntry.length > 0) {
+      // Update the existing entry
+      const task = await prisma.SuperAdmin.update({
+        where: { id: existingEntry[0].id },
+        data: { profitPercent }
+      });
+      res.json(task);
+    } else {
+      // Create a new entry
+      const newTask = await prisma.SuperAdmin.create({
+        data: { profitPercent }
+      });
+      res.json(newTask);
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const getSuperAdmins = async (req, res) => {
+  try {
+    const superAdmins = await prisma.SuperAdmin.findMany();
+    res.json(superAdmins);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 module.exports = {
   getDashboardStats,
@@ -668,5 +702,7 @@ module.exports = {
   getTransactions,
   approveTransactionWithProof,
   getWithdrawals,
-  updateTransactionsStatus
+  updateTransactionsStatus,
+  addProfitPercent,
+  getSuperAdmins
 }; 

@@ -255,7 +255,7 @@ model Withdrawal {
 
 model SuperAdmin {
   id                String         @id @default(auto()) @map("_id") @db.ObjectId
-  cutProfitPercent  Float          @default(10)
+  profitPercent     Float          @default(10)
   profitCutedTask   Transaction[]  @relation("Profit")
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt

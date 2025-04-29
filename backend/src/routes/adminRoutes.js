@@ -29,6 +29,8 @@ router.put('/tasks/:id', adminController.updateTask);
 router.get('/transactions', adminController.getTransactions);
 router.get('/withdrawals', adminController.getWithdrawals);
 router.put('/transactions/:id', adminController.updateTransactionsStatus);
+router.post('/profit-percent', adminController.addProfitPercent);
+router.get('/profit-percent', adminController.getSuperAdmins);
 router.post('/transactions/:id/approve', async (req, res) => {
   const { base64Data, fileName } = req.body.proofImage[0];
   const { upiReference } = req.body;
