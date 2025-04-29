@@ -289,7 +289,7 @@ console.log("selectedSubmission",selectedSubmission);
                                           ? "Active"
                                           : task.taskStatus === "Completed"
                                           ? "Completed"
-                                          : "Pending Review";
+                                          : task.taskStatus == "Rejected"?"Rejected" : "Pending Review";
                                         return status;
                                       })()}
                                     </Badge>
