@@ -5,14 +5,21 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
 import { Menu, X } from "lucide-react"
+import Cookies from 'js-cookie'
+import { useRouter } from 'next/navigation'
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
+    const token = Cookies.get('token')
+    setIsLoggedIn(!!token)
+
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20)
+      setIsScrolled(window.scrollY > 0)
     }
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
@@ -22,9 +29,15 @@ export default function Header() {
     e.preventDefault()
     const section = document.getElementById(sectionId)
     if (section) {
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      section.scrollIntoView({ behavior: 'smooth' })
+      setIsMobileMenuOpen(false)
     }
-    setIsMobileMenuOpen(false)
+  }
+
+  const handleLogout = () => {
+    Cookies.remove('token')
+    setIsLoggedIn(false)
+    router.push('/')
   }
 
   return (
@@ -67,16 +80,28 @@ export default function Header() {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-3 flex-1 justify-end min-w-0">
-            <Link href="/login">
-              <Button variant="ghost" className="text-gray-700 hover:text-purple-600 hover:bg-purple-50 font-medium text-sm lg:text-base">
-                Login
+            {isLoggedIn ? (
+              <Button 
+                onClick={handleLogout}
+                variant="ghost" 
+                className="text-gray-700 hover:text-purple-600 hover:bg-purple-50 font-medium text-sm lg:text-base"
+              >
+                Logout
               </Button>
-            </Link>
-            <Link href="/signup">
-              <Button className="bg-purple-600 hover:bg-purple-700 text-white px-4 lg:px-6 font-medium text-sm lg:text-base">
-                Sign Up
-              </Button>
-            </Link>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="ghost" className="text-gray-700 hover:text-purple-600 hover:bg-purple-50 font-medium text-sm lg:text-base">
+                    Login
+                  </Button>
+                </Link>
+                <Link href="/signup">
+                  <Button className="bg-purple-600 hover:bg-purple-700 text-white px-4 lg:px-6 font-medium text-sm lg:text-base">
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -113,16 +138,28 @@ export default function Header() {
               Contact Us
             </a>
             <div className="flex flex-col gap-2 px-4 py-3">
-              <Link href="/login">
-                <Button variant="ghost" className="w-full text-gray-700 hover:text-purple-600 hover:bg-purple-50 font-medium text-sm sm:text-base">
-                  Login
+              {isLoggedIn ? (
+                <Button 
+                  onClick={handleLogout}
+                  variant="ghost" 
+                  className="w-full text-gray-700 hover:text-purple-600 hover:bg-purple-50 font-medium text-sm sm:text-base"
+                >
+                  Logout
                 </Button>
-              </Link>
-              <Link href="/signup">
-                <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm sm:text-base">
-                  Sign Up
-                </Button>
-              </Link>
+              ) : (
+                <>
+                  <Link href="/login">
+                    <Button variant="ghost" className="w-full text-gray-700 hover:text-purple-600 hover:bg-purple-50 font-medium text-sm sm:text-base">
+                      Login
+                    </Button>
+                  </Link>
+                  <Link href="/signup">
+                    <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm sm:text-base">
+                      Sign Up
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </nav>
         </div>
