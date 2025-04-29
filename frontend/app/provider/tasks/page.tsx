@@ -66,6 +66,7 @@ interface Task {
   createdAt: string;
   updatedAt: string;
   acceptedUsers: AcceptedUser[];
+  showingTaskCount: number;
 }
 
 // Main Component
@@ -109,7 +110,8 @@ console.log("selectedSubmission",selectedSubmission);
       completedCount,
       inProgressCount,
       pendingReviewCount,
-      totalSlots: task.numWorkersNeeded
+      totalSlots: task.numWorkersNeeded,
+      showingTaskCount: inProgressCount + completedCount + pendingReviewCount
     };
   }
 
@@ -321,6 +323,14 @@ console.log("selectedSubmission",selectedSubmission);
                                         <div className="w-3 h-3 rounded-full bg-blue-500"></div>
                                         <span>{counts.pendingReviewCount} Review</span>
                                       </div>
+                                      {task?.showingTaskCount < task.numWorkersNeeded && (
+                                        <div className="flex items-center gap-2 text-sm bg-yellow-100 p-2 rounded-md mt-4">
+                                          <span className="h-4 w-2 text-yellow-600">₹</span>
+                                          <span className="font-semibold text-yellow-800">
+                                            {task.numWorkersNeeded - task.showingTaskCount} Task Pending to Publish due to insufficient funds
+                                          </span>
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
                                 </div>
@@ -425,6 +435,14 @@ console.log("selectedSubmission",selectedSubmission);
                                     {task.price.toFixed(2)}
                                   </Badge>
                                 </div>
+                                {task?.showingTaskCount < task.numWorkersNeeded && (
+                                  <div className="flex items-center gap-2 text-sm bg-yellow-100 p-2 rounded-md mt-4">
+                                    <span className="h-4 w-2 text-yellow-600">₹</span>
+                                    <span className="font-semibold text-yellow-800">
+                                      {task.numWorkersNeeded - task.showingTaskCount} Task Pending to Publish due to insufficient funds
+                                    </span>
+                                  </div>
+                                )}
                               </div>
                               <div className="flex items-center justify-center p-6 bg-gray-50 dark:bg-gray-800/50 md:w-48">
                                 <Button 

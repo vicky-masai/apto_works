@@ -104,6 +104,7 @@ const getMoneyHistory = async (req, res) => {
       select: {
         acceptedTasks: {
           select: {
+            id: true,
             acceptedId: true,
             status: true,
             task: {
@@ -135,7 +136,7 @@ const getMoneyHistory = async (req, res) => {
 
     // Format earning history
     const earningHistory = userWithEarnings?.acceptedTasks.map(task => ({
-      id: task.acceptedId,
+      id: task.id,
       type: 'Earning',
       date: task.task.createdAt,
       amount: task.task.price,

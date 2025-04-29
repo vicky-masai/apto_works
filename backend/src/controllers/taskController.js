@@ -106,19 +106,23 @@ const getProviderTasks = async (req, res) => {
   try {
     const { taskStatus } = req.query;
     
+    // Define the base query filter
     let where = {
       userId: req.user.id
     };
 
-    console.log(taskStatus);
-
     // Add taskStatus filter if provided and valid
-    if (taskStatus && ['Published', 'Review', 'Rejected','Completed'].includes(taskStatus)) {
+    if (taskStatus && ['Published', 'Review', 'Rejected', 'Completed'].includes(taskStatus)) {
       where.taskStatus = taskStatus;
     }
 
-    console.log(where);
+    // Fetch user data
+    const userData = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { balance: true }
+    });
 
+    // Fetch tasks with necessary fields
     const tasks = await prisma.task.findMany({
       where,
       include: {
@@ -130,9 +134,26 @@ const getProviderTasks = async (req, res) => {
       }
     });
 
-    res.json(tasks);
+    // Calculate showingTaskCount for each task
+    let dummyBalance = userData.balance;
+    const finalData = tasks.map(task => {
+      if (task.taskStatus === 'Published') {
+        // Calculate showingTaskCount based on balance divided by price
+        let showingTaskCount = Math.floor(dummyBalance / task.price);
+        // Cap showingTaskCount at numWorkersNeeded
+        showingTaskCount = Math.min(showingTaskCount, task.numWorkersNeeded);
+        dummyBalance -= task.price * task.numWorkersNeeded;
+        return {
+          ...task,
+          showingTaskCount
+        };
+      }
+      return task;
+    });
+
+    res.json(finalData);
   } catch (error) {
-    console.error(error.message);
+    console.error('Error fetching provider tasks:', error.message);
     res.status(500).json({ error: 'Failed to fetch tasks' });
   }
 };
