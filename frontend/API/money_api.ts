@@ -207,10 +207,11 @@ export const getUserWithdrawalRequests = async () => {
 }; 
 
 
-export const requestWithdrawAPI = async (withdrawAmount: number) => {
+export const requestWithdrawAPI = async (withdrawAmount: number,paymentMethodId:string) => {
   try {
     const response = await axios.post(`${BASE_URL}/balance/withdraw`, {
-      amount: withdrawAmount
+      amount: withdrawAmount,
+      paymentMethodId: paymentMethodId
     }, {
       headers: {
         'Authorization': `Bearer ${token}`

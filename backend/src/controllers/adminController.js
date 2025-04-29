@@ -574,23 +574,88 @@ const updateTransactionsStatus = async (req, res) => {
       return res.status(404).json({ error: 'Transaction not found' });
     }
 
-    // If trying to approve an Add transaction, use approveTransactionWithProof
+    // If trying to approve, check if UPI reference is unique
     if (status === 'Approved' && transaction.type === 'Add') {
-      try {
-        const updatedTransaction = await approveTransactionWithProof(req, res, null);
-        return res.json(updatedTransaction);
-      } catch (error) {
-        return res.status(400).json({ error: error.message });
+      // Check if this UPI reference number has been used in any other approved transaction
+      const existingTransaction = await prisma.transaction.findFirst({
+        where: {
+          id: { not: id }, // Exclude current transaction
+          upiRefNumber: transaction.upiRefNumber,
+          type: 'Add',
+          status: 'Approved'
+        }
+      });
+
+      if (existingTransaction) {
+        return res.status(400).json({ 
+          error: 'Invalid UPI reference number. This reference has already been used in another transaction.' 
+        });
+      }
+
+      if (!transaction.upiRefNumber) {
+        return res.status(400).json({ 
+          error: 'UPI reference number is required for approval' 
+        });
       }
     }
+    
+    // Update transaction status
+    const updatedTransaction = await prisma.transaction.update({
+      where: { id },
+      data: { 
+        status
+      }
+    });
+    
+    // Handle balance updates based on transaction type and status
+    console.log("transaction",status,transaction.type);
+    if (status === 'Approved') {
+      if (transaction.type === 'Add') {
+        // For Add money, increment balance when approved
+        await prisma.user.update({
+          where: { id: transaction.userId },
+          data: {
+            balance: {
+              increment: transaction.amount
+            }
+          }
+        });
+      }
+    } else if (status === 'Rejected' && transaction.type === 'Withdraw') {
+      // For Withdraw, increment balance when rejected
+   
+      await prisma.user.update({
+        where: { id: transaction.userId },
+        data: {
+          balance: {
+            increment: transaction.amount
+          }
+        }
+      });
+    }
 
-    // Existing logic for other transaction types
-    // ... existing code ...
+    // Send appropriate notification
+    let notificationMessage = '';
+    if (status === 'Approved') {
+      notificationMessage = `Your ${transaction.type.toLowerCase()} request of ₹${transaction.amount} has been approved.`;
+    } else if (status === 'Rejected') {
+      notificationMessage = `Your ${transaction.type.toLowerCase()} request of ₹${transaction.amount} was rejected. ${rejectionReason || ''}`;
+    }
+
+    await sendNotification({
+      receiverId: transaction.userId,
+      heading: `Transaction ${status}`,
+      message: notificationMessage,
+      senderId: req.user.id
+    });
+
+    res.json(updatedTransaction);
   } catch (error) {
     console.error('Error in updateTransactionsStatus:', error);
     res.status(500).json({ error: error.message });
   }
 };
+
 
 module.exports = {
   getDashboardStats,
