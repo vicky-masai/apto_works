@@ -140,9 +140,11 @@ export default function WalletPage() {
   const [adminUPIs, setAdminUPIs] = useState<AdminUPI[]>([])
   const [selectedUserUpiId, setSelectedUserUpiId] = useState<string>("")
 
+
   const withdrawRequest = async () => {
     try {
-      const response = await  requestWithdrawAPI(Number(withdrawAmount));
+      console.log("selectedUserUpiId",selectedUserUpiId);
+      const response = await requestWithdrawAPI(Number(withdrawAmount),selectedUserUpiId);
       console.log("Withdrawal request submitted successfully:", response);
     } catch (error) {
       console.error("Error submitting withdrawal request:", error); 
@@ -770,7 +772,7 @@ export default function WalletPage() {
                               <label htmlFor="withdraw-upi" className="text-sm font-medium">
                                 Select UPI ID
                               </label>
-                              <Select defaultValue={upiAccounts.find(acc => acc.isDefault)?.id.toString()}>
+                              <Select defaultValue={upiAccounts.find(acc => acc.isDefault)?.id.toString()} onValueChange={(value) => setSelectedUserUpiId(value)}>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Select UPI ID" />
                                 </SelectTrigger>
