@@ -81,6 +81,10 @@ enum PaymentMethodType {
   UPI
 }
 
+
+
+
+
 model User {
   id                    String         @id @default(auto()) @map("_id") @db.ObjectId
   name                  String
@@ -181,10 +185,13 @@ model Transaction {
   upiRefNumber  String?
   proofImages   ProofImage[]
   withdrawal    Withdrawal?
+  superAdminId   String?   @db.ObjectId
+  superAdmin     SuperAdmin? @relation("Profit", fields: [superAdminId], references: [id])
 
   @@index([userId])
   @@index([paymentMethodId])
   @@index([adminUpiId])
+  @@index([superAdminId])
 }
 
 model ProofImage {
@@ -244,6 +251,14 @@ model Withdrawal {
   @@index([userId])
   @@index([status])
   @@index([paymentMethodId])
+}
+
+model SuperAdmin {
+  id                String         @id @default(auto()) @map("_id") @db.ObjectId
+  cutProfitPercent  Float          @default(10)
+  profitCutedTask   Transaction[]  @relation("Profit")
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 }
 
 

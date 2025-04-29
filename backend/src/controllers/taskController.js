@@ -519,6 +519,7 @@ const getAllTasks = async (req, res) => {
       }
     });
 
+
     // Sort tasks by creation date
     filteredTasks.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
@@ -529,6 +530,7 @@ const getAllTasks = async (req, res) => {
 
     let formattedTasks = paginatedTasks.map(task => ({
       ...task,
+      price: task.price * 0.9,
       acceptedCount: task._count.acceptedUsers,
       _count: undefined
     }));
