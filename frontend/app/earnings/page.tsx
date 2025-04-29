@@ -67,8 +67,8 @@ export default function EarningsPage() {
           getAllPaymentMethods()
         ]);
 
-        setFilteredEarnings(balanceData.earningsHistory);
-        setEarningsData(balanceData.earningsHistory);
+        setFilteredEarnings(balanceData.earningsHistory as any);
+        setEarningsData(balanceData.earningsHistory as any);
         settotalEarned(balanceData.totalEarnings);
         setAvailableBalance(balanceData.availableBalance);
         setPendingBalance(balanceData.pending);

@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { Calendar, Clock, DollarSign, IndianRupee, Tag, Users, Trash2 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
+import toast from 'react-hot-toast'
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -38,6 +39,8 @@ interface TaskCardProps {
   taskProviderId: string
   updatedAt: string
   isAccepted?: boolean
+  isOwner?: boolean
+  canAccept?: boolean
   onDelete?: () => void
 }
 
@@ -58,6 +61,8 @@ export function TaskCard({
   taskProviderId, 
   updatedAt, 
   isAccepted = false,
+  isOwner = false,
+  canAccept = true,
   onDelete
 }: TaskCardProps) {
   const [open, setOpen] = useState(false)
@@ -76,9 +81,11 @@ export function TaskCard({
     
     try {
       const data = await acceptTask(id, token);
+      toast.success('Task accepted successfully!');
       router.push(`/tasks/${data.id}/accept`);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error accepting task:", error);
+      toast.error(error?.response?.data?.error || 'Failed to accept task');
     }
   };
 
@@ -90,12 +97,14 @@ export function TaskCard({
 
     try {
       await deleteTask(id, token);
+      toast.success('Task deleted successfully');
       setDeleteDialogOpen(false);
       if (onDelete) {
         onDelete();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting task:", error);
+      toast.error(error?.response?.data?.error || 'Failed to delete task');
     }
   };
 
@@ -199,15 +208,27 @@ export function TaskCard({
               <Button variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={acceptTaskData} disabled={isAccepted}>
-                {isAccepted ? "Accepted" : "Accept Task"}
-              </Button>
+              {!isOwner && canAccept && !isAccepted && (
+                <Button onClick={acceptTaskData}>Accept Task</Button>
+              )}
+              {isOwner && (
+                <Badge variant="secondary">Your Task</Badge>
+              )}
+              {!canAccept && !isOwner && (
+                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Task Not Available</Badge>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        <Button onClick={acceptTaskData} disabled={isAccepted}>
-          {isAccepted ? "Accepted" : "Accept Task"}
-        </Button>
+        {!isOwner && canAccept && !isAccepted && (
+          <Button onClick={acceptTaskData}>Accept Task</Button>
+        )}
+        {isOwner && (
+          <Badge variant="secondary">Your Task</Badge>
+        )}
+        {!canAccept && !isOwner && (
+          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Task Not Available</Badge>
+        )}
       </CardFooter>
 
       {/* Delete Confirmation Dialog */}

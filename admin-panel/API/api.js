@@ -222,23 +222,3 @@ export const updateWithdrawalTransactionStatus = async (transactionId, status, r
   }
 };
 
-export const approveTransactionWithProof = async (transactionId, status, proofImage,upiReference) => {
-  console.log("transactionId",transactionId);
-  console.log("status",status);
-  console.log("proofImage",proofImage);
-  console.log("upiReference",upiReference);
-  try {
-    const response = await axios.post(`${ADMIN_BASE_URL}/${endpoints.transactions}/${transactionId}/approve`, {
-      status,
-      proofImage,
-      upiReference
-    }, {
-      headers: {
-        'Authorization': `Bearer ${authToken}`
-      }
-    });
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};

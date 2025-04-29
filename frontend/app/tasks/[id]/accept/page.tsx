@@ -5,6 +5,8 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, CheckCircle, Clock, DollarSign, Upload } from "lucide-react"
+import Cookies from "js-cookie"
+import toast from 'react-hot-toast'
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,7 +14,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { acceptTask, getAcceptedTaskById, submitProof } from "@/API/api"
-import Cookies from "js-cookie"
 
 export default function TaskAcceptPage({ params }: { params: Promise<{ id: string }> }) {
   const [step, setStep] = useState(1)
@@ -50,11 +51,12 @@ export default function TaskAcceptPage({ params }: { params: Promise<{ id: strin
         try {
           const taskData = await getAcceptedTaskById(Id, token);
           setTask(taskData.task);
-          // await acceptTask(Id, token);
+          toast.success('Task loaded successfully');
           setIsLoading(false);
-        } catch (error) {
+        } catch (error: any) {
           console.error("Error:", error);
-          // Handle error appropriately
+          toast.error(error?.response?.data?.error || 'Failed to load task');
+          setIsLoading(false);
         }
       };
       fetchTaskAndAccept();
@@ -73,17 +75,22 @@ export default function TaskAcceptPage({ params }: { params: Promise<{ id: strin
   }
 
   const handleSubmit = async () => {
-    if (files.length === 0) return;
+    if (files.length === 0) {
+      toast.error('Please upload proof files');
+      return;
+    }
     
     setIsSubmitting(true);
     try {
       const response = await submitProof(Id, files, proofText, token);
       if (response.data) {
+        toast.success('Proof submitted successfully!');
         setIsCompleted(true);
         setStep(3);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting proof:', error);
+      toast.error(error?.response?.data?.error || 'Failed to submit proof');
     } finally {
       setIsSubmitting(false);
     }

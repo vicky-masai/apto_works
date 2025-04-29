@@ -106,6 +106,14 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
   });
 };
 
+interface APIError {
+  response?: {
+    data?: {
+      error?: string;
+    };
+  };
+}
+
 export default function WalletPage() {
   const [balance, setBalance] = useState(0)
   const [totalDeposits, setTotalDeposits] = useState(0)
@@ -299,7 +307,6 @@ export default function WalletPage() {
       const response = await requestDeposit(depositData);
 
       setDepositSuccess(true);
-      toast.success('Deposit request submitted successfully');
 
       // Update UI with new transaction
       const newTransaction: Transaction = {
@@ -349,41 +356,45 @@ export default function WalletPage() {
   const handleWithdraw = () => {
     setIsWithdrawing(true)
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsWithdrawing(false)
-      setWithdrawSuccess(true)
+    withdrawRequest()
+      .then(() => {
+        setIsWithdrawing(false)
+        setWithdrawSuccess(true)
 
-      // Update balance
-      const amount = Number.parseFloat(withdrawAmount)
-      setBalance((prevBalance) => prevBalance - amount)
+        // Update balance
+        const amount = Number.parseFloat(withdrawAmount)
+        setBalance((prevBalance) => prevBalance - amount)
 
-      // Add transaction
-      const newTransaction: Transaction = {
-        id: (transactions.transactions.length + 1).toString(),
-        type: "Withdraw",
-        amount: amount,
-        date: new Date().toISOString(),
-        status: "Pending",
-        method: "UPI",
-        category: "transaction"
-      }
+        // Add transaction
+        const newTransaction: Transaction = {
+          id: (transactions.transactions.length + 1).toString(),
+          type: "Withdraw",
+          amount: amount,
+          date: new Date().toISOString(),
+          status: "Pending",
+          method: "UPI",
+          category: "transaction"
+        }
 
-      setTransactions(prev => ({
-        ...prev,
-        transactions: [newTransaction, ...prev.transactions],
-        combinedHistory: [newTransaction, ...prev.combinedHistory]
-      }))
+        setTransactions(prev => ({
+          ...prev,
+          transactions: [newTransaction, ...prev.transactions],
+          combinedHistory: [newTransaction, ...prev.combinedHistory]
+        }))
 
-      // Reset after showing success message
-      setTimeout(() => {
-        setOpenWithdrawDialog(false)
-        setWithdrawSuccess(false)
-        setWithdrawAmount("")
-      }, 2000)
-    }, 1500)
-
-    withdrawRequest();
+        // Reset after showing success message
+        setTimeout(() => {
+          setOpenWithdrawDialog(false)
+          setWithdrawSuccess(false)
+          setWithdrawAmount("")
+        }, 2000)
+      })
+      .catch((error: unknown) => {
+        console.error("Error processing withdrawal:", error);
+        const apiError = error as APIError;
+        toast.error(apiError?.response?.data?.error || "Failed to process withdrawal. Please try again.");
+        setIsWithdrawing(false);
+      });
   }
 
   const handleAddUpi = async () => {
@@ -415,9 +426,10 @@ export default function WalletPage() {
       setNewUpiId("");
       setOpenAddUpiDialog(false);
       toast.success("UPI ID added successfully");
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to add UPI ID:', error);
-      toast.error("Failed to add UPI ID. Please try again.");
+      const apiError = error as APIError;
+      toast.error(apiError?.response?.data?.error || "Failed to add UPI ID. Please try again.");
     }
   };
 
@@ -427,7 +439,6 @@ export default function WalletPage() {
       const currentDefault = upiAccounts.find(acc => acc.isDefault);
       
       if (currentDefault?.id === account.id) {
-        toast.success("This UPI ID is already set as default");
         return;
       }
 
@@ -438,9 +449,10 @@ export default function WalletPage() {
       const paymentMethods = await getAllPaymentMethods();
       setUpiAccounts(paymentMethods);
       toast.success("Default UPI updated successfully");
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to set default UPI ID:', error);
-      toast.error("Failed to update default UPI. Please try again.");
+      const apiError = error as APIError;
+      toast.error(apiError?.response?.data?.error || "Failed to update default UPI. Please try again.");
     }
   };
 
@@ -449,7 +461,6 @@ export default function WalletPage() {
       const upiToDelete = upiAccounts.find(acc => acc.id === id);
       
       if (!upiToDelete) {
-        toast.error("UPI ID not found");
         return;
       }
 
@@ -465,9 +476,10 @@ export default function WalletPage() {
       const paymentMethods = await getAllPaymentMethods();
       setUpiAccounts(paymentMethods);
       toast.success("UPI ID deleted successfully");
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to delete UPI ID:', error);
-      toast.error("Failed to delete UPI ID. Please try again.");
+      const apiError = error as APIError;
+      toast.error(apiError?.response?.data?.error || "Failed to delete UPI ID. Please try again.");
     }
   };
 

@@ -1,30 +1,26 @@
-import type React from "react"
+import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import { ThemeProvider } from "@/components/theme-provider"
-// import { AuthProvider } from "./auth-provider"
-
 import "./globals.css"
-import { AuthProvider } from "./auth-provider"
+import { Providers } from "@/components/providers"
 
 const inter = Inter({ subsets: ["latin"] })
 
-export const metadata = {
-  generator: 'vicky_developer'
-};
+export const metadata: Metadata = {
+  title: "Apto Works",
+  description: "Apto Works - Task Management Platform",
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
-    <html lang="en" className="light" style={{ colorScheme: "light" }}>
+    <html lang="en">
       <body className={inter.className}>
-        <AuthProvider>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
+        <Providers>
           {children}
-        </ThemeProvider>
-        </AuthProvider>
+        </Providers>
       </body>
     </html>
   )
