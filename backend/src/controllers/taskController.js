@@ -385,7 +385,8 @@ const getAllTasks = async (req, res) => {
     });
 
     let where = {
-      taskStatus: status
+      taskStatus: status,
+      isPaused: false
     };
 
     if (category) {
@@ -795,6 +796,46 @@ const getAcceptedTaskById = async (req, res) => {
   }
 };
 
+const toggleTaskPause = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const userId = req.user.id;
+
+    // Find the task
+    const task = await prisma.task.findUnique({
+      where: { id: taskId }
+    });
+    
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    // Check if user owns the task
+    if (task.userId.toString() !== userId) {
+      return res.status(403).json({ message: "Not authorized to modify this task" });
+    }
+
+    // Check if task is approved and published
+    if (task.taskStatus !== "Published") {
+      return res.status(400).json({ message: "Only published tasks can be paused/unpaused" });
+    }
+
+    // Update the task with toggled isPaused status
+    const updatedTask = await prisma.task.update({
+      where: { id: taskId },
+      data: { isPaused: !task.isPaused }
+    });
+
+    res.status(200).json({
+      message: updatedTask.isPaused ? "Task paused successfully" : "Task activated successfully",
+      isPaused: updatedTask.isPaused
+    });
+  } catch (error) {
+    console.error('Error toggling task pause status:', error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
   createTask,
   getAllPublishedTasks,
@@ -809,5 +850,6 @@ module.exports = {
   acceptTask,
   updateTaskStatus,
   submitProof,
-  getAcceptedTaskById
+  getAcceptedTaskById,
+  toggleTaskPause
 }; 

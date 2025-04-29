@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { CheckCircle, Clock, DollarSign, Eye, Search, X } from "lucide-react"
+import { CheckCircle, Clock, DollarSign, Eye, Search, X, Pause, Play } from "lucide-react"
 
 // UI Component Imports
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import Leftsidebar from "@/components/Leftsidebar"
-import { getProviderTasks, verifyProof } from "@/API/task"
+import { getProviderTasks, verifyProof, toggleTaskPause } from "@/API/task"
 
 // Type Definitions
 interface User {
@@ -67,6 +67,7 @@ interface Task {
   updatedAt: string;
   acceptedUsers: AcceptedUser[];
   showingTaskCount: number;
+  isPaused?: boolean;
 }
 
 // Main Component
@@ -181,6 +182,31 @@ console.log("selectedSubmission",selectedSubmission);
     }
   }
 
+  const handleTaskPauseToggle = async (taskId: string, currentStatus: boolean) => {
+    // Update local state immediately for better UX
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === taskId ? { ...task, isPaused: !currentStatus } : task
+      )
+    );
+
+    try {
+      const response = await toggleTaskPause(taskId);
+      // If the API call was successful, the state is already updated
+      // You might want to show a success toast here
+    } catch (error: any) {
+      console.error('Error updating task status:', error);
+      // Revert state if API call fails
+      setTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task.id === taskId ? { ...task, isPaused: currentStatus } : task
+        )
+      );
+      // Show error message to user
+      alert(error?.message || 'Failed to update task status');
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header isLoggedIn={true} />
@@ -257,7 +283,23 @@ console.log("selectedSubmission",selectedSubmission);
                               <div className="flex-grow p-6">
                                 <div className="flex justify-between items-start gap-4 mb-4">
                                   <div className="space-y-1.5">
-                                    <CardTitle className="line-clamp-1">{task.taskTitle}</CardTitle>
+                                    <div className="flex items-center gap-2">
+                                      <CardTitle className="line-clamp-1">{task.taskTitle}</CardTitle>
+                                      {task.taskStatus === "Published" && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className={`p-1 h-auto ${task.isPaused ? 'text-green-600 hover:text-green-700' : 'text-red-600 hover:text-red-700'}`}
+                                          onClick={() => handleTaskPauseToggle(task.id, task.isPaused || false)}
+                                        >
+                                          {task.isPaused ? (
+                                            <Play className="h-4 w-4" />
+                                          ) : (
+                                            <Pause className="h-4 w-4" />
+                                          )}
+                                        </Button>
+                                      )}
+                                    </div>
                                     <CardDescription className="line-clamp-2">{task.taskDescription}</CardDescription>
                                   </div>
                                   <div className="flex items-center text-lg font-semibold text-green-600 dark:text-green-400 whitespace-nowrap">
@@ -278,9 +320,14 @@ console.log("selectedSubmission",selectedSubmission);
                                       <Clock className="h-3 w-3" />
                                       {task.estimatedTime}
                                     </Badge>
+                                    <Badge variant="outline" className="flex items-center gap-1">
+                                      <DollarSign className="h-3 w-3" />
+                                      Total: {task.totalAmount.toFixed(2)}
+                                    </Badge>
                                     <Badge 
                                       variant="outline" 
                                       className={`flex items-center gap-1 ${
+                                        task.isPaused ? "bg-gray-100 text-gray-800" :
                                         task.taskStatus === "Published" ? "bg-green-100 text-green-800" :
                                         task.taskStatus === "Completed" ? "bg-blue-100 text-blue-800" :
                                         task.taskStatus === "Rejected" ? "bg-red-100 text-red-800" :
@@ -288,11 +335,14 @@ console.log("selectedSubmission",selectedSubmission);
                                       }`}
                                     >
                                       {(() => {
+                                        if (task.isPaused) return "Paused";
                                         const status = task.taskStatus === "Published"
                                           ? "Active"
                                           : task.taskStatus === "Completed"
                                           ? "Completed"
-                                          : task.taskStatus == "Rejected"?"Rejected" : "Pending Review";
+                                          : task.taskStatus === "Rejected"
+                                          ? "Rejected" 
+                                          : "Pending Review";
                                         return status;
                                       })()}
                                     </Badge>
@@ -324,10 +374,10 @@ console.log("selectedSubmission",selectedSubmission);
                                         <span>{counts.pendingReviewCount} Review</span>
                                       </div>
                                       {task?.showingTaskCount < task.numWorkersNeeded && (
-                                        <div className="flex items-center gap-2 text-sm bg-yellow-100 p-2 rounded-md mt-4">
-                                          <span className="h-4 w-2 text-yellow-600">₹</span>
-                                          <span className="font-semibold text-yellow-800">
-                                            {task.numWorkersNeeded - task.showingTaskCount} Task Pending to Publish due to insufficient funds
+                                        <div className="flex items-center gap-2 text-sm bg-red-100 py-2 px-3 rounded-md mt-4">
+                                          <X className="h-4 w-4 text-red-600" />
+                                          <span className="font-semibold text-red-800">
+                                            {task.numWorkersNeeded - task.showingTaskCount} {task.numWorkersNeeded - task.showingTaskCount > 1 ? 'Tasks' : 'Task'} paused: Low balance in wallet
                                           </span>
                                         </div>
                                       )}
@@ -436,10 +486,10 @@ console.log("selectedSubmission",selectedSubmission);
                                   </Badge>
                                 </div>
                                 {task?.showingTaskCount < task.numWorkersNeeded && (
-                                  <div className="flex items-center gap-2 text-sm bg-yellow-100 p-2 rounded-md mt-4">
-                                    <span className="h-4 w-2 text-yellow-600">₹</span>
-                                    <span className="font-semibold text-yellow-800">
-                                      {task.numWorkersNeeded - task.showingTaskCount} Task Pending to Publish due to insufficient funds
+                                  <div className="flex items-center gap-2 text-sm bg-red-100 py-2 px-3 rounded-md mt-4">
+                                    <X className="h-4 w-4 text-red-600" />
+                                    <span className="font-semibold text-red-800">
+                                      {task.numWorkersNeeded - task.showingTaskCount} {task.numWorkersNeeded - task.showingTaskCount > 1 ? 'Tasks' : 'Task'} paused: Low balance in wallet
                                     </span>
                                   </div>
                                 )}

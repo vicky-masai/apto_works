@@ -38,6 +38,7 @@ router.get('/provider', auth, taskController.getProviderTasks);
 router.put('/:taskId', auth, taskController.updateTask);
 router.post('/:taskId/publish', auth, taskController.publishTask);
 router.post('/:taskId/unpublish', auth, taskController.unpublishTask);
+router.post('/:taskId/toggle-pause', auth, taskController.toggleTaskPause);
 
 // Worker routes
 router.get('/', taskController.getAllTasks);

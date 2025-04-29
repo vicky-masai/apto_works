@@ -123,6 +123,7 @@ model Task {
   totalAmount           Float
   difficulty            String         @default("Medium")
   taskStatus            TaskStatus     @default(Review)
+  isPaused              Boolean        @default(false)
   userId                String         @db.ObjectId
   user                  User           @relation("User", fields: [userId], references: [id])
   acceptedUsers         AcceptedTask[]

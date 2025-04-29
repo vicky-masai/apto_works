@@ -56,3 +56,22 @@ export const verifyProof = async (taskId, workerId, isApproved) => {
     throw error;
   }
 };
+
+export const toggleTaskPause = async (taskId) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/tasks/${taskId}/toggle-pause`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error toggling task pause:', error);
+    throw error;
+  }
+};
+
