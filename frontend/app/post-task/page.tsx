@@ -53,9 +53,11 @@ export default function PostTaskPage() {
       const authToken = cookie.get('token')
       await createTask(taskData, authToken)
       setIsSuccess(true)
-      toast.success("Task created successfully!")
-    } catch (error) {
-      toast.error("Failed to create task")
+    } catch (error: any) {
+      toast.error(error?.response?.data?.error || "Failed to create task. Please try again.", {
+        duration: 4000
+      })
+      console.error("Error creating task:", error)
     } finally {
       setIsSubmitting(false)
     }

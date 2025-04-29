@@ -561,12 +561,14 @@ const getAllTasks = async (req, res) => {
 const getTaskById = async (req, res) => {
   try {
     const { taskId } = req.params;
+    const userId = req.user?.id;
 
     const task = await prisma.task.findUnique({
       where: { id: taskId },
       include: {
         user: {
           select: {
+            id: true,
             name: true,
             organizationType: true
           }
@@ -583,12 +585,19 @@ const getTaskById = async (req, res) => {
       return res.status(404).json({ error: 'Task not found' });
     }
 
-    res.json(task);
+    // Add a flag to indicate if the current user is the task owner
+    const response = {
+      ...task,
+      isOwner: userId === task.user.id,
+      canAccept: userId && userId !== task.user.id && task.taskStatus === 'Published' && !task.isPaused
+    };
+
+    res.json(response);
   } catch (error) {
+    console.error('Get Task By Id Error:', error);
     res.status(500).json({ error: 'Failed to fetch task' });
   }
 };
-
 
 let currentTaskId = 0;
 
@@ -599,52 +608,106 @@ const generateTaskId = () => {
     return ++currentTaskId;
 };
 
-
 const acceptTask = async (req, res) => {
   try {
     const { taskId } = req.params;
+    const userId = req.user.id;
+
+    // Get task with user information
     const task = await prisma.task.findUnique({
-      where: { id: taskId }
+      where: { id: taskId },
+      include: {
+        user: {
+          select: {
+            id: true
+          }
+        }
+      }
     });
 
-
-
-    if (!task || task.taskStatus !== 'Published') {
-      return res.status(400).json({ error: 'Task not available' });
+    // Comprehensive validation checks
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
     }
 
-    // Check if task has available slots (numWorkersNeeded >= 1)
+    // Check if user is trying to accept their own task
+    if (task.user.id === userId) {
+      return res.status(403).json({ 
+        error: 'Cannot accept your own task',
+        code: 'SELF_TASK_ACCEPT'
+      });
+    }
+
+    // Check task status
+    if (task.taskStatus !== 'Published') {
+      return res.status(400).json({ 
+        error: 'Task is not available for acceptance',
+        code: 'INVALID_TASK_STATUS'
+      });
+    }
+
+    // Check if task is paused
+    if (task.isPaused) {
+      return res.status(400).json({ 
+        error: 'Task is currently paused',
+        code: 'TASK_PAUSED'
+      });
+    }
+
+    // Check available slots
     if (task.numWorkersNeeded < 1) {
-      return res.status(400).json({ error: 'No more workers needed for this task' });
+      return res.status(400).json({ 
+        error: 'No more slots available for this task',
+        code: 'NO_SLOTS_AVAILABLE'
+      });
     }
 
     // Check if worker has already accepted this task
     const existingAcceptance = await prisma.acceptedTask.findFirst({
       where: {
-        userId: req.user.id,
+        userId: userId,
         taskId,
-        acceptedId: generateTaskId()
+        status: {
+          in: ['Active', 'Review', 'Completed']
+        }
       }
     });
 
     if (existingAcceptance) {
-      return res.status(400).json({ error: 'You have already accepted this task' });
+      return res.status(400).json({ 
+        error: 'You have already accepted this task',
+        code: 'ALREADY_ACCEPTED'
+      });
     }
 
-    // Use transaction to ensure all operations succeed or fail together
+    // Use transaction to ensure data consistency
     const result = await prisma.$transaction(async (prisma) => {
       // Create accepted task
       const acceptedTask = await prisma.acceptedTask.create({
         data: {
-          userId: req.user.id,
+          userId: userId,
           taskId,
           status: 'Active'
+        },
+        include: {
+          task: {
+            select: {
+              taskTitle: true,
+              price: true
+            }
+          },
+          user: {
+            select: {
+              name: true,
+              email: true
+            }
+          }
         }
       });
 
       // Update user's inProgress count
       await prisma.user.update({
-        where: { id: req.user.id },
+        where: { id: userId },
         data: {
           inProgress: {
             increment: 1
@@ -652,7 +715,7 @@ const acceptTask = async (req, res) => {
         }
       });
 
-      // Reduce the number of workers needed for the task
+      // Update task's available slots
       await prisma.task.update({
         where: { id: taskId },
         data: {
@@ -665,10 +728,24 @@ const acceptTask = async (req, res) => {
       return acceptedTask;
     });
 
-    res.status(201).json(result);
+    // Send notification to task owner
+    await sendNotification({
+      receiverId: task.user.id,
+      heading: 'Task Accepted',
+      message: `Your task has been accepted by ${req.user.name}`,
+      senderId: userId
+    });
+
+    res.status(201).json({
+      message: 'Task accepted successfully',
+      data: result
+    });
   } catch (error) {
     console.error('Accept Task Error:', error);
-    res.status(500).json({ error: 'Failed to accept task' });
+    res.status(500).json({ 
+      error: 'Failed to accept task',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 

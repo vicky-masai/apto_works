@@ -5,6 +5,7 @@ import { SetStateAction, useEffect, useState, useRef, useCallback } from "react"
 import { Search, Filter, UserCheck, Wallet, Upload, DollarSign } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Cookies from "js-cookie"
+import toast from 'react-hot-toast'
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -39,6 +40,11 @@ interface Task {
   isPopular?: boolean
   isHighPaying?: boolean
   acceptedCount?: number
+  isOwner?: boolean
+  canAccept?: boolean
+  user?: {
+    id: string
+  }
 }
 
 export default function TasksPage() {
@@ -126,9 +132,11 @@ export default function TasksPage() {
       setTasks(data.tasks);
       setCurrentPage(1);
       setHasMoreTasks(data.tasks.length >= tasksPerPage);
-      setIsLoading(false);
-    } catch (error) {
+      toast.success('Filters applied successfully');
+    } catch (error: any) {
       console.error("Error fetching tasks:", error);
+      toast.error(error?.response?.data?.error || 'Failed to apply filters');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -151,9 +159,10 @@ export default function TasksPage() {
       setTasks(data.tasks);
       setCurrentPage(1);
       setHasMoreTasks(data.tasks.length >= tasksPerPage);
-      setIsLoading(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching tasks:", error);
+      toast.error(error?.response?.data?.error || 'Failed to search tasks');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -192,9 +201,10 @@ export default function TasksPage() {
       setTasks(data.tasks);
       setCurrentPage(1);
       setHasMoreTasks(data.tasks.length >= tasksPerPage);
-      setIsLoading(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching tasks:", error);
+      toast.error(error?.response?.data?.error || 'Failed to load tasks');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -414,31 +424,39 @@ export default function TasksPage() {
                             <>
                               {tasks
                                 .filter(task => !acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id))
-                                .map((task, index) => (
-                                  <div
-                                    key={task.id}
-                                    ref={index === tasks.length - 1 ? lastTaskElementRef : null}
-                                  >
-                                    <TaskCard
-                                      id={task.id}
-                                      title={task.taskTitle}
-                                      description={task.taskDescription}
-                                      price={task.price}
-                                      category={task.category}
-                                      difficulty={task.difficulty}
-                                      estimatedTime={task.estimatedTime}
-                                      createdAt={task.createdAt}
-                                      stepByStepInstructions={task.stepByStepInstructions}
-                                      taskStatus={task.taskStatus}
-                                      requiredProof={task.requiredProof}
-                                      numWorkersNeeded={task.availableWorkers}
-                                      totalAmount={task.totalAmount}
-                                      taskProviderId={task.taskProviderId}
-                                      updatedAt={task.updatedAt}
-                                      isAccepted={acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id)}
-                                    />
-                                  </div>
-                                ))}
+                                .map((task, index) => {
+                                  const isLastElement = index === tasks.length - 1;
+                                  const isAccepted = acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id);
+
+                                  return (
+                                    <div
+                                      key={task.id}
+                                      ref={isLastElement ? lastTaskElementRef : null}
+                                      className="w-full"
+                                    >
+                                      <TaskCard
+                                        id={task.id}
+                                        title={task.taskTitle}
+                                        description={task.taskDescription}
+                                        price={task.price}
+                                        category={task.category}
+                                        difficulty={task.difficulty}
+                                        estimatedTime={task.estimatedTime}
+                                        createdAt={task.createdAt}
+                                        stepByStepInstructions={task.stepByStepInstructions}
+                                        taskStatus={task.taskStatus}
+                                        requiredProof={task.requiredProof}
+                                        numWorkersNeeded={task.numWorkersNeeded}
+                                        totalAmount={task.totalAmount}
+                                        taskProviderId={task.taskProviderId}
+                                        updatedAt={task.updatedAt}
+                                        isAccepted={isAccepted}
+                                        isOwner={task.isOwner}
+                                        canAccept={task.canAccept}
+                                      />
+                                    </div>
+                                  );
+                                })}
                               {tasks.length === 0 && !isLoading && (
                                 <div className="text-center py-8 text-gray-500">
                                   No tasks found. Try adjusting your filters.
@@ -474,31 +492,39 @@ export default function TasksPage() {
                               <>
                                 {tasks
                                   .filter(task => !acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id))
-                                  .map((task, index) => (
-                                    <div
-                                      key={task.id}
-                                      ref={index === tasks.length - 1 ? lastTaskElementRef : null}
-                                    >
-                                      <TaskCard
-                                        id={task.id}
-                                        title={task.taskTitle}
-                                        description={task.taskDescription}
-                                        price={task.price}
-                                        category={task.category}
-                                        difficulty={task.difficulty}
-                                        estimatedTime={task.estimatedTime}
-                                        createdAt={task.createdAt}
-                                        stepByStepInstructions={task.stepByStepInstructions}
-                                        taskStatus={task.taskStatus}
-                                        requiredProof={task.requiredProof}
-                                        numWorkersNeeded={task.availableWorkers}
-                                        totalAmount={task.totalAmount}
-                                        taskProviderId={task.taskProviderId}
-                                        updatedAt={task.updatedAt}
-                                        isAccepted={acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id)}
-                                      />
-                                    </div>
-                                  ))}
+                                  .map((task, index) => {
+                                    const isLastElement = index === tasks.length - 1;
+                                    const isAccepted = acceptedTasks.some((acceptedTask: any) => acceptedTask.taskId === task.id);
+
+                                    return (
+                                      <div
+                                        key={task.id}
+                                        ref={isLastElement ? lastTaskElementRef : null}
+                                        className="w-full"
+                                      >
+                                        <TaskCard
+                                          id={task.id}
+                                          title={task.taskTitle}
+                                          description={task.taskDescription}
+                                          price={task.price}
+                                          category={task.category}
+                                          difficulty={task.difficulty}
+                                          estimatedTime={task.estimatedTime}
+                                          createdAt={task.createdAt}
+                                          stepByStepInstructions={task.stepByStepInstructions}
+                                          taskStatus={task.taskStatus}
+                                          requiredProof={task.requiredProof}
+                                          numWorkersNeeded={task.numWorkersNeeded}
+                                          totalAmount={task.totalAmount}
+                                          taskProviderId={task.taskProviderId}
+                                          updatedAt={task.updatedAt}
+                                          isAccepted={isAccepted}
+                                          isOwner={task.isOwner}
+                                          canAccept={task.canAccept}
+                                        />
+                                      </div>
+                                    );
+                                  })}
                                 {tasks.length === 0 && !isLoading && (
                                   <div className="text-center py-8 text-gray-500">
                                     No tasks found. Try adjusting your filters.

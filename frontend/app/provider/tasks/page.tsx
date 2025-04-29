@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { CheckCircle, Clock, DollarSign, Eye, Search, X, Pause, Play } from "lucide-react"
+import toast from "react-hot-toast"
 
 // UI Component Imports
 import { Button } from "@/components/ui/button"
@@ -183,27 +184,23 @@ console.log("selectedSubmission",selectedSubmission);
   }
 
   const handleTaskPauseToggle = async (taskId: string, currentStatus: boolean) => {
-    // Update local state immediately for better UX
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === taskId ? { ...task, isPaused: !currentStatus } : task
-      )
-    );
-
     try {
-      const response = await toggleTaskPause(taskId);
-      // If the API call was successful, the state is already updated
-      // You might want to show a success toast here
+      await toggleTaskPause(taskId);
+      setTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task.id === taskId ? { ...task, isPaused: !currentStatus } : task
+        )
+      );
+      toast.success(currentStatus ? 'Task activated successfully' : 'Task paused successfully');
     } catch (error: any) {
-      console.error('Error updating task status:', error);
-      // Revert state if API call fails
+      console.error("Error toggling task pause:", error);
+      toast.error(error?.response?.data?.error || 'Failed to update task status');
+      // Revert the optimistic update
       setTasks((prevTasks) =>
         prevTasks.map((task) =>
           task.id === taskId ? { ...task, isPaused: currentStatus } : task
         )
       );
-      // Show error message to user
-      alert(error?.message || 'Failed to update task status');
     }
   };
 
@@ -377,7 +374,7 @@ console.log("selectedSubmission",selectedSubmission);
                                         <div className="flex items-center gap-2 text-sm bg-red-100 py-2 px-3 rounded-md mt-4">
                                           <X className="h-4 w-4 text-red-600" />
                                           <span className="font-semibold text-red-800">
-                                            {task.numWorkersNeeded - task.showingTaskCount} {task.numWorkersNeeded - task.showingTaskCount > 1 ? 'Tasks' : 'Task'} paused: Low balance in wallet
+                                            {task.numWorkersNeeded - task.showingTaskCount > 1 ? 'Tasks are not performing' : 'Task is not performing'} due to insufficient payment
                                           </span>
                                         </div>
                                       )}
