@@ -142,7 +142,9 @@ const getProviderTasks = async (req, res) => {
         let showingTaskCount = Math.floor(dummyBalance / task.price);
         // Cap showingTaskCount at numWorkersNeeded
         showingTaskCount = Math.min(showingTaskCount, task.numWorkersNeeded);
-        dummyBalance -= task.price * task.numWorkersNeeded;
+        // Ensure dummyBalance does not go negative
+        const totalCost = task.price * showingTaskCount;
+        dummyBalance = Math.max(dummyBalance - totalCost, 0);
         return {
           ...task,
           showingTaskCount
