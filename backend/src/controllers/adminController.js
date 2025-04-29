@@ -1,22 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { sendNotification } = require('../utils/notificationService');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-
-// Set up multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // Ensure this directory exists
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({ storage: storage });
-
 // Dashboard Statistics
 const getDashboardStats = async (req, res) => {
   try {
@@ -347,6 +331,7 @@ const getTransactions = async (req, res) => {
     
     // For debugging: Check if files exist
     const fs = require('fs');
+    const path = require('path');
 
     // Get payment methods and admin UPIs separately to handle invalid ObjectIDs
     const formattedTransactions = await Promise.all(transactions.map(async transaction => {
@@ -514,51 +499,6 @@ const getWithdrawals = async (req, res) => {
   }
 };
 
-// Modify approveTransactionWithProof to use Promises for file operations and ensure a single response is sent.
-const approveTransactionWithProof = async (req, res) => {
-  const { base64Data, fileName } = req.body.proofImage[0];
-  const { upiReference, status } = req.body;
-  const upiReferenceNumber = upiReference;
-  const buffer = Buffer.from(base64Data, 'base64');
-
-  if (!upiReferenceNumber || !base64Data) {
-    return res.status(400).send('UPI reference number and proof image are required for approval');
-  }
-
-  // Define the directory and file path
-  const dirPath = path.join(__dirname, 'path/to/save');
-  const transactionFilePath = path.join(dirPath, fileName);
-
-  try {
-    // Create the directory if it doesn't exist
-    await fs.promises.mkdir(dirPath, { recursive: true });
-
-    // Save the file
-    await fs.promises.writeFile(transactionFilePath, buffer);
-
-    // Fetch the transaction details
-    const transaction = await prisma.transaction.findUnique({
-      where: { id: req.params.id },
-    });
-
-    if (!transaction) {
-      return res.status(404).send('Transaction not found');
-    }
-
-    // Update the transaction status
-    const updatedTransaction = await prisma.transaction.update({
-      where: { id: transaction.id },
-      data: { status: status, upiRefNumber: upiReferenceNumber },
-    });
-
-    res.json(updatedTransaction);
-  } catch (error) {
-    console.error('Error in transaction approval:', error);
-    res.status(500).send('Error in transaction approval');
-  }
-};
-
-// Modify updateTransactionsStatus to use approveTransactionWithProof
 const updateTransactionsStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -574,18 +514,82 @@ const updateTransactionsStatus = async (req, res) => {
       return res.status(404).json({ error: 'Transaction not found' });
     }
 
-    // If trying to approve an Add transaction, use approveTransactionWithProof
+    // If trying to approve, check if UPI reference is unique
     if (status === 'Approved' && transaction.type === 'Add') {
-      try {
-        const updatedTransaction = await approveTransactionWithProof(req, res, null);
-        return res.json(updatedTransaction);
-      } catch (error) {
-        return res.status(400).json({ error: error.message });
+      // Check if this UPI reference number has been used in any other approved transaction
+      const existingTransaction = await prisma.transaction.findFirst({
+        where: {
+          id: { not: id }, // Exclude current transaction
+          upiRefNumber: transaction.upiRefNumber,
+          type: 'Add',
+          status: 'Approved'
+        }
+      });
+
+      if (existingTransaction) {
+        return res.status(400).json({ 
+          error: 'Invalid UPI reference number. This reference has already been used in another transaction.' 
+        });
+      }
+
+      if (!transaction.upiRefNumber) {
+        return res.status(400).json({ 
+          error: 'UPI reference number is required for approval' 
+        });
       }
     }
+    
+    // Update transaction status
+    const updatedTransaction = await prisma.transaction.update({
+      where: { id },
+      data: { 
+        status
+      }
+    });
+    
+    // Handle balance updates based on transaction type and status
+    console.log("transaction",status,transaction.type);
+    if (status === 'Approved') {
+      if (transaction.type === 'Add') {
+        // For Add money, increment balance when approved
+        await prisma.user.update({
+          where: { id: transaction.userId },
+          data: {
+            balance: {
+              increment: transaction.amount
+            }
+          }
+        });
+      }
+    } else if (status === 'Rejected' && transaction.type === 'Withdraw') {
+      // For Withdraw, increment balance when rejected
+   
+      await prisma.user.update({
+        where: { id: transaction.userId },
+        data: {
+          balance: {
+            increment: transaction.amount
+          }
+        }
+      });
+    }
 
-    // Existing logic for other transaction types
-    // ... existing code ...
+    // Send appropriate notification
+    let notificationMessage = '';
+    if (status === 'Approved') {
+      notificationMessage = `Your ${transaction.type.toLowerCase()} request of ₹${transaction.amount} has been approved.`;
+    } else if (status === 'Rejected') {
+      notificationMessage = `Your ${transaction.type.toLowerCase()} request of ₹${transaction.amount} was rejected. ${rejectionReason || ''}`;
+    }
+
+    await sendNotification({
+      receiverId: transaction.userId,
+      heading: `Transaction ${status}`,
+      message: notificationMessage,
+      senderId: req.user.id
+    });
+
+    res.json(updatedTransaction);
   } catch (error) {
     console.error('Error in updateTransactionsStatus:', error);
     res.status(500).json({ error: error.message });
@@ -601,7 +605,6 @@ module.exports = {
   createTask,
   updateTask,
   getTransactions,
-  approveTransactionWithProof,
   getWithdrawals,
   updateTransactionsStatus
 }; 
