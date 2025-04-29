@@ -317,7 +317,7 @@ export default function WithdrawalsPage() {
                           <td className="py-4 px-6">#{withdrawal.id}</td>
                           <td className="py-4 px-6 font-medium text-gray-900">{withdrawal.user?.name}</td>
                           <td className="py-4 px-6 font-medium">₹{withdrawal.amount?.toFixed(2)}</td>
-                          <td className="py-4 px-6 text-gray-600">{withdrawal.upiId}</td>
+                          <td className="py-4 px-6 text-gray-600">{withdrawal.paymentDetails?.userUpiId}</td>
                           <td className="py-4 px-6">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                               getStatusColor(withdrawal.status)
@@ -400,7 +400,7 @@ export default function WithdrawalsPage() {
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900">UPI ID</h3>
-                      <p className="mt-1">{selectedWithdrawal.upiId}</p>
+                      <p className="mt-1">{selectedWithdrawal.paymentDetails?.userUpiId}</p>
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900">Status</h3>
