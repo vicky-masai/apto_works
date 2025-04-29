@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Search, X, CheckSquare, Square } from "lucide-react"
 import { useState, useEffect } from "react"
 import { toast } from "react-hot-toast"
-import { getTransactions, updateWithdrawalTransactionStatus, approveTransactionWithProof } from "@/API/api"
+import { getTransactions, updateWithdrawalTransactionStatus } from "@/API/api"
 import { auth } from "@/API/auth"
 
 // Helper function to get status chip color
@@ -28,67 +28,6 @@ const getStatusColor = (status) => {
   }
 }
 
-// New component for the approval popup
-function ApprovalPopup({ isOpen, onClose, onSubmit }) {
-  const [upiReference, setUpiReference] = useState("");
-  const [paymentScreenshot, setPaymentScreenshot] = useState(null);
-
-  const handleSubmit = () => {
-    if (!upiReference.trim() || !paymentScreenshot) {
-      toast.error("Please provide all required details");
-      return;
-    }
-    onSubmit(upiReference, paymentScreenshot);
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-[500px] p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Add Money to Wallet</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        <p>Please provide your transaction details for verification.</p>
-        <div className="mt-4">
-          <h3 className="font-medium">Payment Instructions</h3>
-          <p>Please complete the payment of ₹43 to:</p>
-          <p className="font-bold">wprpodcutreview@ybl</p>
-          <p>After payment, provide the transaction details below.</p>
-        </div>
-        <div className="mt-4">
-          <label className="text-sm font-medium">UPI Reference Number</label>
-          <Input
-            type="text"
-            placeholder="Enter UPI reference number"
-            value={upiReference}
-            onChange={(e) => setUpiReference(e.target.value)}
-            className="w-full mt-1.5"
-          />
-        </div>
-        <div className="mt-4">
-          <label className="text-sm font-medium">Payment Screenshot</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setPaymentScreenshot(e.target.files[0])}
-            className="w-full mt-1.5"
-          />
-        </div>
-        <div className="flex justify-end gap-3 mt-6">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSubmit} className="bg-green-600 hover:bg-green-700 text-white">
-            Submit
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function WithdrawalsPage() {
   const [withdrawals, setWithdrawals] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -101,7 +40,6 @@ export default function WithdrawalsPage() {
   const [filter, setFilter] = useState("")
   const [selectedWithdrawals, setSelectedWithdrawals] = useState([])
   const [mounted, setMounted] = useState(false)
-  const [isApprovalPopupOpen, setIsApprovalPopupOpen] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -140,34 +78,17 @@ export default function WithdrawalsPage() {
     }
   }, [searchQuery, filter, mounted])
 
-  const handleApprove = (withdrawalId) => {
-    setSelectedWithdrawal(withdrawalId)
-    setIsApprovalPopupOpen(true)
-  }
-
-  const handleApprovalSubmit = async (upiReference, paymentScreenshot) => {
+  const handleApprove = async (withdrawalId) => {
     try {
-      if (!paymentScreenshot) {
-        throw new Error('Payment screenshot is required');
-      }
-
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64Data = reader.result.split(',')[1]; // Extract base64 string
-        const proofImages = [{ fileName: paymentScreenshot.name, base64Data }];
-
-        console.log("UPI Reference:", upiReference);
-        console.log("Proof Images:", proofImages);
-
-        setIsApprovalPopupOpen(false);
-        await approveTransactionWithProof(selectedWithdrawal, "Approved", proofImages, upiReference);
-        await fetchWithdrawals();
-        toast.success("Withdrawal approved successfully");
-      };
-      reader.readAsDataURL(paymentScreenshot);
+      console.log("withdrawalId",withdrawalId);
+      const response = await updateWithdrawalTransactionStatus(withdrawalId, "Approved")
+    
+        await fetchWithdrawals()
+        toast.success("Withdrawal approved successfully")
+    
     } catch (error) {
-      console.error('Error approving withdrawal:', error);
-      toast.error("Failed to approve withdrawal");
+      console.error('Error approving withdrawal:', error)
+      toast.error("Failed to approve withdrawal")
     }
   }
 
@@ -638,12 +559,6 @@ export default function WithdrawalsPage() {
             </div>
           </div>
         )}
-
-        <ApprovalPopup
-          isOpen={isApprovalPopupOpen}
-          onClose={() => setIsApprovalPopupOpen(false)}
-          onSubmit={handleApprovalSubmit}
-        />
       </div>
     </Layout>
   )
