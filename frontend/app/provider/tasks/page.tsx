@@ -78,21 +78,26 @@ export default function ProviderTasksPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [currentTab, setCurrentTab] = useState("all")
 console.log("selectedSubmission",selectedSubmission);
 
   // Data Fetching
   useEffect(() => {
-    getProviderTasks().then((tasksData) => {
+    getProviderTasks(currentTab==="completed"?"Completed":currentTab==="pending-review"?"Review":currentTab==="active"?"Published":undefined).then((tasksData) => {
       setTasks(tasksData);
     });
-  }, []);
+  }, [currentTab]);
 
   // Task Filtering
+  console.log("tasks",tasks);
+
   const filteredTasks = tasks.filter(
     (task) =>
       task.taskTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.taskDescription.toLowerCase().includes(searchQuery.toLowerCase()),
   )
+
+  console.log("filteredTasks",filteredTasks);
 
   // Helper Functions
   const getSubmissionCounts = (task: Task) => {
@@ -217,7 +222,11 @@ console.log("selectedSubmission",selectedSubmission);
 
               {/* Task Tabs Section */}
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 p-1">
-                <Tabs defaultValue="all" className="w-full">
+                <Tabs 
+                  defaultValue="all" 
+                  className="w-full"
+                  onValueChange={(value) => setCurrentTab(value)}
+                >
                   {/* Tab Navigation */}
                   <TabsList className="w-full justify-start gap-2 rounded-none border-b dark:border-gray-700 px-3 pb-0">
                     <TabsTrigger value="all" className="data-[state=active]:border-primary data-[state=active]:bg-transparent">
@@ -266,6 +275,23 @@ console.log("selectedSubmission",selectedSubmission);
                                     <Badge variant="outline" className="flex items-center gap-1">
                                       <Clock className="h-3 w-3" />
                                       {task.estimatedTime}
+                                    </Badge>
+                                    <Badge 
+                                      variant="outline" 
+                                      className={`flex items-center gap-1 ${
+                                        task.taskStatus === "Published" ? "bg-green-100 text-green-800" :
+                                        task.taskStatus === "Completed" ? "bg-blue-100 text-blue-800" :
+                                        "bg-yellow-100 text-yellow-800"
+                                      }`}
+                                    >
+                                      {(() => {
+                                        const status = task.taskStatus === "Published"
+                                          ? "Active"
+                                          : task.taskStatus === "Completed"
+                                          ? "Completed"
+                                          : "Pending Review";
+                                        return status;
+                                      })()}
                                     </Badge>
                                   </div>
 
@@ -334,9 +360,7 @@ console.log("selectedSubmission",selectedSubmission);
                   {/* Pending Review Tab Content */}
                   <TabsContent value="pending-review" className="space-y-4 mt-4 px-4">
                     <div className="space-y-4">
-                      {filteredTasks
-                        .filter((task) => task.acceptedUsers.some(user => user.status === "Pending"))
-                        .map((task) => (
+                      {filteredTasks.map((task) => (
                           <Card key={task.id} className="overflow-hidden hover:shadow-md transition-shadow">
                             <div className="flex flex-col md:flex-row">
                               <div className="flex-grow p-6">
@@ -345,9 +369,9 @@ console.log("selectedSubmission",selectedSubmission);
                                     <CardTitle className="line-clamp-1">{task.taskTitle}</CardTitle>
                                     <CardDescription className="line-clamp-2">{task.taskDescription}</CardDescription>
                                   </div>
-                                  <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-200">
+                                  {/* <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-200">
                                     {task.acceptedUsers.filter(user => user.status === "Review").length} In Review
-                                  </Badge>
+                                  </Badge> */}
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                   <Badge variant="outline" className="flex items-center gap-1">
@@ -378,9 +402,7 @@ console.log("selectedSubmission",selectedSubmission);
                   {/* Active Tasks Tab Content */}
                   <TabsContent value="active" className="space-y-4 mt-4 px-4">
                     <div className="space-y-4">
-                      {filteredTasks
-                        .filter((task) => task.acceptedUsers.some(user => user.status === "Active"))
-                        .map((task) => (
+                      {filteredTasks.map((task) => (
                           <Card key={task.id} className="overflow-hidden hover:shadow-md transition-shadow">
                             <div className="flex flex-col md:flex-row">
                               <div className="flex-grow p-6">
@@ -389,9 +411,9 @@ console.log("selectedSubmission",selectedSubmission);
                                     <CardTitle className="line-clamp-1">{task.taskTitle}</CardTitle>
                                     <CardDescription className="line-clamp-2">{task.taskDescription}</CardDescription>
                                   </div>
-                                  <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200">
+                                  {task.acceptedUsers.filter(user => user.status === "Active").length>0 && <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200">
                                     {task.acceptedUsers.filter(user => user.status === "Active").length} Working
-                                  </Badge>
+                                  </Badge>}
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                   <Badge variant="outline" className="flex items-center gap-1">
@@ -422,9 +444,7 @@ console.log("selectedSubmission",selectedSubmission);
                   {/* Completed Tasks Tab Content */}
                   <TabsContent value="completed" className="space-y-4 mt-4 px-4">
                     <div className="space-y-4">
-                      {filteredTasks
-                        .filter((task) => task.acceptedUsers.some(user => user.status === "Completed"))
-                        .map((task) => (
+                      {filteredTasks.map((task) => (
                           <Card key={task.id} className="overflow-hidden hover:shadow-md transition-shadow">
                             <div className="flex flex-col md:flex-row">
                               <div className="flex-grow p-6">
@@ -433,9 +453,9 @@ console.log("selectedSubmission",selectedSubmission);
                                     <CardTitle className="line-clamp-1">{task.taskTitle}</CardTitle>
                                     <CardDescription className="line-clamp-2">{task.taskDescription}</CardDescription>
                                   </div>
-                                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-green-200">
+                                  {/* <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-green-200">
                                     {task.acceptedUsers.filter(user => user.status === "Completed").length} Completed
-                                  </Badge>
+                                  </Badge> */}
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                   <Badge variant="outline" className="flex items-center gap-1">
