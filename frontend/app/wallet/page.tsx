@@ -168,6 +168,9 @@ export default function WalletPage() {
         setTotalWithdrawals(balanceData.totalWithdrawals);
         setUpiAccounts(paymentMethods);
         setAdminUPIs(activeAdminUPIs);
+        const defaultUpiAccount = paymentMethods.find((account: UPIAccount) => account.isDefault);
+        console.log("defaultUpiAccount",defaultUpiAccount);
+        setSelectedUserUpiId(defaultUpiAccount?.id);
       } catch (error) {
         console.error('Error fetching data:', error);
         toast.error('Failed to load some data. Please try again.');
@@ -175,6 +178,7 @@ export default function WalletPage() {
     };
 
     fetchData();
+    
   }, []);
 
   useEffect(() => {
@@ -589,6 +593,7 @@ export default function WalletPage() {
                                     <Select
                                       value={selectedUserUpiId}
                                       onValueChange={(value) => {
+                                        console.log('Selected UPI ID:', value);
                                         setSelectedUserUpiId(value);
                                       }}
                                     >
