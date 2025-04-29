@@ -21,11 +21,14 @@ export const getAcceptedTasks = async () => {
 };
 
 // Function to get tasks for a provider with authentication
-export const getProviderTasks = async () => {
+export const getProviderTasks = async (taskStatus) => {
   try {
     const response = await axios.get(`${BASE_URL}/tasks/provider`, {
       headers: {
         Authorization: `Bearer ${token}`
+      },
+      params: {
+        taskStatus: taskStatus || undefined, // Only include taskStatus if it's provided
       }
     });
     return response.data;

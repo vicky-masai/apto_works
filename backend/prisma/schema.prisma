@@ -30,6 +30,7 @@ enum OrganizationType {
 enum TaskStatus {
   Published
   Review
+  Completed
   Rejected
 }
 

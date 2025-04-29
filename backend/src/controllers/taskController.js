@@ -113,7 +113,7 @@ const getProviderTasks = async (req, res) => {
     console.log(taskStatus);
 
     // Add taskStatus filter if provided and valid
-    if (taskStatus && ['Published', 'Review', 'Rejected'].includes(taskStatus)) {
+    if (taskStatus && ['Published', 'Review', 'Rejected','Completed'].includes(taskStatus)) {
       where.taskStatus = taskStatus;
     }
 
