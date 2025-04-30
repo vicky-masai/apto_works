@@ -42,13 +42,15 @@ export const register = async (userData) => {
       data: userData
     });
 
-    const response = await axios.post(`${BASE_URL}/${endpoints.register}`, userData, {
+    const encryptedPayload = encryptPayload(userData);
+
+    const response = await axios.post(`${BASE_URL}/${endpoints.register}`, {encryptedPayload}, {
       headers: {
         'Content-Type': 'application/json',
       }
     });
 
-    return response.data;
+    return decryptPayload(response.data);
   } catch (error) {
     console.error('Registration error:', {
       message: error.message,
@@ -63,7 +65,8 @@ export const register = async (userData) => {
 // Function to verify OTP
 export const verifyOTP = async (email, otp) => {
   try {
-    const response = await axios.post(`${BASE_URL}/${endpoints.verifyOTP}`, { email, otp });
+    const encryptedPayload = encryptPayload({ email, otp });
+    const response = await axios.post(`${BASE_URL}/${endpoints.verifyOTP}`, {encryptedPayload});
     return response.data;
   } catch (error) {
     console.error('Error during OTP verification:', error);
@@ -74,7 +77,8 @@ export const verifyOTP = async (email, otp) => {
 // Function to handle forgot password
 export const forgotPassword = async (email) => {
   try {
-    const response = await axios.post(`${BASE_URL}/${endpoints.forgotPassword}`, { email });
+    const encryptedPayload = encryptPayload({ email });
+    const response = await axios.post(`${BASE_URL}/${endpoints.forgotPassword}`, {encryptedPayload});
     return response.data;
   } catch (error) {
     console.error('Error during password reset request:', error);
@@ -85,7 +89,8 @@ export const forgotPassword = async (email) => {
 // Function to reset password
 export const resetPassword = async (email, otp, newPassword) => {
   try {
-    const response = await axios.post(`${BASE_URL}/${endpoints.resetPassword}`, { email, otp, newPassword });
+    const encryptedPayload = encryptPayload({ email, otp, newPassword });
+    const response = await axios.post(`${BASE_URL}/${endpoints.resetPassword}`, {encryptedPayload});
     return response.data;
   } catch (error) {
     console.error('Error during password reset:', error);
@@ -96,7 +101,8 @@ export const resetPassword = async (email, otp, newPassword) => {
 // Function to resend OTP
 export const resendVerifyOtp = async (email) => {
   try {
-    const response = await axios.post(`${BASE_URL}/${endpoints.resendOtp}`, { email });
+    const encryptedPayload = encryptPayload({ email });
+    const response = await axios.post(`${BASE_URL}/${endpoints.resendOtp}`, {encryptedPayload});
     return response.data;
   } catch (error) {
     console.error('Error resending OTP:', error);
@@ -140,7 +146,7 @@ export const getAllTasks = async (params) => {
     // Make GET request to get all tasks endpoint with query params
     const response = await axios.get(`${BASE_URL}/tasks?${queryParams}`);
 
-    return response.data;
+    return decryptPayload(response.data);
   } catch (error) {
     console.error('Error fetching tasks:', error);
     throw error;
