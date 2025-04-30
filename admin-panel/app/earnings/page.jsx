@@ -253,7 +253,7 @@ export default function EarningsPage() {
       {console.log("sdfsdfs",selectedEarning)}
 
       {console.log(selectedEarning)}
-      {selectedEarning && (
+      {selectedEarning && ( 
         <div className="fixed inset-0 m-auto my-auto bg-black bg-opacity-50 flex justify-center items-center">
           <div className="max-w-sm bg-white rounded-lg shadow-lg p-4 relative">
             <button onClick={closeModal} className="absolute top-0 right-0 m-4 text-gray-500 hover:text-gray-700 text-sm font-bold py-2 px-4 rounded">
@@ -272,7 +272,7 @@ export default function EarningsPage() {
               <strong>Posted By:</strong> {selectedEarning?.postedBy}
             </div>
             <div className="mb-4">
-              <strong>Completed By:</strong> {selectedEarning?.completedBy}
+              <strong>Completed By:</strong> {selectedEarning?.acceptedBy}
             </div>
             <div className="mb-4">
               <strong>Task Amount:</strong> ₹{selectedEarning?.taskAmount.toLocaleString()}
@@ -283,9 +283,9 @@ export default function EarningsPage() {
             <div className="mb-4">
               <strong>Status:</strong> {selectedEarning?.status}
             </div>
-            {/* <div className="mb-4">
-              <strong>Date:</strong> {format(selectedEarning?.date, "PPP")}
-            </div> */}
+              <div className="mb-4">
+                <strong>Date:</strong> {new Date(selectedEarning.date).toLocaleDateString()}
+              </div>
           </div>
         </div>
       )}
