@@ -131,6 +131,8 @@ const verifyProof = async (req, res) => {
         user: true
       }
     });
+    const superAdmins = await prisma.SuperAdmin.findMany();
+    const profitPercent = superAdmins[0].profitPercent;
 
     if (isApproved) {
       // Transfer payment to worker
@@ -147,10 +149,10 @@ const verifyProof = async (req, res) => {
           where: { id: workerId },
           data: {
             balance: {
-              increment: updatedTask.task.price*0.9
+              increment: updatedTask.task.price*(1 - profitPercent / 100)
             },
             totalEarnings: {
-              increment: updatedTask.task.price*0.9
+              increment: updatedTask.task.price*(1 - profitPercent / 100)
             },
             completedTasks: {
               increment: 1

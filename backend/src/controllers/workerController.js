@@ -71,7 +71,15 @@ const getAcceptedTasks = async (req, res) => {
       orderBy: { createdAt: 'desc' }
     });
 
-    res.json(acceptedTasks);
+    const superAdmins = await prisma.SuperAdmin.findMany();
+    const profitPercent = superAdmins[0].profitPercent;
+
+    const modifiedTasks = acceptedTasks.map(task => {
+      task.price = task.task.price * (1 - profitPercent / 100);
+      return task;
+    });
+
+    res.json(modifiedTasks);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch accepted tasks' });
   }
