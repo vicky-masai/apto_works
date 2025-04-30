@@ -4,6 +4,7 @@ const prisma = require('../config/database');
 const config = require('../config/config');
 const { sendOTP, sendPasswordResetEmail } = require('../utils/email');
 const { generateOTP, generateResetToken } = require('../utils/otp');
+const { decryptPayload, encryptPayload } = require('../utils/crypto');
 const { sendNotification } = require('../utils/notificationService');
 
 
@@ -56,7 +57,10 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = decryptPayload(req.body.encryptedPayload);
+    console.log("req.body.encryptedPayload",req.body.encryptedPayload);
+    console.log("email",email);
+    console.log("password",password);
 
     // Find user
     const user = await prisma.user.findUnique({
@@ -94,7 +98,7 @@ const login = async (req, res) => {
       sendMail:true,
       email: user.email,
     });
-    res.json({
+    const encryptedPayload = encryptPayload({
       token,
       user: {
         id: user.id,
@@ -105,6 +109,7 @@ const login = async (req, res) => {
         skills: user.skills
       }
     });
+    res.json(encryptedPayload);
   } catch (error) {
     res.status(500).json({ error: 'Login failed' });
   }

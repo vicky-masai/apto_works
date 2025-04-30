@@ -2,12 +2,14 @@
 const crypto = require('crypto');
 
 // AES-256 requires a 32-byte key (256 bits)
-const SECRET_KEY = process.env.NEXT_PUBLIC_SECRET_KEY;
+const SECRET_KEY = "294cf7042878cbed0b2ada69c20150dfd0564b2fff74470b16ec5b85d1401dbe";
+console.log("SECRET_KEY",SECRET_KEY);
 const IV_LENGTH = 16; // For AES, this is always 16
 
 function encryptPayload(payload) {
   try {
     const iv = crypto.randomBytes(IV_LENGTH);
+    console.log("SECRET_KEY",SECRET_KEY);
     // Create a 32-byte key by using a hash if needed
     const key = crypto.createHash('sha256').update(String(SECRET_KEY)).digest();
     const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);

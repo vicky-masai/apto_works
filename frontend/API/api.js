@@ -1,6 +1,6 @@
 // Importing axios for making HTTP requests
 import axios from 'axios';
-
+import { encryptPayload, decryptPayload } from '../lib/crypto';
 // Base URL for API requests, set via environment variable
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -17,12 +17,17 @@ const endpoints = {
 
 // Function to handle user login
 export const login = async (email, password) => {
+  const encryptedPayload = encryptPayload({ email, password });
+  console.log("encryptedPayload",encryptedPayload);
+  const decryptedPayload = decryptPayload(encryptedPayload);
+  console.log("decryptedPayload",decryptedPayload);
   try {
     const response = await axios.post(`${BASE_URL}/${endpoints.login}`, {
-      email,
-      password,
+      encryptedPayload
     });
-    return response.data;
+    const decryptedResponse = decryptPayload(response.data);
+    console.log("decryptedResponse",decryptedResponse);
+    return decryptedResponse;
   } catch (error) {
     console.error('Error during login:', error);
     throw error;
