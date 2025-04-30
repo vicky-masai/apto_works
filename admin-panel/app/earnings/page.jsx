@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -26,6 +26,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { fetchEarningsData } from "@/API/api";
 
 // Dummy data for demonstration
 const dummyEarnings = [
@@ -55,18 +64,47 @@ const dummyEarnings = [
 ];
 
 export default function EarningsPage() {
-  const [earnings] = useState(dummyEarnings);
-  const [loading] = useState(false);
+  const [earnings, setEarnings] = useState([]);
+  const [summary, setSummary] = useState({
+    today: 0,
+    yesterday: 0,
+    total: 0,
+    profitPercent: 0,
+  });
+  const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState({
     from: new Date(),
     to: new Date(),
   });
+  const [selectedEarning, setSelectedEarning] = useState(null);
 
-  const summary = {
-    today: 1500,
-    yesterday: 2000,
-    total: 15000,
-    profitPercent: 10,
+  useEffect(() => {
+    const fetchEarnings = async () => {
+      try {
+        const data = await fetchEarningsData();
+        setEarnings(data.earnings);
+        setSummary({
+          today: parseFloat(data.summary.todayEarnings.replace('₹', '').replace(',', '')) || 0,
+          yesterday: parseFloat(data.summary.yesterdayEarnings.replace('₹', '').replace(',', '')) || 0,
+          total: data.summary.total,
+          profitPercent: data.summary.profitPercent,
+        });
+      } catch (error) {
+        console.error("Error fetching earnings data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEarnings();
+  }, []);
+
+  const handleViewDetails = (earning) => {
+    setSelectedEarning(earning);
+  };
+
+  const closeModal = () => {
+    setSelectedEarning(null);
   };
 
   return (
@@ -178,23 +216,19 @@ export default function EarningsPage() {
                       <TableCell className="font-medium">{earning.taskId}</TableCell>
                       <TableCell>{earning.taskName}</TableCell>
                       <TableCell>{earning.postedBy}</TableCell>
-                      <TableCell>{earning.completedBy}</TableCell>
+                      <TableCell>{earning.acceptedBy}</TableCell>
                       <TableCell className="text-right">₹{earning.taskAmount.toLocaleString()}</TableCell>
                       <TableCell className="text-right font-medium text-green-600">
                         ₹{earning.adminProfit.toLocaleString()}
                       </TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          earning.status === "Completed" 
-                            ? "bg-green-100 text-green-800" 
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}>
-                          {earning.status}
+                        <span className={`px-2 py-1 rounded-full text-xs bg-green-100 text-green-800`}>
+                          Completed
                         </span>
                       </TableCell>
-                      <TableCell>{format(earning.date, "PPP")}</TableCell>
+                      <TableCell>{format(new Date(), "PPP")}</TableCell>
                       <TableCell>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => handleViewDetails(earning)}>
                           View Details
                         </Button>
                       </TableCell>
@@ -206,6 +240,28 @@ export default function EarningsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Details Modal */}
+      {selectedEarning && (
+        <Dialog open={!!selectedEarning} onOpenChange={closeModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Task Details</DialogTitle>
+              <DialogClose onClick={closeModal} />
+            </DialogHeader>
+            <DialogDescription>
+              <p><strong>Task ID:</strong> {selectedEarning.taskId}</p>
+              <p><strong>Task Name:</strong> {selectedEarning.taskName}</p>
+              <p><strong>Posted By:</strong> {selectedEarning.postedBy}</p>
+              <p><strong>Completed By:</strong> {selectedEarning.completedBy}</p>
+              <p><strong>Task Amount:</strong> ₹{selectedEarning.taskAmount.toLocaleString()}</p>
+              <p><strong>Admin Profit:</strong> ₹{selectedEarning.adminProfit.toLocaleString()}</p>
+              <p><strong>Status:</strong> {selectedEarning.status}</p>
+              <p><strong>Date:</strong> {format(selectedEarning.date, "PPP")}</p>
+            </DialogDescription>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 } 

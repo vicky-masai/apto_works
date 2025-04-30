@@ -81,8 +81,11 @@ export function TaskCard({
     
     try {
       const data = await acceptTask(id, token);
+      console.log("datasuraj",data);
+      console.log(data);
+
       toast.success('Task accepted successfully!');
-      router.push(`/tasks/${data.id}/accept`);
+      router.push(`/tasks/${data.data.id}/accept`);
     } catch (error: any) {
       console.error("Error accepting task:", error);
       toast.error(error?.response?.data?.error || 'Failed to accept task');

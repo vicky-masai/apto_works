@@ -348,3 +348,18 @@ export const getEarnings = async (fromDate, toDate) => {
   }
 };
 
+
+export const fetchEarningsData = async () => {
+  try {
+    const response = await axios.get(`${ADMIN_BASE_URL}/earnings-v2`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching earnings data:", error);
+    throw error;
+  }
+}; 
+

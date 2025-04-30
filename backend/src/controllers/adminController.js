@@ -736,13 +736,124 @@ const getEarnings = async (req, res) => {
       return sum + earning.adminProfit;
     }, 0);
 
+    const todayChange = ((todayProfit - yesterdayProfit) / yesterdayProfit) * 100;
+    const yesterdayChange = ((yesterdayProfit - totalProfit) / totalProfit) * 100;
+
     res.json({
       earnings: formattedEarnings,
       summary: {
         today: todayProfit,
         yesterday: yesterdayProfit,
         total: totalProfit,
-        profitPercent: profitPercent
+        profitPercent: profitPercent,
+        todayEarnings: `₹${todayProfit.toFixed(2)}`,
+        todayChange: `${todayChange.toFixed(1)}% from yesterday`,
+        yesterdayEarnings: `₹${yesterdayProfit.toFixed(2)}`,
+        yesterdayChange: `${yesterdayChange.toFixed(1)}% from previous day`,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching earnings:', error);
+    res.status(500).json({ error: 'Failed to fetch earnings data' });
+  }
+};
+
+const getEarningsV2 = async (req, res) => {
+  try {
+    const { from, to } = req.query;
+    const fromDate = from ? new Date(from) : new Date();
+    const toDate = to ? new Date(to) : new Date();
+
+    fromDate.setHours(0, 0, 0, 0);
+    toDate.setHours(23, 59, 59, 999);
+
+    const profitSettings = await prisma.SuperAdmin.findFirst();
+    const profitPercent = profitSettings?.profitPercent || 10;
+
+    const tasks = await prisma.acceptedTask.findMany({
+      select: {
+        id: true,
+        status: true,
+        task: {
+          select: {
+            taskTitle: true,
+            price: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    const formattedEarnings = tasks.map(task => {
+      const adminProfit = (task.task.price * profitPercent) / 100;
+      return {
+        id: task.id,
+        taskId: task.id,
+        taskName: task.task.taskTitle,
+        postedBy: task.user.name,
+        acceptedBy: task.user.name,
+        taskAmount: task.task.price,
+        adminProfit: adminProfit,
+        date: task.createdAt,
+        status: task.status,
+        createdAt: task.createdAt,
+      };
+    });
+
+    const totalProfit = formattedEarnings.reduce((sum, earning) => {
+      return sum + earning.adminProfit;
+    }, 0);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
+    const yesterdayEnd = new Date();
+    yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
+    yesterdayEnd.setHours(23, 59, 59, 999);
+
+    const todayTasks = tasks.filter(task => {
+      const taskDate = new Date(task.createdAt);
+      return taskDate >= today && taskDate <= todayEnd && task.status === 'Completed';
+    });
+
+    const yesterdayTasks = tasks.filter(task => {
+      const taskDate = new Date(task.createdAt);
+      return taskDate >= yesterday && taskDate <= yesterdayEnd && task.status === 'Completed';
+    });
+
+    const todayProfit = todayTasks.reduce((sum, task) => {
+      return sum + ((task.task.price * profitPercent) / 100);
+    }, 0);
+
+    const yesterdayProfit = yesterdayTasks.reduce((sum, task) => {
+      return sum + ((task.task.price * profitPercent) / 100);
+    }, 0);
+
+    const todayChange = ((todayProfit - yesterdayProfit) / yesterdayProfit) * 100;
+    const yesterdayChange = ((yesterdayProfit - totalProfit) / totalProfit) * 100;
+
+    res.json({
+      earnings: formattedEarnings,
+      summary: {
+        total: totalProfit,
+        profitPercent: profitPercent,
+        todayEarnings: `₹${todayProfit.toFixed(2)}`,
+        todayChange: `${todayChange.toFixed(1)}% from yesterday`,
+        yesterdayEarnings: `₹${yesterdayProfit.toFixed(2)}`,
+        yesterdayChange: `${yesterdayChange.toFixed(1)}% from previous day`,
       },
     });
   } catch (error) {
@@ -765,4 +876,5 @@ module.exports = {
   addProfitPercent,
   getSuperAdmins,
   getEarnings,
+  getEarningsV2,
 }; 

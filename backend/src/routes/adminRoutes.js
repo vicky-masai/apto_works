@@ -27,6 +27,7 @@ router.put('/tasks/:id', adminController.updateTask);
 
 // Earnings Management
 router.get('/earnings', adminController.getEarnings);
+router.get('/earnings-v2', adminController.getEarningsV2);
 
 // Money Management
 router.get('/transactions', adminController.getTransactions);
