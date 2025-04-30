@@ -17,6 +17,7 @@ const endpoints = {
   taskPUT: 'tasks',
   transactions: 'transactions',
   profitPercent: 'profit-percent',
+  earnings: 'earnings',
 };
 
 export const login = async (email, password) => {
@@ -268,6 +269,81 @@ export const updateProfitPercent = async (authToken, profitPercent) => {
     return response.data;
   } catch (error) {
     console.error('Error updating profit percent:', error);
+    throw error;
+  }
+};
+
+export const getEarnings = async (fromDate, toDate) => {
+  try {
+    // First get the completed tasks with their earnings
+    const tasksResponse = await axios.get(`${ADMIN_BASE_URL}/earnings`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      },
+      params: {
+        status: 'Completed',
+        from: fromDate.toISOString(),
+        to: toDate.toISOString()
+      }
+    });
+
+    // Get all transactions for additional earnings info
+    const transactionsResponse = await axios.get(`${ADMIN_BASE_URL}/${endpoints.transactions}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      },
+      params: {
+        type: 'Earning',
+        status: 'Completed'
+      }
+    });
+
+    const tasks = tasksResponse.data.tasks || [];
+    const transactions = transactionsResponse.data.transactions || [];
+
+    // Calculate today's earnings
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayEarnings = transactions
+      .filter(t => new Date(t.createdAt) >= today)
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    // Calculate yesterday's earnings
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
+    const yesterdayEnd = new Date(yesterday);
+    yesterdayEnd.setHours(23, 59, 59, 999);
+    const yesterdayEarnings = transactions
+      .filter(t => {
+        const date = new Date(t.createdAt);
+        return date >= yesterday && date <= yesterdayEnd;
+      })
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    // Calculate total earnings
+    const totalEarnings = transactions.reduce((sum, t) => sum + t.amount, 0);
+
+    // Format earnings data
+    const earnings = tasks.map(task => ({
+      id: task.id,
+      taskId: task.id,
+      taskName: task.taskTitle,
+      userName: task.user?.name || 'Unknown User',
+      amount: task.totalAmount,
+      date: task.createdAt
+    }));
+
+    return {
+      earnings,
+      summary: {
+        today: todayEarnings,
+        yesterday: yesterdayEarnings,
+        total: totalEarnings
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching earnings:', error);
     throw error;
   }
 };

@@ -9,11 +9,13 @@ import {
   Wallet,
   Settings,
   LogOut,
-  X
+  X,
+  DollarSign
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Cookies from 'js-cookie';
 import { useRouter } from "next/navigation"
+
 export default function Sidebar({ isOpen, onClose, isMobile }) {
   const pathname = usePathname()
   const router = useRouter()
@@ -36,6 +38,11 @@ export default function Sidebar({ isOpen, onClose, isMobile }) {
       title: "Tasks",
       icon: Briefcase,
       href: "/tasks",
+    },
+    {
+      title: "Earnings",
+      icon: DollarSign,
+      href: "/earnings",
     },
     {
       title: "Money Management",

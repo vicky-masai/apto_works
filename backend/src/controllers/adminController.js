@@ -631,6 +631,126 @@ const getSuperAdmins = async (req, res) => {
   }
 };
 
+const getEarnings = async (req, res) => {
+  try {
+    const { from, to } = req.query;
+    const fromDate = from ? new Date(from) : new Date();
+    const toDate = to ? new Date(to) : new Date();
+
+    // Set fromDate to start of day and toDate to end of day
+    fromDate.setHours(0, 0, 0, 0);
+    toDate.setHours(23, 59, 59, 999);
+
+    // Get today's earnings
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    // Get yesterday's earnings
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
+    const yesterdayEnd = new Date();
+    yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
+    yesterdayEnd.setHours(23, 59, 59, 999);
+
+    // Get the current profit percentage
+    const profitSettings = await prisma.SuperAdmin.findFirst();
+    const profitPercent = profitSettings?.profitPercent || 10; // Default to 10% if not set
+
+    // Get completed tasks with their earnings
+    const tasks = await prisma.task.findMany({
+      where: {
+        createdAt: {
+          gte: fromDate,
+          lte: toDate,
+        },
+        taskStatus: 'Completed',
+      },
+      select: {
+        id: true,
+        taskTitle: true,
+        totalAmount: true,
+        price: true,
+        createdAt: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        acceptedUsers: {
+          where: {
+            status: 'Paid'
+          },
+          select: {
+            user: {
+              select: {
+                name: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // Calculate admin's profit for each task
+    const formattedEarnings = tasks.map(task => {
+      const adminProfit = (task.totalAmount * profitPercent) / 100;
+      return {
+        id: task.id,
+        taskId: task.id,
+        taskName: task.taskTitle,
+        postedBy: task.user.name,
+        completedBy: task.acceptedUsers[0]?.user.name || 'N/A',
+        taskAmount: task.totalAmount,
+        adminProfit: adminProfit,
+        date: task.createdAt,
+      };
+    });
+
+    // Calculate summary statistics with admin's profit
+    const todayTasks = tasks.filter(task => {
+      const taskDate = new Date(task.createdAt);
+      return taskDate >= today && taskDate <= todayEnd;
+    });
+
+    const yesterdayTasks = tasks.filter(task => {
+      const taskDate = new Date(task.createdAt);
+      return taskDate >= yesterday && taskDate <= yesterdayEnd;
+    });
+
+    const todayProfit = todayTasks.reduce((sum, task) => {
+      return sum + ((task.totalAmount * profitPercent) / 100);
+    }, 0);
+
+    const yesterdayProfit = yesterdayTasks.reduce((sum, task) => {
+      return sum + ((task.totalAmount * profitPercent) / 100);
+    }, 0);
+
+    const totalProfit = formattedEarnings.reduce((sum, earning) => {
+      return sum + earning.adminProfit;
+    }, 0);
+
+    res.json({
+      earnings: formattedEarnings,
+      summary: {
+        today: todayProfit,
+        yesterday: yesterdayProfit,
+        total: totalProfit,
+        profitPercent: profitPercent
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching earnings:', error);
+    res.status(500).json({ error: 'Failed to fetch earnings data' });
+  }
+};
+
 module.exports = {
   getDashboardStats,
   getUsers,
@@ -643,5 +763,6 @@ module.exports = {
   getWithdrawals,
   updateTransactionsStatus,
   addProfitPercent,
-  getSuperAdmins
+  getSuperAdmins,
+  getEarnings,
 }; 
