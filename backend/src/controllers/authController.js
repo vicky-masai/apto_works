@@ -11,11 +11,12 @@ const { sendNotification } = require('../utils/notificationService');
 // Unified Authentication
 const register = async (req, res) => {
   try {
-    const { name, email, password, userType, organizationType, skills } = req.body;
+    const { name, email, password, userType, organizationType, skills } = decryptPayload(req.body.encryptedPayload);
+ 
 
     // Check if email already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email: email }
     });
 
     if (existingUser) {
@@ -45,10 +46,11 @@ const register = async (req, res) => {
     // Send OTP email
     await sendOTP(email, otp);
 
-    res.status(201).json({
+
+    res.status(201).json(encryptPayload({
       message: 'Registration successful. Please verify your email.',
       userId: user.id
-    });
+    }));
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ error: 'Registration failed' });
@@ -117,7 +119,7 @@ const login = async (req, res) => {
 
 const verifyOTP = async (req, res) => {
   try {
-    const { email, otp } = req.body;
+    const { email, otp } = decryptPayload(req.body.encryptedPayload);
 
     const user = await prisma.user.findUnique({
       where: { email }
@@ -149,7 +151,7 @@ const verifyOTP = async (req, res) => {
 
 const resendOTP = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email } = decryptPayload(req.body.encryptedPayload);
 
     const user = await prisma.user.findUnique({
       where: { email }
@@ -179,7 +181,7 @@ const resendOTP = async (req, res) => {
 
 const forgotPassword = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email } = decryptPayload(req.body.encryptedPayload);
 
     const user = await prisma.user.findUnique({
       where: { email }
@@ -212,7 +214,7 @@ const forgotPassword = async (req, res) => {
 
 const resetPassword = async (req, res) => {
   try {
-    const { email, otp, newPassword } = req.body;
+    const { email, otp, newPassword } = decryptPayload(req.body.encryptedPayload);
 
     const user = await prisma.user.findUnique({
       where: { email }
@@ -265,6 +267,7 @@ const getUserProfile = async (req, res) => {
     }
 
     res.json(user);
+ 
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch user profile' });
   }
