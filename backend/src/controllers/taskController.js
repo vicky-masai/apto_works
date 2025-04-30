@@ -529,9 +529,12 @@ const getAllTasks = async (req, res) => {
     const totalPages = Math.ceil(totalCount / pageSize);
     const paginatedTasks = filteredTasks.slice(skip, skip + pageSize);
 
+    const superAdmins = await prisma.SuperAdmin.findMany();
+    const profitPercent = superAdmins[0].profitPercent;
+
     let formattedTasks = paginatedTasks.map(task => ({
       ...task,
-      price: task.price * 0.9,
+      price: task.price * (1 - profitPercent / 100),
       acceptedCount: task._count.acceptedUsers,
       _count: undefined
     }));
@@ -850,6 +853,10 @@ const getAcceptedTaskById = async (req, res) => {
     // Trim any whitespace from the ID
     const trimmedId = acceptedTaskId.trim();
 
+    const superAdmins = await prisma.SuperAdmin.findMany();
+    const profitPercent = superAdmins[0].profitPercent;
+    
+
     const acceptedTask = await prisma.acceptedTask.findUnique({
       where: { 
         id: trimmedId,
@@ -870,7 +877,15 @@ const getAcceptedTaskById = async (req, res) => {
       return res.status(404).json({ error: 'Accepted task not found' });
     }
 
-    res.json(acceptedTask);
+    const adjustedPrice = acceptedTask.task.price * (1 - profitPercent / 100);
+
+    res.json({
+      ...acceptedTask,
+      task: {
+        ...acceptedTask.task,
+        price: adjustedPrice
+      }
+    });
   } catch (error) {
     console.error('Get Accepted Task Error:', error);
     res.status(500).json({ error: 'Failed to fetch accepted task' });

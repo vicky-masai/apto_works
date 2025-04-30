@@ -16,6 +16,7 @@ const endpoints = {
   login: 'auth/login',
   taskPUT: 'tasks',
   transactions: 'transactions',
+  profitPercent: 'profit-percent',
 };
 
 export const login = async (email, password) => {
@@ -218,6 +219,55 @@ export const updateWithdrawalTransactionStatus = async (transactionId, status, r
     });
     return response.data;
   } catch (error) {
+    throw error;
+  }
+};
+
+// Function to add a new profit percentage
+export const addProfitPercent = async (authToken, profitPercent) => {
+  try {
+    const response = await axios.post(`${ADMIN_BASE_URL}/${endpoints.profitPercent}`, {
+      profitPercent
+    }, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error adding profit percent:', error);
+    throw error;
+  }
+};
+
+// Function to get all profit percentages
+export const getProfitPercents = async (authToken) => {
+  try {
+    const response = await axios.get(`${ADMIN_BASE_URL}/${endpoints.profitPercent}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching profit percents:', error);
+    throw error;
+  }
+};
+
+// Function to update a profit percentage using POST without id
+export const updateProfitPercent = async (authToken, profitPercent) => {
+  try {
+    const response = await axios.post(`${ADMIN_BASE_URL}/${endpoints.profitPercent}`, {
+      profitPercent
+    }, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating profit percent:', error);
     throw error;
   }
 };

@@ -60,6 +60,11 @@ export default function Sidebar({ isOpen, onClose, isMobile }) {
       icon: Settings,
       href: "/settings",
     },
+    {
+      title: "Profit Percent Manager",
+      icon: Briefcase,
+      href: "/profit-percent-manager",
+    },
   ]
   const handleLogout = () => {
     Cookies.remove("adminToken");
