@@ -70,6 +70,8 @@ export default function EarningsPage() {
     yesterday: 0,
     total: 0,
     profitPercent: 0,
+    todayChange: 0,
+    yesterdayChange: 0,
   });
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState({
@@ -84,8 +86,14 @@ export default function EarningsPage() {
         const data = await fetchEarningsData();
         setEarnings(data.earnings);
         setSummary({
-          today: parseFloat(data.summary.todayEarnings.replace('₹', '').replace(',', '')) || 0,
-          yesterday: parseFloat(data.summary.yesterdayEarnings.replace('₹', '').replace(',', '')) || 0,
+          today: typeof data.summary.todayEarnings === 'string' 
+            ? parseFloat(data.summary.todayEarnings.replace('₹', '').replace(',', '')) 
+            : data.summary.todayEarnings || 0,
+          yesterday: typeof data.summary.yesterdayEarnings === 'string' 
+            ? parseFloat(data.summary.yesterdayEarnings.replace('₹', '').replace(',', '')) 
+            : data.summary.yesterdayEarnings || 0,
+          todayChange: data.summary.todayChange || 0,
+          yesterdayChange: data.summary.yesterdayChange || 0,
           total: data.summary.total,
           profitPercent: data.summary.profitPercent,
         });
@@ -133,7 +141,7 @@ export default function EarningsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">₹{summary.today.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">+20.1% from yesterday</p>
+            <p className="text-xs text-muted-foreground">+{summary.todayChange}% from yesterday</p>
           </CardContent>
         </Card>
         <Card>
@@ -143,7 +151,7 @@ export default function EarningsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">₹{summary.yesterday.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">+10.5% from previous day</p>
+            <p className="text-xs text-muted-foreground">+{summary.yesterdayChange}% from previous day</p>
           </CardContent>
         </Card>
         <Card>
@@ -222,11 +230,11 @@ export default function EarningsPage() {
                         ₹{earning.adminProfit.toLocaleString()}
                       </TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs bg-green-100 text-green-800`}>
-                          Completed
+                        <span className={`px-2 py-1 rounded-full text-xs ${earning.status==="Completed"?"bg-green-100 text-green-800":"bg-red-100 text-red-800"}`}>
+                          {earning.status==="Completed"?"Completed":"Pending"}
                         </span>
                       </TableCell>
-                      <TableCell>{format(new Date(), "PPP")}</TableCell>
+                      <TableCell>{format(new Date(earning.createdAt), "PPP")}</TableCell>
                       <TableCell>
                         <Button variant="outline" size="sm" onClick={() => handleViewDetails(earning)}>
                           View Details
@@ -242,25 +250,44 @@ export default function EarningsPage() {
       </Card>
 
       {/* Details Modal */}
+      {console.log("sdfsdfs",selectedEarning)}
+
+      {console.log(selectedEarning)}
       {selectedEarning && (
-        <Dialog open={!!selectedEarning} onOpenChange={closeModal}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Task Details</DialogTitle>
-              <DialogClose onClick={closeModal} />
-            </DialogHeader>
-            <DialogDescription>
-              <p><strong>Task ID:</strong> {selectedEarning.taskId}</p>
-              <p><strong>Task Name:</strong> {selectedEarning.taskName}</p>
-              <p><strong>Posted By:</strong> {selectedEarning.postedBy}</p>
-              <p><strong>Completed By:</strong> {selectedEarning.completedBy}</p>
-              <p><strong>Task Amount:</strong> ₹{selectedEarning.taskAmount.toLocaleString()}</p>
-              <p><strong>Admin Profit:</strong> ₹{selectedEarning.adminProfit.toLocaleString()}</p>
-              <p><strong>Status:</strong> {selectedEarning.status}</p>
-              <p><strong>Date:</strong> {format(selectedEarning.date, "PPP")}</p>
-            </DialogDescription>
-          </DialogContent>
-        </Dialog>
+        <div className="fixed inset-0 m-auto my-auto bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="max-w-sm bg-white rounded-lg shadow-lg p-4 relative">
+            <button onClick={closeModal} className="absolute top-0 right-0 m-4 text-gray-500 hover:text-gray-700 text-sm font-bold py-2 px-4 rounded">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <h2 className="text-xl font-semibold mb-4">Task Details</h2>
+            <div className="mb-4">
+              <strong>Task ID:</strong> {selectedEarning?.taskId}
+            </div>
+            <div className="mb-4">
+              <strong>Task Name:</strong> {selectedEarning?.taskName}
+            </div>
+            <div className="mb-4">
+              <strong>Posted By:</strong> {selectedEarning?.postedBy}
+            </div>
+            <div className="mb-4">
+              <strong>Completed By:</strong> {selectedEarning?.completedBy}
+            </div>
+            <div className="mb-4">
+              <strong>Task Amount:</strong> ₹{selectedEarning?.taskAmount.toLocaleString()}
+            </div>
+            <div className="mb-4">
+              <strong>Admin Profit:</strong> ₹{selectedEarning?.adminProfit.toLocaleString()}
+            </div>
+            <div className="mb-4">
+              <strong>Status:</strong> {selectedEarning?.status}
+            </div>
+            {/* <div className="mb-4">
+              <strong>Date:</strong> {format(selectedEarning?.date, "PPP")}
+            </div> */}
+          </div>
+        </div>
       )}
     </div>
   );

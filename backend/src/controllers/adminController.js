@@ -774,6 +774,7 @@ const getEarningsV2 = async (req, res) => {
       select: {
         id: true,
         status: true,
+        createdAt: true,
         task: {
           select: {
             taskTitle: true,
@@ -809,7 +810,7 @@ const getEarningsV2 = async (req, res) => {
     });
 
     const totalProfit = formattedEarnings.reduce((sum, earning) => {
-      return sum + earning.adminProfit;
+      return earning.status==="Completed" ? sum + earning.adminProfit : sum;
     }, 0);
 
     const today = new Date();
@@ -842,18 +843,18 @@ const getEarningsV2 = async (req, res) => {
       return sum + ((task.task.price * profitPercent) / 100);
     }, 0);
 
-    const todayChange = ((todayProfit - yesterdayProfit) / yesterdayProfit) * 100;
-    const yesterdayChange = ((yesterdayProfit - totalProfit) / totalProfit) * 100;
+    const todayChange = isNaN((todayProfit - yesterdayProfit) / yesterdayProfit) ? 0 : ((todayProfit - yesterdayProfit) / yesterdayProfit) * 100;
+    const yesterdayChange = isNaN((yesterdayProfit - totalProfit) / totalProfit) ? 0 : ((yesterdayProfit - totalProfit) / totalProfit) * 100;
 
     res.json({
       earnings: formattedEarnings,
       summary: {
         total: totalProfit,
         profitPercent: profitPercent,
-        todayEarnings: `₹${todayProfit.toFixed(2)}`,
-        todayChange: `${todayChange.toFixed(1)}% from yesterday`,
-        yesterdayEarnings: `₹${yesterdayProfit.toFixed(2)}`,
-        yesterdayChange: `${yesterdayChange.toFixed(1)}% from previous day`,
+        todayEarnings: todayProfit,
+        todayChange: todayChange,
+        yesterdayEarnings: yesterdayProfit,
+        yesterdayChange: yesterdayChange,
       },
     });
   } catch (error) {
