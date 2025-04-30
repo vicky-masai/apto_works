@@ -77,7 +77,9 @@ export const verifyOTP = async (email, otp) => {
 // Function to handle forgot password
 export const forgotPassword = async (email) => {
   try {
+    
     const encryptedPayload = encryptPayload({ email });
+    console.log("encryptedPayload",encryptedPayload);
     const response = await axios.post(`${BASE_URL}/${endpoints.forgotPassword}`, {encryptedPayload});
     return response.data;
   } catch (error) {
