@@ -75,7 +75,7 @@ const getAcceptedTasks = async (req, res) => {
     const profitPercent = superAdmins[0].profitPercent;
 
     const modifiedTasks = acceptedTasks.map(task => {
-      task.price = task.task.price * (1 - profitPercent / 100);
+      task.task.price = task.task.price * (1 - profitPercent / 100);
       return task;
     });
 
