@@ -266,7 +266,8 @@ const getUserProfile = async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json(encryptPayload(user));
+    res.json(user);
+ 
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch user profile' });
   }

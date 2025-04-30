@@ -148,7 +148,7 @@ export const getAllTasks = async (params) => {
     // Make GET request to get all tasks endpoint with query params
     const response = await axios.get(`${BASE_URL}/tasks?${queryParams}`);
 
-    return decryptPayload(response.data);
+    return response.data;
   } catch (error) {
     console.error('Error fetching tasks:', error);
     throw error;
