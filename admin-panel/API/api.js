@@ -6,6 +6,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000/
 const ADMIN_BASE_URL = `${API_BASE_URL}/admin`;
 const authToken = Cookies.get('adminToken');
 
+const { decryptPayload, encryptPayload } = require('../lib/crypto');
+
 // Define API endpoints
 const endpoints = {
   dashboard: 'dashboard',
@@ -22,11 +24,8 @@ const endpoints = {
 
 export const login = async (email, password) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/${endpoints.login}`, {
-      email,
-      password,
-    });
-    return response.data;
+    const response = await axios.post(`${API_BASE_URL}/${endpoints.login}`,{encryptedPayload: encryptPayload({email,password,})});
+    return decryptPayload(response.data);
   } catch (error) {
     console.error('Error during login:', error);
     throw error;
