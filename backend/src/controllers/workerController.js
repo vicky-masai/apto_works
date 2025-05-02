@@ -1,4 +1,5 @@
 const prisma = require('../config/database');
+const { decryptPayload, encryptPayload } = require('../utils/crypto');
 
 const getProfile = async (req, res) => {
   try {
@@ -17,7 +18,7 @@ const getProfile = async (req, res) => {
       }
     });
 
-    res.json(user);
+    res.json(encryptPayload(user));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch profile' });
   }
@@ -95,7 +96,7 @@ const getBalance = async (req, res) => {
       }
     });
 
-    res.json(user);
+    res.json(encryptPayload(user));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch balance' });
   }
