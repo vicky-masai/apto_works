@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-
+const { decryptPayload, encryptPayload } = require('../lib/crypto');
 // Base URL for API requests, set via environment variable
 const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000/api';
 const ADMIN_BASE_URL = `${API_BASE_URL}/admin`;
@@ -22,10 +22,10 @@ export const createAdminUPI = async (authToken, upiData) => {
   try {
     const response = await axios.post(
       `${ADMIN_BASE_URL}/upi`,
-      upiData,
+      {encryptedPayload: encryptPayload(upiData)},
       getApiConfig(authToken)
     );
-    return response.data;
+    return decryptPayload(response.data);
   } catch (error) {
     throw handleApiError(error);
   }
@@ -38,7 +38,7 @@ export const getAllAdminUPIs = async (authToken) => {
       `${ADMIN_BASE_URL}/upi/all`,
       getApiConfig(authToken)
     );
-    return response.data;
+    return decryptPayload(response.data);
   } catch (error) {
     throw handleApiError(error);
   }
@@ -50,7 +50,7 @@ export const getActiveAdminUPIs = async () => {
     const response = await axios.get(
       `${ADMIN_BASE_URL}/upi/active`
     );
-    return response.data;
+    return decryptPayload(response.data);
   } catch (error) {
     throw handleApiError(error);
   }
@@ -61,10 +61,10 @@ export const updateAdminUPI = async (authToken, id, upiData) => {
   try {
     const response = await axios.put(
       `${ADMIN_BASE_URL}/upi/${id}`,
-      upiData,
+      {encryptedPayload: encryptPayload(upiData)},
       getApiConfig(authToken)
     );
-    return response.data;
+    return decryptPayload(response.data);
   } catch (error) {
     throw handleApiError(error);
   }
@@ -77,7 +77,7 @@ export const deleteAdminUPI = async (authToken, id) => {
       `${ADMIN_BASE_URL}/upi/${id}`,
       getApiConfig(authToken)
     );
-    return response.data;
+    return decryptPayload(response.data);
   } catch (error) {
     throw handleApiError(error);
   }
@@ -90,7 +90,7 @@ export const getUPIStatistics = async (authToken, id) => {
       `${ADMIN_BASE_URL}/upi/statistics/${id}`,
       getApiConfig(authToken)
     );
-    return response.data;
+    return decryptPayload(response.data);
   } catch (error) {
     throw handleApiError(error);
   }
