@@ -14,8 +14,9 @@ const adminAuth = async (req, res, next) => {
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId }
     });
+    console.log("user",user);
     console.log(user);
-    if (!user || (user.role !== 'User' && user.role !== 'Moderator')) {
+    if (!user || (user.userType !== 'Admin')) {
       return res.status(403).json({ error: 'Access denied. Admin privileges requiredsdf.' });
     }
 

@@ -203,6 +203,7 @@ const getTasks = async (req, res) => {
       }
     });
   } catch (error) {
+    console.log("error",error.message);
     res.status(500).json({ error: error.message });
   }
 };
