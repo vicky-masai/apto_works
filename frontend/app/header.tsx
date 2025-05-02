@@ -44,7 +44,7 @@ export default function Header() {
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
       isScrolled ? 'bg-white shadow-md' : 'bg-gradient-to-r from-white/95 to-[#EEF2FF]/95 backdrop-blur-md'
     }`}>
-      <div className="max-w-6xl mx-auto w-full px-2 sm:px-4 lg:px-1">
+      <div className="max-w-7xl mx-auto w-full px-4 lg:px-1">
         <div className="flex items-center h-16 sm:h-20 w-full">
           {/* Logo */}
           <div className="flex-1 flex items-center min-w-0">
@@ -77,6 +77,10 @@ export default function Header() {
               Contact Us
             </a>
           </nav> */}
+
+
+
+
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-3 flex-1 justify-end min-w-0">

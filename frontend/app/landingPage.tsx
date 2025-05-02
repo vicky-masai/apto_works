@@ -268,12 +268,16 @@ export default function TaskMarketplaceLanding() {
                 Connect with global opportunities. Whether you're looking to earn, hire, or invest - we're building the future of task-based work.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg rounded-full">
-                  Find Tasks
-                </Button>
-                <Button size="lg" variant="outline" className="border-blue-200 text-blue-600 hover:bg-blue-50 px-8 py-6 text-lg rounded-full">
-                  Post Tasks
-                </Button>
+                <Link href="/tasks">
+                  <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg rounded-full">
+                    Find Tasks
+                  </Button>
+                </Link>
+                <Link href="/post-task">
+                  <Button size="lg" variant="outline" className="border-blue-200 text-blue-600 hover:bg-blue-50 px-8 py-6 text-lg rounded-full">
+                    Post Tasks
+                  </Button>
+                </Link>
               </div>
               <div className="grid grid-cols-3 gap-6 pt-8">
                 {[
@@ -290,11 +294,12 @@ export default function TaskMarketplaceLanding() {
             </div>
             <div className="relative">
               <Image
-                src="/hero-image.jpg"
+                src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=2070&auto=format&fit=crop"
                 alt="Platform Overview"
                 width={600}
                 height={400}
-                className="rounded-2xl shadow-2xl"
+                className="rounded-2xl shadow-2xl object-cover"
+                priority
               />
               <div className="absolute -z-10 top-10 -right-10 w-72 h-72 bg-blue-200/30 rounded-full blur-3xl"></div>
             </div>
@@ -628,15 +633,16 @@ export default function TaskMarketplaceLanding() {
             Join thousands of users already benefiting from our platform
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" className="bg-white text-blue-600 hover:bg-gray-100">
-              Start Earning
-            </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-              Post a Task
-            </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-              Investor Relations
-            </Button>
+            <Link href="/tasks">
+              <Button size="lg" variant="secondary" className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-6 text-lg font-medium">
+                Find Tasks
+              </Button>
+            </Link>
+            <Link href="/post-task">
+              <Button size="lg" variant="secondary" className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-6 text-lg font-medium">
+                Post Tasks
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
@@ -855,12 +861,12 @@ export default function TaskMarketplaceLanding() {
                   {
                     icon: <Mail className="h-6 w-6" />,
                     title: "Email",
-                    description: "support@platform.com"
+                    description: "success@codeapto.com"
                   },
                   {
                     icon: <Phone className="h-6 w-6" />,
                     title: "Phone",
-                    description: "+1 (555) 123-4567"
+                    description: "+91 9148805506"
                   }
                 ].map((contact, index) => (
                   <div key={index} className="flex items-center gap-4">
@@ -916,9 +922,12 @@ export default function TaskMarketplaceLanding() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
             <div>
               <h3 className="text-xl font-bold mb-6">About Us</h3>
-              <p className="text-gray-400">
-                Building the future of work through our innovative task marketplace platform.
+              <p className="text-gray-400 mb-4">
+                Building the future of work through our innovative task marketplace platform. We connect talented professionals with meaningful opportunities worldwide.
               </p>
+              {/* <p className="text-gray-400">
+                At AptoWorks, we believe in empowering individuals and businesses through technology. Our platform simplifies task management, ensures secure payments, and fosters a community of skilled professionals.
+              </p> */}
             </div>
             <div>
               <h3 className="text-xl font-bold mb-6">Quick Links</h3>
