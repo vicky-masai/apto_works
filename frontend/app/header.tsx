@@ -61,7 +61,7 @@ export default function Header() {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8 lg:gap-10 flex-1 justify-center min-w-0">
+          {/* <nav className="hidden md:flex items-center gap-8 lg:gap-10 flex-1 justify-center min-w-0">
             <a 
               href="#hero-section"
               onClick={(e) => handleSectionClick(e, 'hero-section')}
@@ -76,7 +76,7 @@ export default function Header() {
             >
               Contact Us
             </a>
-          </nav>
+          </nav> */}
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-3 flex-1 justify-end min-w-0">

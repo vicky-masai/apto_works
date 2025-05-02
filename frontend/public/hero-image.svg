@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+    <defs>
+        <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:0.2"/>
+            <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:0.2"/>
+        </linearGradient>
+        <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1"/>
+            <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1"/>
+        </linearGradient>
+    </defs>
+    
+    <!-- Background -->
+    <rect x="0" y="0" width="800" height="600" fill="url(#gradient1)"/>
+    
+    <!-- Task Cards -->
+    <g transform="translate(100,100)">
+        <!-- Card 1 -->
+        <rect x="0" y="0" width="200" height="120" rx="10" fill="white" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.1))"/>
+        <rect x="20" y="20" width="120" height="10" rx="5" fill="#E5E7EB"/>
+        <rect x="20" y="40" width="160" height="10" rx="5" fill="#E5E7EB"/>
+        <rect x="20" y="60" width="80" height="10" rx="5" fill="#E5E7EB"/>
+        <circle cx="170" cy="90" r="15" fill="url(#gradient2)"/>
+        
+        <!-- Card 2 -->
+        <rect x="250" y="50" width="200" height="120" rx="10" fill="white" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.1))"/>
+        <rect x="270" y="70" width="120" height="10" rx="5" fill="#E5E7EB"/>
+        <rect x="270" y="90" width="160" height="10" rx="5" fill="#E5E7EB"/>
+        <rect x="270" y="110" width="80" height="10" rx="5" fill="#E5E7EB"/>
+        <circle cx="420" cy="140" r="15" fill="url(#gradient2)"/>
+        
+        <!-- Card 3 -->
+        <rect x="100" y="200" width="200" height="120" rx="10" fill="white" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.1))"/>
+        <rect x="120" y="220" width="120" height="10" rx="5" fill="#E5E7EB"/>
+        <rect x="120" y="240" width="160" height="10" rx="5" fill="#E5E7EB"/>
+        <rect x="120" y="260" width="80" height="10" rx="5" fill="#E5E7EB"/>
+        <circle cx="270" cy="290" r="15" fill="url(#gradient2)"/>
+    </g>
+    
+    <!-- Connection Lines -->
+    <g stroke="url(#gradient2)" stroke-width="2" fill="none">
+        <path d="M270,190 C300,220 320,240 350,270"/>
+        <path d="M420,220 C450,250 470,270 500,300"/>
+        <path d="M320,320 C350,350 370,370 400,400"/>
+    </g>
+    
+    <!-- Floating Icons -->
+    <g fill="url(#gradient2)">
+        <circle cx="600" cy="150" r="8"/>
+        <circle cx="650" cy="200" r="6"/>
+        <circle cx="550" cy="250" r="10"/>
+        <circle cx="700" cy="300" r="7"/>
+        <circle cx="600" cy="350" r="9"/>
+    </g>
+    
+    <!-- Abstract Shapes -->
+    <g stroke="url(#gradient2)" stroke-width="2" fill="none">
+        <path d="M550,100 Q600,150 650,100"/>
+        <path d="M600,200 Q650,250 700,200"/>
+        <path d="M550,300 Q600,350 650,300"/>
+    </g>
+</svg> 
