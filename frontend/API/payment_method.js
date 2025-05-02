@@ -1,5 +1,6 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import { encryptPayload, decryptPayload } from '../lib/crypto';
 
 // Base URL for API requests, set via environment variable
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
@@ -13,7 +14,9 @@ export const getAllPaymentMethods = async () => {
         Authorization: `Bearer ${token}`,
       },
     });
-    return response.data;
+    console.log("response.data",decryptPayload(response.data));
+    return decryptPayload(response.data);
+    
   } catch (error) {
     console.error('Error fetching payment methods:', error);
     throw error;
@@ -28,7 +31,7 @@ export const deletePaymentMethod = async (paymentMethodId) => {
         Authorization: `Bearer ${token}`,
       },
     });
-    return response.data;
+    return decryptPayload(response.data);
   } catch (error) {
     console.error('Error deleting payment method:', error);
     throw error;
@@ -37,13 +40,14 @@ export const deletePaymentMethod = async (paymentMethodId) => {
 
 // Function to add a new payment method
 export const addPaymentMethod = async (paymentMethodData) => {
+  const encryptedPayload = encryptPayload(paymentMethodData); 
   try {
-    const response = await axios.post(`${BASE_URL}/balance/payment-methods`, paymentMethodData, {
+    const response = await axios.post(`${BASE_URL}/balance/payment-methods`, {encryptedPayload}, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-    return response.data;
+    return decryptPayload(response.data);
   } catch (error) {
     console.error('Error adding payment method:', error);
     throw error;
@@ -58,7 +62,7 @@ export const getPaymentMethodById = async (paymentMethodId) => {
         Authorization: `Bearer ${token}`,
       },
     });
-    return response.data;
+    return decryptPayload(response.data);
   } catch (error) {
     console.error('Error fetching payment method:', error);
     throw error;
@@ -67,13 +71,14 @@ export const getPaymentMethodById = async (paymentMethodId) => {
 
 // Function to update a payment method
 export const updatePaymentMethod = async (paymentMethodId, updatedData) => {
+  const encryptedPayload = encryptPayload(updatedData);
   try {
-    const response = await axios.put(`${BASE_URL}/balance/payment-methods/${paymentMethodId}`, updatedData, {
+    const response = await axios.put(`${BASE_URL}/balance/payment-methods/${paymentMethodId}`, {encryptedPayload}, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-    return response.data;
+    return decryptPayload(response.data);
   } catch (error) {
     console.error('Error updating payment method:', error);
     throw error;
@@ -88,7 +93,7 @@ export const getActiveAdminUPIs = async () => {
         Authorization: `Bearer ${token}`,
       },
     });
-    return response.data;
+    return decryptPayload(response.data);
   } catch (error) {
     console.error('Error fetching active admin UPIs:', error);
     throw error;

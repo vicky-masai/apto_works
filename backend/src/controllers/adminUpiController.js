@@ -1,9 +1,9 @@
 const prisma = require('../config/database');
-
+const { decryptPayload, encryptPayload } = require('../utils/crypto');
 // Create a new admin UPI
 const createAdminUPI = async (req, res) => {
   try {
-    const { upiId, name, isActive = true } = req.body;
+    const { upiId, name, isActive = true } = decryptPayload(req.body.encryptedPayload);
 
     if (!upiId || !name) {
       return res.status(400).json({ error: 'UPI ID and name are required' });
@@ -25,7 +25,7 @@ const createAdminUPI = async (req, res) => {
       }
     });
 
-    res.status(201).json(adminUPI);
+    res.status(201).json(encryptPayload(adminUPI));
   } catch (error) {
     console.error('Error creating admin UPI:', error);
     res.status(500).json({ error: 'Failed to create admin UPI' });
@@ -64,7 +64,7 @@ const getAllAdminUPIs = async (req, res) => {
       updatedAt: upi.updatedAt
     }));
 
-    res.json(formattedUPIs);
+    res.json(encryptPayload(formattedUPIs));
   } catch (error) {
     console.error('Error fetching admin UPIs:', error);
     res.status(500).json({ error: 'Failed to fetch admin UPIs' });
@@ -84,7 +84,7 @@ const getActiveAdminUPIs = async (req, res) => {
       orderBy: { createdAt: 'desc' }
     });
 
-    res.json(adminUPIs);
+    res.json(encryptPayload(adminUPIs));
   } catch (error) {
     console.error('Error fetching active admin UPIs:', error);
     res.status(500).json({ error: 'Failed to fetch active admin UPIs' });
@@ -95,7 +95,7 @@ const getActiveAdminUPIs = async (req, res) => {
 const updateAdminUPI = async (req, res) => {
   try {
     const { id } = req.params;
-    const { upiId, name, isActive } = req.body;
+    const { upiId, name, isActive } = decryptPayload(req.body.encryptedPayload);
 
     if (!upiId || !name) {
       return res.status(400).json({ error: 'UPI ID and name are required' });
@@ -124,7 +124,7 @@ const updateAdminUPI = async (req, res) => {
       }
     });
 
-    res.json(adminUPI);
+    res.json(encryptPayload(adminUPI));
   } catch (error) {
     console.error('Error updating admin UPI:', error);
     res.status(500).json({ error: 'Failed to update admin UPI' });
@@ -151,7 +151,7 @@ const deleteAdminUPI = async (req, res) => {
       where: { id }
     });
 
-    res.json({ message: 'Admin UPI deleted successfully' });
+    res.json(encryptPayload({ message: 'Admin UPI deleted successfully' }));
   } catch (error) {
     console.error('Error deleting admin UPI:', error);
     res.status(500).json({ error: 'Failed to delete admin UPI' });
@@ -201,7 +201,7 @@ const getUPIStatistics = async (req, res) => {
       return acc;
     }, {});
 
-    res.json({
+    res.json(encryptPayload({
       id: statistics.id,
       upiId: statistics.upiId,
       name: statistics.name,
@@ -211,7 +211,7 @@ const getUPIStatistics = async (req, res) => {
       monthlyStats,
       createdAt: statistics.createdAt,
       updatedAt: statistics.updatedAt
-    });
+    }));
   } catch (error) {
     console.error('Error fetching UPI statistics:', error);
     res.status(500).json({ error: 'Failed to fetch UPI statistics' });

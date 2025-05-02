@@ -1,10 +1,15 @@
 const prisma = require('../config/database');
 const { PrismaClient } = require('@prisma/client');
 const prismaClient = new PrismaClient();
+const { decryptPayload, encryptPayload } = require('../utils/crypto');
 
 const addBalance = async (req, res) => {
   try {
-    const { amount, paymentMethodId } = req.body;
+    console.log("req.body.encryptedData",req.body.encryptedData);
+    const { amount, paymentMethodId } = decryptPayload(req.body.encryptedData);
+    console.log("amount",amount);
+    console.log("paymentMethodId",paymentMethodId);
+
     const user = req.user;
 
     if (amount <= 0) {
@@ -22,7 +27,7 @@ const addBalance = async (req, res) => {
       }
     });
 
-    res.json({ message: 'Transaction created successfully and is pending approval' });
+    res.json(encryptPayload({ message: 'Transaction created successfully and is pending approval' }));
   } catch (error) {
     res.status(500).json({ error: 'Failed to create transaction' });
   }
@@ -30,8 +35,10 @@ const addBalance = async (req, res) => {
 
 const withdrawBalance = async (req, res) => {
   try {
-    const { amount, paymentMethodId } = req.body;
+    const { amount, paymentMethodId } = decryptPayload(req.body.encryptedPayload);
     const user = req.user;
+
+    console.log("amount",amount);
 
     if (amount <= 0) {
       return res.status(400).json({ error: 'Amount must be greater than 0' });
@@ -58,7 +65,7 @@ const withdrawBalance = async (req, res) => {
       data: { balance: { decrement: amount } }
     });
 
-    res.json({ message: 'Transaction created successfully and is pending approval' });
+    res.json(encryptPayload({ message: 'Transaction created successfully and is pending approval' }));
   } catch (error) {
     res.status(500).json({ error: 'Failed to create transaction' });
   }
@@ -71,7 +78,7 @@ const getBalanceHistory = async (req, res) => {
       orderBy: { createdAt: 'desc' }
     });
 
-    res.json(history);
+    res.json(encryptPayload(history));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch balance history' });
   }
@@ -149,11 +156,11 @@ const getMoneyHistory = async (req, res) => {
     const combinedHistory = [...transactionHistory, ...earningHistory]
       .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    res.json({
-      // transactions: transactionHistory,
-      // earnings: earningHistory,
-      combinedHistory
-    });
+      res.json(encryptPayload({
+        // transactions: transactionHistory,
+        // earnings: earningHistory,
+        combinedHistory
+      }));
   } catch (error) {
     console.error('Error fetching money history:', error);
     res.status(500).json({ error: 'Failed to fetch money history' });
@@ -188,12 +195,12 @@ const getBalance = async (req, res) => {
       }
     });
 
-    res.json({ 
-      balance: user.balance,
-      userId: user.id,
-      totalDeposits: totalDeposits._sum.amount || 0,
-      totalWithdrawals: totalWithdrawals._sum.amount || 0
-    });
+      res.json(encryptPayload({ 
+        balance: user.balance,
+        userId: user.id,
+        totalDeposits: totalDeposits._sum.amount || 0,
+        totalWithdrawals: totalWithdrawals._sum.amount || 0
+      }));
   } catch (error) {
     console.error('Error fetching balance:', error);
     res.status(500).json({ error: 'Failed to fetch balance' });
@@ -239,13 +246,13 @@ const getUserBalance = async (req, res) => {
       taskId: task.acceptedId
     }));
 
-    res.json({
+    res.json(encryptPayload({
       userId: user.id,
       availableBalance: user.balance,
       totalEarnings: user.totalEarnings,
       pending: user.acceptedTasks.filter(task => task.task.taskStatus === 'Pending').length,
       earningsHistory
-    });
+    }));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch balance' });
   }
@@ -253,7 +260,7 @@ const getUserBalance = async (req, res) => {
 
 const addPaymentMethod = async (req, res) => {
   try {
-    const { upiId, methodType, isDefault } = req.body;
+    const { upiId, methodType, isDefault } = decryptPayload(req.body.encryptedPayload);
     const user = req.user;
 
     // Validate required fields
@@ -271,7 +278,7 @@ const addPaymentMethod = async (req, res) => {
       },
     });
 
-    res.status(201).json(paymentMethod);
+    res.status(201).json(encryptPayload(paymentMethod));
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ error: 'Failed to add payment method' });
@@ -286,7 +293,7 @@ const getAllPaymentMethods = async (req, res) => {
       where: { userId: user.id },
     });
 
-    res.json(paymentMethods);
+    res.json(encryptPayload(paymentMethods));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch payment methods' });
   }
@@ -305,7 +312,7 @@ const getPaymentMethodById = async (req, res) => {
       return res.status(404).json({ error: 'Payment method not found' });
     }
 
-    res.json(paymentMethod);
+    res.json(encryptPayload(paymentMethod));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch payment method' });
   }
@@ -314,7 +321,7 @@ const getPaymentMethodById = async (req, res) => {
 const updatePaymentMethod = async (req, res) => {
   try {
     const { id } = req.params;
-    const { upiId, methodType, isDefault } = req.body;
+    const { upiId, methodType, isDefault } = decryptPayload(req.body.encryptedPayload);
     const user = req.user;
 
     // Validate required fields
@@ -352,7 +359,7 @@ const updatePaymentMethod = async (req, res) => {
       },
     });
 
-    res.json(updatedPaymentMethod);
+    res.json(encryptPayload(updatedPaymentMethod));
   } catch (error) {
     res.status(500).json({ error: 'Failed to update payment method' });
   }
@@ -377,7 +384,7 @@ const deletePaymentMethod = async (req, res) => {
       where: { id },
     });
 
-    res.json({ message: 'Payment method deleted successfully' });
+    res.json(encryptPayload({ message: 'Payment method deleted successfully' }));
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete payment method' });
   }
@@ -446,7 +453,7 @@ const getAllTransaction = async (req, res) => {
       orderBy: { createdAt: 'desc' }
     });
 
-    res.json(transactions);
+    res.json(encryptPayload(transactions));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch transactions' });
   }
@@ -458,7 +465,7 @@ const getAllWithdrawalRequest = async (req, res) => {
       orderBy: { createdAt: 'desc' }
     });
 
-    res.json(withdrawalRequests);
+    res.json(encryptPayload(withdrawalRequests));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch withdrawal requests' });
   }
@@ -471,7 +478,7 @@ const getAllAddMoneyRequest = async (req, res) => {
       orderBy: { createdAt: 'desc' }
     });
 
-    res.json(addMoneyRequests);
+    res.json(encryptPayload(addMoneyRequests));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch add money requests' });
   }
@@ -487,11 +494,11 @@ const getAllTransactionsForUser = async (req, res) => {
     if (type) where.type = type;
 
     const transactions = await prisma.transaction.findMany({
-      where,
+      where,  
       orderBy: { createdAt: 'desc' }
     });
 
-    res.json(transactions);
+    res.json(encryptPayload(transactions));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch user transactions' });
   }
@@ -505,7 +512,7 @@ const getAllWithdrawalRequestsForUser = async (req, res) => {
       orderBy: { createdAt: 'desc' }
     });
 
-    res.json(withdrawalRequests);
+    res.json(encryptPayload(withdrawalRequests));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch user withdrawal requests' });
   }
@@ -519,7 +526,7 @@ const getAllAddMoneyRequestsForUser = async (req, res) => {
       orderBy: { createdAt: 'desc' }
     });
 
-    res.json(addMoneyRequests);
+    res.json(encryptPayload(addMoneyRequests));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch user add money requests' });
   }
@@ -527,7 +534,7 @@ const getAllAddMoneyRequestsForUser = async (req, res) => {
 
 const requestDeposit = async (req, res) => {
   try {
-    const { amount, upiId, upiRefNumber } = req.body;
+    const { amount, upiId, upiRefNumber } = decryptPayload(req.body.encryptedPayload);
     const user = req.user;
     const files = req.files;
 
@@ -581,7 +588,7 @@ const requestDeposit = async (req, res) => {
       }
     });
 
-    res.status(201).json({
+    res.status(201).json(encryptPayload({
       message: 'Deposit request created successfully and is pending approval',
       transaction: {
         id: transaction.id,
@@ -590,7 +597,7 @@ const requestDeposit = async (req, res) => {
         upiRefNumber: transaction.upiRefNumber,
         proofImages: transaction.proofImages
       }
-    });
+    }));
   } catch (error) {
     console.error('Error in requestDeposit:', error);
     res.status(500).json({ error: 'Failed to create deposit request' });
@@ -599,7 +606,7 @@ const requestDeposit = async (req, res) => {
 
 const requestDepositJson = async (req, res) => {
   try {
-    const { amount, upiId, upiRefNumber, adminUpiId, proofImages } = req.body;
+    const { amount, upiId, upiRefNumber, adminUpiId, proofImages } = decryptPayload(req.body.encryptedPayload);
     const user = req.user;
 
     if (!amount || !upiId || !upiRefNumber || !adminUpiId || !proofImages || !Array.isArray(proofImages) || proofImages.length === 0) {
@@ -690,7 +697,7 @@ const requestDepositJson = async (req, res) => {
       }
     });
 
-    res.status(201).json({
+    res.status(201).json(encryptPayload({
       message: 'Deposit request created successfully and is pending approval',
       transaction: {
         id: transaction.id,
@@ -701,7 +708,7 @@ const requestDepositJson = async (req, res) => {
         userUpiId: transaction.paymentMethod.upiId,
         proofImages: transaction.proofImages
       }
-    });
+    }));
   } catch (error) {
     console.error('Error in requestDepositJson:', error);
     res.status(500).json({ error: error.message || 'Failed to create deposit request' });

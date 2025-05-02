@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import Cookies from 'js-cookie';
-
+import { encryptPayload, decryptPayload } from '../lib/crypto';
 // Base URL for API requests, set via environment variable
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 const token = Cookies.get("token");
@@ -81,7 +81,7 @@ export const getBalance = async (): Promise<BalanceResponse> => {
         'Authorization': `Bearer ${token}`
       }
     });
-    return response.data;
+    return decryptPayload(response.data);
   } catch (error) {
     console.error('Error fetching balance:', error);
     throw error;
@@ -96,7 +96,7 @@ export const getBalanceHistory = async (): Promise<BalanceHistoryResponse> => {
         'Authorization': `Bearer ${token}`
       }
     });
-    return response.data;
+    return decryptPayload(response.data);
   } catch (error) {
     console.error('Error fetching balance history:', error);
     throw error;
@@ -111,7 +111,7 @@ export const getUserBalance = async (): Promise<UserBalanceResponse> => {
         'Authorization': `Bearer ${token}`
       }
     });
-    return response.data;
+    return decryptPayload(response.data);
   } catch (error) {
     console.error('Error fetching user profile:', error);
     throw error;
@@ -150,10 +150,12 @@ export const requestDeposit = async (depositData: DepositRequestPayload): Promis
       }))
     };
 
+    const encryptedPayload = encryptPayload(formattedData);
+
     // Make the API request
     const response = await axios.post(
       `${BASE_URL}/balance/deposit`,
-      formattedData,
+      {encryptedPayload},
       {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -166,7 +168,7 @@ export const requestDeposit = async (depositData: DepositRequestPayload): Promis
     return {
       success: true,
       message: response.data.message || 'Deposit request submitted successfully',
-      transaction: response.data.transaction
+      transaction: decryptPayload(response.data).transaction
     };
   } catch (error) {
     console.error('Error submitting deposit request:', error);
@@ -199,7 +201,7 @@ export const getUserWithdrawalRequests = async () => {
         'Authorization': `Bearer ${token}`
       }
     });
-    return response.data;
+    return decryptPayload(response.data);
   } catch (error) {
     console.error('Error fetching user withdrawal requests:', error);
     throw error;
@@ -208,16 +210,21 @@ export const getUserWithdrawalRequests = async () => {
 
 
 export const requestWithdrawAPI = async (withdrawAmount: number,paymentMethodId:string) => {
+
+  const encryptedPayload = encryptPayload({
+    amount: withdrawAmount,
+    paymentMethodId: paymentMethodId,
+  });
   try {
-    const response = await axios.post(`${BASE_URL}/balance/withdraw`, {
-      amount: withdrawAmount,
-      paymentMethodId: paymentMethodId
-    }, {
+    const response = await axios.post(`${BASE_URL}/balance/withdraw`, {encryptedPayload}, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
+
     });
-    return response.data;
+    console.log("response.data",response.data);
+    console.log("response.data",decryptPayload(response.data));
+    return decryptPayload(response.data);
   } catch (error) {
     console.error('Error submitting withdrawal request:', error);
     throw error;  
