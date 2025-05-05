@@ -2,7 +2,7 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 // Base URL for API requests, set via environment variable
-const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3002/api';
 const ADMIN_BASE_URL = `${API_BASE_URL}/admin`;
 const authToken = Cookies.get('adminToken');
 
