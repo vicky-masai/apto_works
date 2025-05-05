@@ -9,6 +9,7 @@ import { useState, useEffect } from "react"
 import { toast } from "react-hot-toast"
 import { getTransactions, updateWithdrawalTransactionStatus } from "@/API/api"
 import { auth } from "@/API/auth"
+import { currencyTypes } from "@/utils/currencyTypes"
 
 // Helper function to get status chip color
 const getStatusColor = (status) => {
@@ -316,7 +317,7 @@ export default function WithdrawalsPage() {
                           </td>
                           <td className="py-4 px-6">#{withdrawal.id}</td>
                           <td className="py-4 px-6 font-medium text-gray-900">{withdrawal.user?.name}</td>
-                          <td className="py-4 px-6 font-medium">₹{withdrawal.amount?.toFixed(2)}</td>
+                          <td className="py-4 px-6 font-medium">{currencyTypes[0]?.symbol}{withdrawal.amount?.toFixed(2)}</td>
                           <td className="py-4 px-6 text-gray-600">{withdrawal.paymentDetails?.userUpiId}</td>
                           <td className="py-4 px-6">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -396,7 +397,7 @@ export default function WithdrawalsPage() {
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900">Amount</h3>
-                      <p className="mt-1">₹{selectedWithdrawal.amount?.toFixed(2)}</p>
+                      <p className="mt-1">{currencyTypes[0]?.symbol}{selectedWithdrawal.amount?.toFixed(2)}</p>
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900">UPI ID</h3>

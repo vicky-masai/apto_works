@@ -3,7 +3,7 @@
 import Layout from "@/components/Layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, DollarSign, CheckCircle, AlertCircle } from "lucide-react"
-
+import { currencyTypes } from "@/utils/currencyTypes"
 export default function DashboardPage() {
   const stats = [
     {
@@ -15,7 +15,7 @@ export default function DashboardPage() {
     },
     {
       title: "Total Deposits",
-      value: "₹45,678",
+      value: "45,678",
       change: "+23%",
       icon: DollarSign,
       trend: "up",
@@ -81,7 +81,7 @@ export default function DashboardPage() {
                       <p className="text-sm text-gray-500">2 hours ago</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium text-green-600">+₹1,000</p>
+                      <p className="font-medium text-green-600">+{currencyTypes[0]?.symbol}1,000</p>
                       <p className="text-sm text-gray-500">UPI Payment</p>
                     </div>
                   </div>
@@ -103,7 +103,7 @@ export default function DashboardPage() {
                       <p className="text-sm text-gray-500">Completed by User{i + 1}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium">₹500</p>
+                      <p className="font-medium">{currencyTypes[0]?.symbol}500</p>
                       <p className="text-sm text-gray-500">1 hour ago</p>
                     </div>
                   </div>

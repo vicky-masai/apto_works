@@ -9,7 +9,7 @@ import { useState, useEffect } from "react"
 import { toast } from "react-hot-toast"
 import { getUsers, deleteUser, updateUser } from "@/API/api"
 import { auth } from "@/API/auth"
-
+import { currencyTypes } from "@/utils/currencyTypes"
 export default function UsersPage() {
   const [users, setUsers] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -156,7 +156,7 @@ export default function UsersPage() {
                           <td className="py-4 px-6 font-medium text-gray-900">{user.name}</td>
                           <td className="py-4 px-6 text-gray-600">{user.email}</td>
                           <td className="py-4 px-6 text-gray-600">{user.role || user.userType}</td>
-                          <td className="py-4 px-6 font-medium">₹{user.balance?.toFixed(2) || '0.00'}</td>
+                          <td className="py-4 px-6 font-medium">{currencyTypes[0]?.symbol}{user.balance?.toFixed(2) || '0.00'}</td>
                           <td className="py-4 px-6">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                               user.status === "Active" 
