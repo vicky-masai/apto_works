@@ -24,11 +24,11 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(fileUpload());
 
 // Serve static files from uploads directory
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'), {
-  setHeaders: (res, path) => {
-    res.set('Access-Control-Allow-Origin', '*');
-  }
-}));
+// app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'), {
+//   setHeaders: (res, path) => {
+//     res.set('Access-Control-Allow-Origin', '*');
+//   }
+// }));
 
 // Test endpoint for decryption
 app.post('/api/test/decrypt', (req, res) => {
