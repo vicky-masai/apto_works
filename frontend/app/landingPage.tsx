@@ -145,8 +145,12 @@ export default function TaskMarketplaceLanding() {
   const [contactForm, setContactForm] = useState({
     name: "",
     email: "",
-    subject: "",
     message: "",
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({
+    type: null,
+    message: ''
   })
   const [tasks, setTasks] = useState<Task[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -247,6 +251,49 @@ export default function TaskMarketplaceLanding() {
   const handleAcceptTask = (taskId: string) => {
     router.push(`/tasks/${taskId}/accept`)
   }
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitStatus({ type: null, message: '' });
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(contactForm),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSubmitStatus({
+          type: 'success',
+          message: 'Message sent successfully! We will get back to you soon.'
+        });
+        setContactForm({ name: '', email: '', message: '' });
+      } else {
+        throw new Error(data.error || 'Failed to send message');
+      }
+    } catch (error) {
+      setSubmitStatus({
+        type: 'error',
+        message: 'Failed to send message. Please try again later.'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleContactChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setContactForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   return (
     <div className={`bg-white text-gray-800 ${roboto.className}`}>
@@ -883,11 +930,15 @@ export default function TaskMarketplaceLanding() {
             </div>
 
             <div className="bg-white/10 p-8 rounded-xl backdrop-blur-lg">
-              <form className="space-y-6">
+              <form onSubmit={handleContactSubmit} className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium mb-2">Name</label>
                   <input
                     type="text"
+                    name="name"
+                    value={contactForm.name}
+                    onChange={handleContactChange}
+                    required
                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/20"
                     placeholder="Your name"
                   />
@@ -896,6 +947,10 @@ export default function TaskMarketplaceLanding() {
                   <label className="block text-sm font-medium mb-2">Email</label>
                   <input
                     type="email"
+                    name="email"
+                    value={contactForm.email}
+                    onChange={handleContactChange}
+                    required
                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/20"
                     placeholder="your@email.com"
                   />
@@ -903,12 +958,27 @@ export default function TaskMarketplaceLanding() {
                 <div>
                   <label className="block text-sm font-medium mb-2">Message</label>
                   <textarea
+                    name="message"
+                    value={contactForm.message}
+                    onChange={handleContactChange}
+                    required
                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/20 h-32"
                     placeholder="Your message"
                   ></textarea>
                 </div>
-                <Button className="w-full bg-white text-blue-600 hover:bg-white/90">
-                  Send Message
+                {submitStatus.type && (
+                  <div className={`p-3 rounded-lg ${
+                    submitStatus.type === 'success' ? 'bg-green-500/20' : 'bg-red-500/20'
+                  }`}>
+                    <p className="text-sm">{submitStatus.message}</p>
+                  </div>
+                )}
+                <Button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-white text-blue-600 hover:bg-white/90 disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Sending...' : 'Send Message'}
                 </Button>
               </form>
             </div>
