@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { currencyTypes } from "@/utils/currencyTypes"
 import {
   Dialog,
   DialogContent,
@@ -559,7 +560,7 @@ export default function WalletPage() {
                               <div className="grid gap-4 py-4">
                                 <div className="grid gap-2">
                                   <label htmlFor="amount" className="text-sm font-medium">
-                                    Amount (₹)
+                                    Amount ({currencyTypes[0]?.symbol})
                                   </label>
                                   <Input
                                     id="amount"
@@ -656,7 +657,7 @@ export default function WalletPage() {
                                 <Alert className="bg-blue-50 text-blue-800 border-blue-200">
                                   <AlertTitle className="text-blue-800">Payment Instructions</AlertTitle>
                                   <AlertDescription className="text-blue-700">
-                                    <p>Please complete the payment of ₹{depositAmount} to:</p>
+                                    <p>Please complete the payment of {currencyTypes[0]?.symbol}{depositAmount} to:</p>
                                     <p className="font-medium mt-2">{selectedAdminUpi}</p>
                                     <p className="text-sm mt-2">After payment, provide the transaction details below.</p>
                                   </AlertDescription>
@@ -747,7 +748,7 @@ export default function WalletPage() {
                           </div>
                           <h3 className="text-xl font-medium text-center">Payment Verification Submitted!</h3>
                           <p className="text-center text-gray-500">
-                            Your payment of ₹{Number(depositAmount).toFixed(2)} is being verified. Funds will be added to your wallet once verified.
+                            Your payment of {currencyTypes[0]?.symbol}{Number(depositAmount).toFixed(2)} is being verified. Funds will be added to your wallet once verified.
                           </p>
                         </div>
                       )}
@@ -772,7 +773,7 @@ export default function WalletPage() {
                           <div className="grid gap-4 py-4">
                             <div className="grid gap-2">
                               <label htmlFor="withdraw-amount" className="text-sm font-medium">
-                                Amount (Available: ₹{balance.toFixed(2)})
+                                Amount (Available: {currencyTypes[0]?.symbol}{balance.toFixed(2)})
                               </label>
                               <Input
                                 id="withdraw-amount"
@@ -852,7 +853,7 @@ export default function WalletPage() {
                     <Wallet className="h-4 w-4 text-gray-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">₹{balance.toFixed(2)}</div>
+                    <div className="text-2xl font-bold">{currencyTypes[0]?.symbol}{balance.toFixed(2)}</div>
                     <p className="text-xs text-gray-500">Available for tasks and withdrawals</p>
                   </CardContent>
                 </Card>
@@ -862,7 +863,7 @@ export default function WalletPage() {
                     <ArrowUp className="h-4 w-4 text-green-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">₹{totalDeposits.toFixed(2)}</div>
+                    <div className="text-2xl font-bold">{currencyTypes[0]?.symbol}{totalDeposits.toFixed(2)}</div>
                     <p className="text-xs text-gray-500">All-time deposits</p>
                   </CardContent>
                 </Card>
@@ -872,7 +873,7 @@ export default function WalletPage() {
                     <ArrowDown className="h-4 w-4 text-red-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">₹{totalWithdrawals.toFixed(2)}</div>
+                    <div className="text-2xl font-bold">{currencyTypes[0]?.symbol}{totalWithdrawals.toFixed(2)}</div>
                     <p className="text-xs text-gray-500">All-time withdrawals</p>
                   </CardContent>
                 </Card>
@@ -938,7 +939,7 @@ export default function WalletPage() {
                                   : "text-red-600"
                               }`}
                             >
-                              {transaction.type === "Deposit" || transaction.type === "Earning" ? "+" : "-"}₹
+                              {transaction.type === "Deposit" || transaction.type === "Earning" ? "+" : "-"}{currencyTypes[0]?.symbol}
                               {transaction.amount.toFixed(2)}
                             </div>
                             <div>{transaction.method}</div>

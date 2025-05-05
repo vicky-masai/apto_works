@@ -1,5 +1,6 @@
 "use client";
 
+import { currencyTypes } from "@/utils/currencyTypes"
 import { useState, useEffect } from "react";
 import {
   Card,
@@ -87,10 +88,10 @@ export default function EarningsPage() {
         setEarnings(data.earnings);
         setSummary({
           today: typeof data.summary.todayEarnings === 'string' 
-            ? parseFloat(data.summary.todayEarnings.replace('₹', '').replace(',', '')) 
+            ? parseFloat(data.summary.todayEarnings.replace('{currencyTypes[0]?.symbol}', '').replace(',', '')) 
             : data.summary.todayEarnings || 0,
           yesterday: typeof data.summary.yesterdayEarnings === 'string' 
-            ? parseFloat(data.summary.yesterdayEarnings.replace('₹', '').replace(',', '')) 
+            ? parseFloat(data.summary.yesterdayEarnings.replace('{currencyTypes[0]?.symbol}', '').replace(',', '')) 
             : data.summary.yesterdayEarnings || 0,
           todayChange: data.summary.todayChange || 0,
           yesterdayChange: data.summary.yesterdayChange || 0,
@@ -140,7 +141,7 @@ export default function EarningsPage() {
             <Percent className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{summary.today.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{currencyTypes[0]?.symbol}{summary.today.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">+{summary.todayChange}% from yesterday</p>
           </CardContent>
         </Card>
@@ -150,7 +151,7 @@ export default function EarningsPage() {
             <Percent className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{summary.yesterday.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{currencyTypes[0]?.symbol}{summary.yesterday.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">+{summary.yesterdayChange}% from previous day</p>
           </CardContent>
         </Card>
@@ -160,7 +161,7 @@ export default function EarningsPage() {
             <Percent className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{summary.total.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{currencyTypes[0]?.symbol}{summary.total.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Lifetime earnings</p>
           </CardContent>
         </Card>
@@ -225,9 +226,9 @@ export default function EarningsPage() {
                       <TableCell>{earning.taskName}</TableCell>
                       <TableCell>{earning.postedBy}</TableCell>
                       <TableCell>{earning.acceptedBy}</TableCell>
-                      <TableCell className="text-right">₹{earning.taskAmount.toLocaleString()}</TableCell>
+                      <TableCell className="text-right">{currencyTypes[0]?.symbol}{earning.taskAmount.toLocaleString()}</TableCell>
                       <TableCell className="text-right font-medium text-green-600">
-                        ₹{earning.adminProfit.toLocaleString()}
+                        {currencyTypes[0]?.symbol}{earning.adminProfit.toLocaleString()}
                       </TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded-full text-xs ${earning.status==="Completed"?"bg-green-100 text-green-800":"bg-red-100 text-red-800"}`}>
@@ -275,10 +276,10 @@ export default function EarningsPage() {
               <strong>Completed By:</strong> {selectedEarning?.acceptedBy}
             </div>
             <div className="mb-4">
-              <strong>Task Amount:</strong> ₹{selectedEarning?.taskAmount.toLocaleString()}
+              <strong>Task Amount:</strong> {currencyTypes[0]?.symbol}{selectedEarning?.taskAmount.toLocaleString()}
             </div>
             <div className="mb-4">
-              <strong>Admin Profit:</strong> ₹{selectedEarning?.adminProfit.toLocaleString()}
+              <strong>Admin Profit:</strong> {currencyTypes[0]?.symbol}{selectedEarning?.adminProfit.toLocaleString()}
             </div>
             <div className="mb-4">
               <strong>Status:</strong> {selectedEarning?.status}

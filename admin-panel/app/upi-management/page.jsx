@@ -9,6 +9,7 @@ import { toast } from "react-hot-toast"
 import Layout from "@/components/Layout"
 import { Plus, Pause, Play } from "lucide-react"
 import { auth } from "@/API/auth"
+import { currencyTypes } from "@/utils/currencyTypes"
 import { 
   createAdminUPI, 
   getAllAdminUPIs, 
@@ -204,7 +205,7 @@ export default function UPIManagementPage() {
                             </Button>
                           </div>
                         </td>
-                        <td className="py-4 px-6 font-medium">₹{upi.totalReceived?.toFixed(2) || '0.00'}</td>
+                        <td className="py-4 px-6 font-medium">{currencyTypes[0]?.symbol}{upi.totalReceived?.toFixed(2) || '0.00'}</td>
                         <td className="py-4 px-6">
                           <div className="flex gap-2">
                             <Button

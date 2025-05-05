@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { currencyTypes } from "@/utils/currencyTypes"
 import {
   Dialog,
   DialogContent,
@@ -140,7 +141,7 @@ export default function EarningsPage() {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `earnings_history_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `earnings_history_{currencyTypes[0]?.symbol}{new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -348,7 +349,7 @@ export default function EarningsPage() {
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">${totalEarned.toFixed(2)}</div>
+                    <div className="text-2xl font-bold">{currencyTypes[0]?.symbol}{totalEarned.toFixed(2)}</div>
                     <p className="text-xs text-muted-foreground">Lifetime earnings</p>
                   </CardContent>
                 </Card>
@@ -358,7 +359,7 @@ export default function EarningsPage() {
                     <CreditCard className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">${availableBalance.toFixed(2)}</div>
+                    <div className="text-2xl font-bold">{currencyTypes[0]?.symbol}{availableBalance.toFixed(2)}</div>
                     <p className="text-xs text-muted-foreground">Available for withdrawal</p>
                   </CardContent>
                 </Card>
@@ -368,7 +369,7 @@ export default function EarningsPage() {
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">${pendingBalance.toFixed(2)}</div>
+                    <div className="text-2xl font-bold">{currencyTypes[0]?.symbol}{pendingBalance.toFixed(2)}</div>
                     <p className="text-xs text-muted-foreground">Pending clearance</p>
                   </CardContent>
                 </Card>
@@ -415,7 +416,7 @@ export default function EarningsPage() {
                           <div>{(earning?.taskId) || (i+1)}</div>
                           <div className="font-medium">{earning.taskName}</div>
                           <div className="text-muted-foreground">{new Date(earning.date).toLocaleDateString()}</div>
-                          <div className="font-medium">${earning.amount.toFixed(2)}</div>
+                          <div className="font-medium">{currencyTypes[0]?.symbol}{earning.amount.toFixed(2)}</div>
                           <div>
                             <Badge
                               className={

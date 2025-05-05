@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { CheckCircle, Clock, DollarSign, Eye, Search, X, Pause, Play } from "lucide-react"
 import toast from "react-hot-toast"
+import { currencyTypes } from "@/utils/currencyTypes"
 
 // UI Component Imports
 import { Button } from "@/components/ui/button"
@@ -300,8 +301,8 @@ console.log("selectedSubmission",selectedSubmission);
                                     <CardDescription className="line-clamp-2">{task.taskDescription}</CardDescription>
                                   </div>
                                   <div className="flex items-center text-lg font-semibold text-green-600 dark:text-green-400 whitespace-nowrap">
-                                    <DollarSign className="h-5 w-5 mr-1" />
-                                    {task.price.toFixed(2)}
+                            
+                                    {currencyTypes[0]?.symbol}{task.price.toFixed(2)}
                                   </div>
                                 </div>
 
@@ -318,7 +319,7 @@ console.log("selectedSubmission",selectedSubmission);
                                       {task.estimatedTime}
                                     </Badge>
                                     <Badge variant="outline" className="flex items-center gap-1">
-                                      <DollarSign className="h-3 w-3" />
+                                   
                                       Total: {task.totalAmount.toFixed(2)}
                                     </Badge>
                                     <Badge 
@@ -436,8 +437,8 @@ console.log("selectedSubmission",selectedSubmission);
                                     {task.category}
                                   </Badge>
                                   <Badge variant="outline" className="flex items-center gap-1">
-                                    <DollarSign className="h-3 w-3" />
-                                    {task.price.toFixed(2)}
+                                 
+                                    {currencyTypes[0]?.symbol}{task.price.toFixed(2)}
                                   </Badge>
                                 </div>
                               </div>
@@ -478,8 +479,8 @@ console.log("selectedSubmission",selectedSubmission);
                                     {task.category}
                                   </Badge>
                                   <Badge variant="outline" className="flex items-center gap-1">
-                                    <DollarSign className="h-3 w-3" />
-                                    {task.price.toFixed(2)}
+                                 
+                                    {currencyTypes[0]?.symbol}{task.price.toFixed(2)}
                                   </Badge>
                                 </div>
                                 {task?.showingTaskCount < task.numWorkersNeeded && (
@@ -528,8 +529,8 @@ console.log("selectedSubmission",selectedSubmission);
                                     {task.category}
                                   </Badge>
                                   <Badge variant="outline" className="flex items-center gap-1">
-                                    <DollarSign className="h-3 w-3" />
-                                    {task.price.toFixed(2)}
+                                 
+                                    {currencyTypes[0]?.symbol}{task.price.toFixed(2)}
                                   </Badge>
                                 </div>
                               </div>
@@ -791,7 +792,7 @@ console.log("selectedSubmission",selectedSubmission);
                 <div>
                   <span className="text-muted-foreground block mb-1">Payment Amount</span>
                   <span className="font-medium text-green-600 dark:text-green-400">
-                    ${selectedTask?.price.toFixed(2)}
+                    {currencyTypes[0]?.symbol}{selectedTask?.price.toFixed(2)}
                   </span>
                 </div>
               </div>

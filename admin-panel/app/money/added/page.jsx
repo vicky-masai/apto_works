@@ -11,7 +11,7 @@ import { toast } from "react-hot-toast"
 import { getTransactions } from "@/API/api"
 import { auth } from "@/API/auth"
 import { useEffect } from "react"
-
+import { currencyTypes } from "@/utils/currencyTypes"
 // Add this new import for transaction status update
 import { updateAddMoneyTransactionStatus } from "@/API/api"
 
@@ -211,7 +211,7 @@ export default function AddedMoneyPage() {
                       <tr key={transaction.id} className="border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors">
                         <td className="py-4 px-6">#{transaction.id}</td>
                         <td className="py-4 px-6 font-medium text-gray-900">{transaction.user.name}</td>
-                        <td className="py-4 px-6 font-medium">₹{transaction.amount.toFixed(2)}</td>
+                        <td className="py-4 px-6 font-medium">{currencyTypes[0]?.symbol}{transaction.amount.toFixed(2)}</td>
                         <td className="py-4 px-6 text-gray-600">{transaction.paymentDetails?.adminUpiId}</td>
                         <td className="py-4 px-6 text-gray-600">{transaction.paymentDetails?.userUpiId}</td>
                         <td className="py-4 px-6 font-mono text-sm text-gray-600">{transaction.upiRefNumber || transaction.paymentDetails?.upiRefNumber}</td>
@@ -343,7 +343,7 @@ export default function AddedMoneyPage() {
                       </div>
                       <div className="mb-3">
                         <span className="text-sm text-gray-500">Amount</span>
-                        <p className="text-lg font-semibold text-gray-900">₹{selectedTransaction.amount.toFixed(2)}</p>
+                        <p className="text-lg font-semibold text-gray-900">{currencyTypes[0]?.symbol}{selectedTransaction.amount.toFixed(2)}</p>
                       </div>
                       <div className="mb-3">
                         <span className="text-sm text-gray-500">Status</span>
