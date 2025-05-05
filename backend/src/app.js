@@ -7,6 +7,7 @@ const fs = require('fs');
 const http = require('http');
 const { Server } = require('socket.io');
 const { encryptPayload, decryptPayload } = require('../src/utils/crypto');
+const fileUpload = require('express-fileupload');
 
 const {
   setSocketIO,
@@ -56,6 +57,7 @@ if (!fs.existsSync(paymentProofsDir)) {
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(fileUpload());
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(uploadDir, {
@@ -95,6 +97,7 @@ app.use('/api/categories', require('./routes/categories'));
 app.use('/api/balance', require('./routes/balance'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/admin/upi', require('./routes/adminUpiRoutes'));
+app.use('/api/upload', require('./routes/upload'));
 // app.use('/api/withdrawals', require('./routes/withdrawalRoutes'));
 
 // Error handling middleware

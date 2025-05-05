@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const balanceController = require('../controllers/balanceController');
 const { auth, isAdmin } = require('../middleware/auth');
-const upload = require('../middleware/upload');
 
 const { 
     addPaymentMethod, 

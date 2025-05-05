@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const adminAuth = require('../middleware/adminAuth');
 const adminController = require('../controllers/adminController');
-const upload = require('../middleware/upload');
 const fs = require('fs');
 const path = require('path');
 const { PrismaClient } = require('@prisma/client');
+const { put } = require('@vercel/blob');
 
 const prisma = new PrismaClient();
 
@@ -45,38 +45,21 @@ router.post('/transactions/:id/approve', async (req, res) => {
     return res.status(400).send('UPI reference number and proof image are required for approval');
   }
 
-  // Define the directory and file path
-  const dirPath = path.join(__dirname, 'path/to/save');
-  const filePath = path.join(dirPath, fileName);
-
-  // Create the directory if it doesn't exist
-  fs.mkdir(dirPath, { recursive: true }, (err) => {
-    if (err) {
-      console.error('Error creating directory:', err);
-      return res.status(500).send('Error creating directory');
-    }
-
-    // Save the file
-    fs.writeFile(filePath, buffer, async (err) => {
-      if (err) {
-        console.error('Error saving file:', err);
-        return res.status(500).send('Error saving file');
-      }
-
-      try {
-        // Fetch the transaction details
-      
-
-        // Call the controller function with the correct parameters
-        const updatedTransaction = await adminController.approveTransactionWithProof(req,res,filePath);
-        console.log(updatedTransaction);
-        res.json(updatedTransaction);
-      } catch (error) {
-        console.error('Error in transaction approval:', error);
-        res.status(500).send('Error in transaction approval');
-      }
+  try {
+    // Upload to Vercel Blob
+    const blob = await put(fileName, buffer, {
+      access: 'public',
+      contentType: 'image/jpeg',
     });
-  });
+
+    // Call the controller function with the blob URL
+    const updatedTransaction = await adminController.approveTransactionWithProof(req, res, blob.url);
+    console.log(updatedTransaction);
+    res.json(updatedTransaction);
+  } catch (error) {
+    console.error('Error in transaction approval:', error);
+    res.status(500).send('Error in transaction approval');
+  }
 });
 
 module.exports = router; 
