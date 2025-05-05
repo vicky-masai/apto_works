@@ -16,6 +16,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { getBalance } from '@/API/money_api';
+import { currencyTypes } from '@/utils/currencyTypes';
 
 interface SidebarItem {
   title: string;
@@ -137,7 +138,7 @@ const Leftsidebar = () => {
           {!isCollapsed && <span className="ml-2 font-medium text-blue-600">Wallet</span>}
         </div>
         <div className={`text-blue-700 text-center font-bold ${isCollapsed ? 'text-sm' : 'text-lg'}`}>
-        ₹{balance.toFixed(2)}
+        {currencyTypes[0]?.symbol}{balance.toFixed(2)}
         </div>
       </div>
 
