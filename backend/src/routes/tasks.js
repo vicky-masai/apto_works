@@ -6,10 +6,10 @@ const fs = require('fs');
 const path = require('path');
 
 // Create uploads directory if it doesn't exist
-const uploadDir = path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// const uploadDir = path.join(process.cwd(), 'uploads');
+// if (!fs.existsSync(uploadDir)) {
+//   fs.mkdirSync(uploadDir, { recursive: true });
+// }
 
 // Task Provider routes
 router.post('/', auth, taskController.createTask);
