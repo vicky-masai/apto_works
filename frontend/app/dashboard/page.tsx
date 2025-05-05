@@ -13,6 +13,7 @@ import { useEffect, useState } from "react"
 import { getProfile } from "@/API/profile"
 import { getAcceptedTasks } from "@/API/task"
 import Leftsidebar from "@/components/Leftsidebar"
+import { currencyTypes } from "@/utils/currencyTypes"
 
 export default function DashboardPage() {
   const [totalEarned, settotalEarned] = useState(0)
@@ -47,6 +48,8 @@ export default function DashboardPage() {
     }).catch(error => {
       console.error("Error fetching accepted tasks:", error);
     });
+
+    console.log("Available currency types:", currencyTypes);
   }, []);
  
   return (
@@ -80,7 +83,7 @@ export default function DashboardPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-green-800">
-                      ₹{totalEarned}
+                      {currencyTypes[0]?.symbol}{totalEarned}
                     </div>
                   </CardContent>
                 </Card>
@@ -109,7 +112,7 @@ export default function DashboardPage() {
                     <Wallet className="h-4 w-4 text-gray-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-green-800">₹{balance}</div>
+                    <div className="text-2xl font-bold text-green-800">{currencyTypes[0]?.symbol}{balance}</div>
                     <p className="text-xs text-gray-500">Available for withdrawal</p>
                   </CardContent>
                 </Card>

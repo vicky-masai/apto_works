@@ -17,7 +17,7 @@ import Cookies from "js-cookie"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/Header"
 import Leftsidebar from "@/components/Leftsidebar"
-
+import { currencyTypes } from "@/utils/currencyTypes"
 export default function PostTaskPage() {
   const router = useRouter();
   const token = Cookies.get("token");
@@ -135,7 +135,7 @@ export default function PostTaskPage() {
 
                         <div className="grid grid-cols-2 gap-4">
                           <div className="grid gap-2">
-                            <Label htmlFor="price">Price (₹)</Label>
+                            <Label htmlFor="price">Price ({currencyTypes[0]?.symbol})</Label>
                             <Input id="price" name="price" type="number" min="0.50" step="0.50" placeholder="5.00" required />
                           </div>
 
