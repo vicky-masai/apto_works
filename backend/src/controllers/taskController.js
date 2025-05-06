@@ -1,5 +1,6 @@
 const prisma = require('../config/database');
 const { sendNotification } = require('../utils/notificationService');
+const { put } = require('@vercel/blob');
 // Task Provider Methods
 const createTask = async (req, res) => {
   try {
@@ -788,12 +789,11 @@ const updateTaskStatus = async (req, res) => {
   }
 };
 
-const submitProof = async (req, res, uploadedFiles) => {
+const submitProof = async (req, res) => {
   try {
     const { acceptedTaskId } = req.params;
     const { describe } = req.body;
-    console.log('Uploaded Files:', uploadedFiles);
-    const files = req.files;
+    let files = req.files;
 
     console.log('Request body:', req.body);
     console.log('Files:', files);
@@ -819,8 +819,29 @@ const submitProof = async (req, res, uploadedFiles) => {
       return res.status(403).json({ error: 'Unauthorized to submit proof for this task' });
     }
 
-    // Construct file URLs if files exist
-    const fileUrls = files ? files.map(file => `${process.env.BACKEND_URL}/uploads/${file.filename}`) : [];
+    // Handle both single and multiple files
+    let fileArray = [];
+    if (files && files.files) {
+      // If multiple files uploaded as 'files'
+      if (Array.isArray(files.files)) {
+        fileArray = files.files;
+      } else {
+        fileArray = [files.files];
+      }
+    } else if (files) {
+      // If files are uploaded with different field names
+      fileArray = Object.values(files);
+    }
+
+    // Upload each file to Vercel Blob
+    const fileUrls = [];
+    for (const file of fileArray) {
+      const blob = await put(file.name, file.data, {
+        access: 'public',
+        contentType: file.mimetype,
+      });
+      fileUrls.push(blob.url);
+    }
 
     const updatedTask = await prisma.acceptedTask.update({
       where: { 
@@ -829,7 +850,7 @@ const submitProof = async (req, res, uploadedFiles) => {
       },
       data: {
         describe,
-        proof: uploadedFiles,
+        proof: fileUrls,
         status: 'Review'
       }
     });
@@ -837,7 +858,7 @@ const submitProof = async (req, res, uploadedFiles) => {
     res.json({
       data: {
         ...updatedTask,
-        proof: uploadedFiles
+        fileUrls
       },
       message: "Proof submitted successfully"
     });

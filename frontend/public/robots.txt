@@ -1,0 +1,15 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /private/
+Disallow: /api/
+Disallow: /_next/
+
+# Sitemap location
+Sitemap: https://aptoworks.com/sitemap.xml
+
+# Crawl-delay for heavy pages
+Crawl-delay: 2 

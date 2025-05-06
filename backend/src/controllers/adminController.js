@@ -372,22 +372,11 @@ const getTransactions = async (req, res) => {
           }
         }
 
-        const formattedProofImages = (transaction.proofImages || []).map(image => {
-          const fullImagePath = path.join(process.cwd(), image.imageUrl);
-          const fileExists = fs.existsSync(fullImagePath);
-          console.log(`Image path check:
-            URL in DB: ${image.imageUrl}
-            Full path: ${fullImagePath}
-            File exists: ${fileExists}
-          `);
-
-          return {
-            id: image.id || '',
-            imageUrl: image.imageUrl ? `${baseUrl}/${image.imageUrl}` : '',
-            fileName: image.fileName || '',
-            exists: fileExists
-          };
-        });
+        const formattedProofImages = (transaction.proofImages || []).map(image => ({
+          id: image.id || '',
+          imageUrl: image.imageUrl || '', // Only use the Vercel Blob URL
+          fileName: image.fileName || ''
+        }));
 
         // Enhanced payment details formatting
         const paymentDetails = {

@@ -2,6 +2,7 @@ const prisma = require('../config/database');
 const { PrismaClient } = require('@prisma/client');
 const prismaClient = new PrismaClient();
 const { decryptPayload, encryptPayload } = require('../utils/crypto');
+const { put } = require('@vercel/blob');
 
 const addBalance = async (req, res) => {
   try {
@@ -534,11 +535,11 @@ const getAllAddMoneyRequestsForUser = async (req, res) => {
 
 const requestDeposit = async (req, res) => {
   try {
-    const { amount, upiId, upiRefNumber } = decryptPayload(req.body.encryptedPayload);
+    const { amount, upiId, upiRefNumber } = req.body;
     const user = req.user;
     const files = req.files;
 
-    if (!amount || !upiId || !upiRefNumber || !files || files.length === 0) {
+    if (!amount || !upiId || !upiRefNumber || !files || Object.keys(files).length === 0) {
       return res.status(400).json({ 
         error: 'Missing required fields. Please provide amount, UPI ID, reference number, and at least one proof image.' 
       });
@@ -567,6 +568,31 @@ const requestDeposit = async (req, res) => {
       });
     }
 
+    // Handle both single and multiple files
+    let fileArray = [];
+    if (files && files.proofImages) {
+      if (Array.isArray(files.proofImages)) {
+        fileArray = files.proofImages;
+      } else {
+        fileArray = [files.proofImages];
+      }
+    } else if (files) {
+      fileArray = Object.values(files);
+    }
+
+    // Upload each file to Vercel Blob
+    const savedImages = [];
+    for (const file of fileArray) {
+      const blob = await put(file.name, file.data, {
+        access: 'public',
+        contentType: file.mimetype,
+      });
+      savedImages.push({
+        imageUrl: blob.url,
+        fileName: file.name
+      });
+    }
+
     // Create transaction record with proof images
     const transaction = await prisma.transaction.create({
       data: {
@@ -577,10 +603,7 @@ const requestDeposit = async (req, res) => {
         paymentMethodId: paymentMethod.id,
         upiRefNumber: upiRefNumber,
         proofImages: {
-          create: files.map(file => ({
-            imageUrl: file.path,
-            fileName: file.filename
-          }))
+          create: savedImages
         }
       },
       include: {
@@ -647,32 +670,27 @@ const requestDepositJson = async (req, res) => {
       });
     }
 
-    // Save base64 images to files
+    // Upload proof images to Vercel Blob
     const savedImages = await Promise.all(proofImages.map(async (image) => {
       try {
         // Remove data URI scheme prefix if present
         const base64Data = image.base64Data.replace(/^data:image\/\w+;base64,/, '');
         const buffer = Buffer.from(base64Data, 'base64');
-        
         // Generate unique filename
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         const fileName = `proof-${uniqueSuffix}.jpeg`;
-        const filePath = `uploads/payment-proofs/${fileName}`;
-        
-        // Ensure directory exists
-        const fs = require('fs').promises;
-        await fs.mkdir('uploads/payment-proofs', { recursive: true });
-        
-        // Write file
-        await fs.writeFile(filePath, buffer);
-        
+        // Upload to Vercel Blob
+        const blob = await put(fileName, buffer, {
+          access: 'public',
+          contentType: 'image/jpeg',
+        });
         return {
-          imageUrl: filePath,
+          imageUrl: blob.url,
           fileName: fileName
         };
       } catch (error) {
-        console.error('Error saving image:', error);
-        throw new Error('Failed to save proof image');
+        console.error('Error uploading image to Vercel Blob:', error);
+        throw new Error('Failed to upload proof image');
       }
     }));
 
