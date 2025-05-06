@@ -83,6 +83,7 @@ export default function ProviderTasksPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [currentTab, setCurrentTab] = useState("all")
+  const [base64Image, setBase64Image] = useState("")
 console.log("selectedSubmission",selectedSubmission);
 
   // Data Fetching
@@ -202,6 +203,18 @@ console.log("selectedSubmission",selectedSubmission);
           task.id === taskId ? { ...task, isPaused: currentStatus } : task
         )
       );
+    }
+  };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setBase64Image(base64String); // Store in state
+      };
+      reader.readAsDataURL(file);
     }
   };
 

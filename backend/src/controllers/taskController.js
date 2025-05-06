@@ -788,10 +788,11 @@ const updateTaskStatus = async (req, res) => {
   }
 };
 
-const submitProof = async (req, res) => {
+const submitProof = async (req, res, uploadedFiles) => {
   try {
     const { acceptedTaskId } = req.params;
     const { describe } = req.body;
+    console.log('Uploaded Files:', uploadedFiles);
     const files = req.files;
 
     console.log('Request body:', req.body);
@@ -828,7 +829,7 @@ const submitProof = async (req, res) => {
       },
       data: {
         describe,
-        proof: fileUrls,
+        proof: uploadedFiles,
         status: 'Review'
       }
     });
@@ -836,7 +837,7 @@ const submitProof = async (req, res) => {
     res.json({
       data: {
         ...updatedTask,
-        fileUrls
+        proof: uploadedFiles
       },
       message: "Proof submitted successfully"
     });

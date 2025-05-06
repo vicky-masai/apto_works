@@ -5,6 +5,7 @@ const { auth } = require('../middleware/auth');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const blobService = require('../utils/blodService');
 
 // Create uploads directory if it doesn't exist
 const uploadDir = path.join(process.cwd(), 'uploads');
@@ -45,7 +46,25 @@ router.get('/', taskController.getAllTasks);
 router.get('/:taskId', auth, taskController.getTaskById);
 router.post('/:taskId/accept', auth, taskController.acceptTask);
 router.put('/:taskId/status', auth, taskController.updateTaskStatus);
-router.post('/:acceptedTaskId/proof', auth, upload.array('files'), taskController.submitProof);
+router.post('/:acceptedTaskId/proof', auth, async (req, res) => {
+  try {
+    const files = req.files;
+    const uploadedFiles = [];
+    console.log('Uploaded Files:', files);
+
+    for (const file of files) {
+      const base64String = file.buffer.toString('base64');
+      const fileName = file.originalname;
+      const fileUrl = await blobService.uploadBase64File(base64String, fileName);
+      uploadedFiles.push(fileUrl);
+    }
+
+    // Pass the uploaded file URLs to the controller
+    await taskController.submitProof(req, res, uploadedFiles);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 router.get('/accepted/:acceptedTaskId', auth, taskController.getAcceptedTaskById);
 
 module.exports = router; 

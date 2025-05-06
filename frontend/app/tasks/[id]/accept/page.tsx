@@ -74,6 +74,18 @@ export default function TaskAcceptPage({ params }: { params: Promise<{ id: strin
     setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
   }
 
+  const convertFilesToBase64 = async (files: File[]): Promise<string[]> => {
+    const base64Files = await Promise.all(files.map(file => {
+      return new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = error => reject(error);
+      });
+    }));
+    return base64Files;
+  };
+
   const handleSubmit = async () => {
     if (files.length === 0) {
       toast.error('Please upload proof files');
@@ -82,7 +94,8 @@ export default function TaskAcceptPage({ params }: { params: Promise<{ id: strin
     
     setIsSubmitting(true);
     try {
-      const response = await submitProof(Id, files, proofText, token);
+      const base64Files = await convertFilesToBase64(files);
+      const response = await submitProof(Id, base64Files, proofText, token);
       if (response.data) {
         toast.success('Proof submitted successfully!');
         setIsCompleted(true);

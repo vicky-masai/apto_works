@@ -10,6 +10,15 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendOTP = async (email, otp) => {
+
+  console.log("suraj",config.EMAIL_USER, config.EMAIL_PASSWORD);
+
+  console.log("Sending OTP to:", email);
+  console.log(email, otp);
+
+
+
+
   const mailOptions = {
     from: config.EMAIL_USER,
     to: email,
