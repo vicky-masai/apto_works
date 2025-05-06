@@ -23,6 +23,10 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(fileUpload());
 
+app.get('/', (req, res) => {
+  res.send('Hello World');
+});
+
 // Serve static files from uploads directory
 // app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'), {
 //   setHeaders: (res, path) => {

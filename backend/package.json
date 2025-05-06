@@ -9,9 +9,13 @@
   "scripts": {
     "dev": "nodemon src/app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
+
+    "build": "babel src -d dist"
+
     "vercel-start": "node api/index.js",
     "postinstall": "prisma generate",
     "migrate": "prisma migrate deploy"
+
   },
   "keywords": [],
   "dependencies": {

@@ -35,6 +35,7 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
     try {
       const response = await getNotification()
       setNotifications(response.notifications);
+      setNotificationCount(response.notifications.length);
     } catch (err) {
       console.error('Error fetching notifications', err);
     }
