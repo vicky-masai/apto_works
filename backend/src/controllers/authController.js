@@ -44,6 +44,8 @@ const register = async (req, res) => {
     });
 
     // Send OTP email
+    console.log("email",email);
+    console.log("otp",otp);
     await sendOTP(email, otp);
 
 
