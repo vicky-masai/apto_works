@@ -30,7 +30,7 @@ const auth = async (req, res, next) => {
 
 const isAdmin = async (req, res, next) => {
   try {
-    if (req.userType !== 'Admin') {
+    if (req.user.role !== 'Admin') {
       return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
     }
     next();

@@ -5,6 +5,7 @@ const { auth } = require('../middleware/auth');
 
 // Registration
 router.post('/register', authController.register);
+router.post('/admin-register', authController.adminRegister);
 
 // Login
 router.post('/login', authController.login);

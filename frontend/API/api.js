@@ -17,10 +17,8 @@ const endpoints = {
 
 // Function to handle user login
 export const login = async (email, password) => {
-  const encryptedPayload = encryptPayload({ email, password });
-  console.log("encryptedPayload",encryptedPayload);
-  const decryptedPayload = decryptPayload(encryptedPayload);
-  console.log("decryptedPayload",decryptedPayload);
+  const encryptedPayload = encryptPayload({ email, password,role:"User" });
+
   try {
     const response = await axios.post(`${BASE_URL}/${endpoints.login}`, {
       encryptedPayload
