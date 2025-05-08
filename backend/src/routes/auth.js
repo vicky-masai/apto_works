@@ -20,5 +20,6 @@ router.post('/reset-password', authController.resetPassword);
 // User Profile
 router.get('/profile',auth ,authController.getUserProfile);
 router.get('/notifications',auth ,authController.getUserNotifications);
+router.delete('/notifications', auth, authController.clearAllNotifications);
 
 module.exports = router; 

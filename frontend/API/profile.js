@@ -50,3 +50,17 @@ export const updateProfile = async (data) => {
     throw error;
   }
 };
+
+export const clearAllNotifications = async () => {
+  try {
+    const response = await axios.delete(`${BASE_URL}/auth/notifications`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Failed to clear notifications:', error);
+    throw error;
+  }
+};

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import Cookies from "js-cookie"
 import { useRouter } from "next/navigation"
 import socket from '../utils/socket'; // import singleton instance
-import { getNotification } from "@/API/profile"
+import { getNotification, clearAllNotifications } from "@/API/profile"
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -150,8 +150,24 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
                 </button>
                 {isNotificationOpen && (
                   <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-md shadow-lg border border-gray-200">
-                    <div className="p-4 border-b border-gray-200">
+                    <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                       <h3 className="text-lg font-semibold">Notifications</h3>
+                      <button
+                        className="text-xs text-red-500 border border-red-200 rounded px-2 py-1 disabled:opacity-50"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          try {
+                            await clearAllNotifications();
+                            setNotifications([]);
+                            setNotificationCount(0);
+                          } catch (err) {
+                            console.error('Failed to clear notifications', err);
+                          }
+                        }}
+                        disabled={notifications.length === 0}
+                      >
+                        Clear All
+                      </button>
                     </div>
                     <div className="max-h-96 overflow-y-auto">
                       {notifications.map((notification) => (
