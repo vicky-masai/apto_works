@@ -9,6 +9,7 @@ const getProfile = async (req, res) => {
         id: true,
         name: true,
         email: true,
+        phone: true,
         skills: true,
         balance: true,
         createdAt: true,
@@ -26,18 +27,21 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { name, skills } = req.body;
+    const { name, email, phone, skills } = req.body;
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) updateData.email = email;
+    if (phone !== undefined) updateData.phone = phone;
+    if (skills !== undefined) updateData.skills = skills;
 
     const user = await prisma.user.update({
       where: { id: req.user.id },
-      data: {
-        name,
-        skills
-      },
+      data: updateData,
       select: {
         id: true,
         name: true,
         email: true,
+        phone: true,
         skills: true,
         balance: true,
         createdAt: true,
@@ -49,7 +53,7 @@ const updateProfile = async (req, res) => {
 
     res.json(user);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update profile' });
+    res.status(500).json({ error: 'Failed to update profile', message: error.message });
   }
 };
 
