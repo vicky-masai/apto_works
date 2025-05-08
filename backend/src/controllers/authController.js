@@ -34,6 +34,7 @@ const register = async (req, res) => {
       data: {
         name,
         email,
+        role:"User",
         password: hashedPassword,
         userType,
         organizationType: userType === 'TaskProvider' ? organizationType : null,
@@ -59,12 +60,54 @@ const register = async (req, res) => {
   }
 };
 
+const adminRegister = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+ 
+
+    // Check if email already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: email }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email already registered' });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Generate OTP
+    const otp = generateOTP();
+
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        isEmailVerified:true,
+        role:"Admin"
+      }
+    });
+
+
+
+    res.status(201).json({
+      message: 'Admin registered successfully',
+      userId: user.id
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ error: 'Registration failed' });
+  }
+};
+
+
 const login = async (req, res) => {
   try {
-    const { email, password } = decryptPayload(req.body.encryptedPayload);
-    console.log("req.body.encryptedPayload",req.body.encryptedPayload);
-    console.log("email",email);
-    console.log("password",password);
+    const { email, password,role } = decryptPayload(req.body.encryptedPayload);
+
 
     // Find user
     const user = await prisma.user.findUnique({
@@ -75,6 +118,17 @@ const login = async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    if(role === "Admin"){
+      if(user.role !== "Admin"){
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+    }
+
+    if(role === "User"){
+      if(user.role !== "User"){
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+    }
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
@@ -118,6 +172,9 @@ const login = async (req, res) => {
     res.status(500).json({ error: 'Login failed' });
   }
 };
+
+
+
 
 const verifyOTP = async (req, res) => {
   try {
@@ -332,6 +389,7 @@ const clearAllNotifications = async (req, res) => {
 
 module.exports = {
   register,
+  adminRegister,
   login,
   verifyOTP,
   resendOTP,

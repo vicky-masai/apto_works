@@ -24,7 +24,7 @@ const endpoints = {
 
 export const login = async (email, password) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/${endpoints.login}`,{encryptedPayload: encryptPayload({email,password,})});
+    const response = await axios.post(`${API_BASE_URL}/${endpoints.login}`,{encryptedPayload: encryptPayload({email,password,role:"Admin"})});
     return decryptPayload(response.data);
   } catch (error) {
     console.error('Error during login:', error);
