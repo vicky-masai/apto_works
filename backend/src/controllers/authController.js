@@ -139,7 +139,16 @@ const login = async (req, res) => {
 
     // Check if email is verified
     if (!user.isEmailVerified) {
-      return res.status(401).json({ error: 'Please verify your email first' });
+      const otp = generateOTP();
+      await sendOTP(user.email, otp);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          otp,
+          otpExpiry: new Date(Date.now() + 5 * 60 * 1000) // 5 minutes
+        }
+      });
+      return res.status(201).json(encryptPayload({ error: 'Please verify your email first', otp }));
     }
 
     // Generate JWT token

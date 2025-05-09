@@ -55,6 +55,11 @@ console.log("password",password);
     try {
       const response = await login(email, password)
       // Store login state in localStorage
+      if(response?.error=="Please verify your email first"){
+        router.push(`/verify-otp?email=${encodeURIComponent(email)}`)
+        toast.error("Please verify your email first! otp is sent to your email")
+        return;
+      }
       localStorage.setItem("isLoggedIn", "true")
       localStorage.setItem("userEmail", email)
       toast.success("Login success")
