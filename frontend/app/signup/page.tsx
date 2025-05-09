@@ -148,11 +148,11 @@ export default function SignupPage() {
                 {error && <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">{error}</div>}
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" name="name" placeholder="John Doe" required />
+                  <Input id="name" name="name" placeholder="Code Apto" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" name="email" type="email" placeholder="john@example.com" required />
+                  <Input id="email" name="email" type="email" placeholder="codeapto@example.com" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
