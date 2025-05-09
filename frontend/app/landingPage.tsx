@@ -360,11 +360,13 @@ export default function TaskMarketplaceLanding() {
           <Tabs defaultValue="workers" className="space-y-8">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold mb-4">Choose Your Path</h2>
-              <TabsList className="bg-blue-50 p-2 rounded-full">
-                <TabsTrigger value="workers" className="px-8 py-3 rounded-full">For Workers</TabsTrigger>
-                <TabsTrigger value="posters" className="px-8 py-3 rounded-full">For Task Posters</TabsTrigger>
-                <TabsTrigger value="investors" className="px-8 py-3 rounded-full">For Investors</TabsTrigger>
-              </TabsList>
+              <div className="overflow-x-auto no-scrollbar flex justify-center w-full">
+                <TabsList className="bg-blue-50 rounded-full flex gap-2 min-w-max sm:p-2 p-1">
+                  <TabsTrigger value="workers" className="sm:px-8 px-4 py-3 rounded-full min-w-max whitespace-nowrap data-[state=active]:bg-white data-[state=active]:font-bold data-[state=active]:shadow transition">For Workers</TabsTrigger>
+                  <TabsTrigger value="posters" className="sm:px-8 px-4 py-3 rounded-full min-w-max whitespace-nowrap data-[state=active]:bg-white data-[state=active]:font-bold data-[state=active]:shadow transition">For Task Posters</TabsTrigger>
+                  <TabsTrigger value="investors" className="sm:px-8 px-4 py-3 rounded-full min-w-max whitespace-nowrap data-[state=active]:bg-white data-[state=active]:font-bold data-[state=active]:shadow transition">For Investors</TabsTrigger>
+                </TabsList>
+              </div>
             </div>
 
             <TabsContent value="workers" className="space-y-8">

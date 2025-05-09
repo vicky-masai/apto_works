@@ -1,6 +1,6 @@
 "use client"
 import Link from "next/link"
-import { DollarSign, Home, LogIn, LogOut, Shield, Upload, User, UserPlus, Wallet, Clipboard, Bell } from "lucide-react"
+import { DollarSign, Home, LogIn, LogOut, Shield, Upload, User, UserPlus, Wallet, Clipboard, Bell, Menu, X } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import Cookies from "js-cookie"
@@ -30,6 +30,7 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
   const [notificationCount, setNotificationCount] = useState(3);
   const [isBlinking, setIsBlinking] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const fetchNotifications = async () => {
     try {
@@ -114,14 +115,14 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-20 w-full border-b bg-white">
-      <div className="container flex h-16 items-center justify-between">
+      <div className="container flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-2 font-bold text-xl text-primary">
-          {/* <Shield className="h-6 w-6" /> */}
-          {/* <Link href="/">TaskHub</Link> */}
+          <Shield className="h-6 w-6" />
+          <Link href="/">TaskHub</Link>
         </div>
         {isLoggedIn ? (
           <>
-            {/* <nav className="hidden md:flex items-center gap-6">
+            <nav className="hidden md:flex items-center gap-6">
               <button 
                 onClick={() => handleProtectedNavigation("/dashboard")} 
                 className="text-sm font-medium text-gray-900 hover:text-primary"
@@ -134,7 +135,7 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
               <Link href="/provider/tasks" className="text-sm font-medium text-gray-600 hover:text-gray-900">
                 My Posted Tasks
               </Link>
-            </nav> */}
+            </nav>
             <div className="relative flex items-center gap-4">
               <div className="relative" ref={notificationRef}>
                 <button 
@@ -226,7 +227,43 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
                   </div>
                 )}
               </div>
+              <button 
+                className="md:hidden flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
             </div>
+            {/* Mobile Menu */}
+            {isMobileMenuOpen && (
+              <div className="absolute top-16 left-0 right-0 bg-white border-b md:hidden">
+                <nav className="container px-4 py-4 flex flex-col gap-4">
+                  <button 
+                    onClick={() => {
+                      handleProtectedNavigation("/dashboard");
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="text-sm font-medium text-gray-900 hover:text-primary"
+                  >
+                    Dashboard
+                  </button>
+                  <Link 
+                    href="/tasks" 
+                    className="text-sm font-medium text-gray-600 hover:text-gray-900"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Tasks
+                  </Link>
+                  <Link 
+                    href="/provider/tasks" 
+                    className="text-sm font-medium text-gray-600 hover:text-gray-900"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    My Posted Tasks
+                  </Link>
+                </nav>
+              </div>
+            )}
           </>
         ) : (
           <>
@@ -253,7 +290,41 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
               <Link href="/signup">
                 <Button size="sm">Sign up</Button>
               </Link>
+              <button 
+                className="md:hidden flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
             </div>
+            {/* Mobile Menu for non-logged in users */}
+            {isMobileMenuOpen && (
+              <div className="absolute top-16 left-0 right-0 bg-white border-b md:hidden">
+                <nav className="container px-4 py-4 flex flex-col gap-4">
+                  <Link 
+                    href="#features" 
+                    className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Features
+                  </Link>
+                  <Link
+                    href="#how-it-works"
+                    className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    How It Works
+                  </Link>
+                  <Link 
+                    href="#pricing" 
+                    className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Pricing
+                  </Link>
+                </nav>
+              </div>
+            )}
           </>
         )}
       </div>
