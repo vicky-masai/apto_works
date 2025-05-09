@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const adminAuth = require('../middleware/adminAuth');
+
 const {
   createAdminUPI,
   getAllAdminUPIs,
@@ -11,7 +11,7 @@ const {
   getUPIStatistics
 } = require('../controllers/adminUpiController');
 
-router.use(adminAuth);
+
 // Admin-only routes
 router.post('/',createAdminUPI);
 router.get('/all',  getAllAdminUPIs);
