@@ -13,7 +13,8 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 dayjs.extend(relativeTime);
 
 interface HeaderProps {
-  isLoggedIn?: boolean
+  isLoggedIn?: boolean;
+  setSidebarOpen?: (open: boolean) => void;
 }
 
 type Notification = {
@@ -24,13 +25,12 @@ type Notification = {
   isRead?: boolean;
 };
 
-export function Header({ isLoggedIn = true }: HeaderProps) {
+export function Header({ isLoggedIn = true, setSidebarOpen }: HeaderProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(3);
+  const [notificationCount, setNotificationCount] = useState(0);
   const [isBlinking, setIsBlinking] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const fetchNotifications = async () => {
     try {
@@ -124,7 +124,7 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
           <>
             <nav className="hidden md:flex items-center gap-6">
               <button 
-                onClick={() => handleProtectedNavigation("/dashboard")} 
+                onClick={() => handleProtectedNavigation("/dashboard")}
                 className="text-sm font-medium text-gray-900 hover:text-primary"
               >
                 Dashboard
@@ -229,41 +229,11 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
               </div>
               <button 
                 className="md:hidden flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                onClick={() => setSidebarOpen && setSidebarOpen(true)}
               >
-                {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                <Menu className="h-5 w-5" />
               </button>
             </div>
-            {/* Mobile Menu */}
-            {isMobileMenuOpen && (
-              <div className="absolute top-16 left-0 right-0 bg-white border-b md:hidden">
-                <nav className="container px-4 py-4 flex flex-col gap-4">
-                  <button 
-                    onClick={() => {
-                      handleProtectedNavigation("/dashboard");
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="text-sm font-medium text-gray-900 hover:text-primary"
-                  >
-                    Dashboard
-                  </button>
-                  <Link 
-                    href="/tasks" 
-                    className="text-sm font-medium text-gray-600 hover:text-gray-900"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Tasks
-                  </Link>
-                  <Link 
-                    href="/provider/tasks" 
-                    className="text-sm font-medium text-gray-600 hover:text-gray-900"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    My Posted Tasks
-                  </Link>
-                </nav>
-              </div>
-            )}
           </>
         ) : (
           <>
@@ -292,39 +262,11 @@ export function Header({ isLoggedIn = true }: HeaderProps) {
               </Link>
               <button 
                 className="md:hidden flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                onClick={() => setSidebarOpen && setSidebarOpen(true)}
               >
-                {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                <Menu className="h-5 w-5" />
               </button>
             </div>
-            {/* Mobile Menu for non-logged in users */}
-            {isMobileMenuOpen && (
-              <div className="absolute top-16 left-0 right-0 bg-white border-b md:hidden">
-                <nav className="container px-4 py-4 flex flex-col gap-4">
-                  <Link 
-                    href="#features" 
-                    className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Features
-                  </Link>
-                  <Link
-                    href="#how-it-works"
-                    className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    How It Works
-                  </Link>
-                  <Link 
-                    href="#pricing" 
-                    className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Pricing
-                  </Link>
-                </nav>
-              </div>
-            )}
           </>
         )}
       </div>

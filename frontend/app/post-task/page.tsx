@@ -69,7 +69,7 @@ export default function PostTaskPage() {
       <Toaster position="top-center" reverseOrder={false} />
       <div className="flex">
         <Leftsidebar />
-        <main className={`flex-1 p-6 transition-all duration-300 ml-[256px] dark:bg-gray-900`}>
+        <main className={`flex-1 p-6 transition-all duration-300dark:bg-gray-900`}>
           <div className="container mx-auto max-w-7xl">
             <div className="flex flex-col gap-6">
               <div className="flex items-center justify-center">

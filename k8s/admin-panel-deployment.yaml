@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-panel
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: admin-panel
+  template:
+    metadata:
+      labels:
+        app: admin-panel
+    spec:
+      containers:
+      - name: admin-panel
+        image: your-dockerhub/admin-panel:latest
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-panel
+spec:
+  selector:
+    app: admin-panel
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000 

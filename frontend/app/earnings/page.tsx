@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Calendar, CreditCard, DollarSign, Download } from "lucide-react"
+import { Calendar, CreditCard, DollarSign, Download, Menu } from "lucide-react"
 import { toast } from "react-hot-toast"
 
 import { Button } from "@/components/ui/button"
@@ -51,6 +51,7 @@ export default function EarningsPage() {
   const [availableBalance, setAvailableBalance] = useState(0);
   const [pendingBalance, setPendingBalance] = useState(0);
   const [upiAccounts, setUpiAccounts] = useState<UPIAccount[]>([])
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     if (filter === "all") {
@@ -234,115 +235,33 @@ export default function EarningsPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      {/* Sidebar toggle button for mobile, above Header */}
+      <div className="md:hidden p-2">
+        <button
+          className="p-2 focus:outline-none"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open sidebar"
+        >
+          <Menu className="h-6 w-6" />
+        </button>
+      </div>
       <Header isLoggedIn={true} />
       <div className="flex">
-        <Leftsidebar />
-        <main className={`flex-1 p-6 transition-all duration-300 ml-[256px] dark:bg-gray-900`}>
+        {/* Sidebar overlay for mobile/tablet */}
+        <div className={`fixed inset-0 z-40 bg-black bg-opacity-30 transition-opacity md:hidden ${sidebarOpen ? 'block' : 'hidden'}`}
+          onClick={() => setSidebarOpen(false)}
+        />
+        <div className={`fixed z-50 inset-y-0 left-0 w-64 bg-white dark:bg-gray-900 shadow-lg transform transition-transform md:static md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:block`}>
+          <Leftsidebar />
+        </div>
+        <main className="flex-1 p-2 sm:p-4 md:p-6 transition-all duration-300 dark:bg-gray-900">
           <div className="container mx-auto max-w-7xl">
             <div className="flex flex-col gap-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                 <h1 className="text-2xl font-bold">Earnings</h1>
-                {/* <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-                  <DialogTrigger asChild>
-                    <Button onClick={() => window.location.href = "/wallet"}>Withdraw Funds</Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle>Withdraw Funds</DialogTitle>
-                      <DialogDescription>
-                        Enter the amount and select your UPI ID for withdrawal.
-                      </DialogDescription>
-                    </DialogHeader>
-                    {!withdrawSuccess ? (
-                      <>
-                        <div className="grid gap-4 py-4">
-                          <div className="grid gap-2">
-                            <label htmlFor="amount" className="text-sm font-medium">
-                              Amount (Available: ₹{availableBalance.toFixed(2)})
-                            </label>
-                            <Input
-                              id="amount"
-                              type="number"
-                              min="1"
-                              max={availableBalance}
-                              step="0.01"
-                              placeholder="Enter amount"
-                              value={withdrawAmount}
-                              onChange={(e) => setWithdrawAmount(e.target.value)}
-                            />
-                          </div>
-                          <div className="grid gap-2">
-                            <label htmlFor="upi-id" className="text-sm font-medium">
-                              Select UPI ID
-                            </label>
-                            <Select 
-                              value={selectedUpiId} 
-                              onValueChange={setSelectedUpiId}
-                            >
-                              <SelectTrigger id="upi-id">
-                                <SelectValue placeholder="Select UPI ID" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {upiAccounts.map(acc => (
-                                  <SelectItem key={acc.id} value={acc.id.toString()}>
-                                    {acc.upiId} {acc.isDefault && "(Default)"}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            {upiAccounts.length === 0 && (
-                              <p className="text-sm text-yellow-600">
-                                Please add a UPI ID in the Payment Methods section below.
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <DialogFooter>
-                          <Button variant="outline" onClick={() => {
-                            setOpenDialog(false)
-                            setWithdrawAmount("")
-                            setSelectedUpiId("")
-                          }}>
-                            Cancel
-                          </Button>
-                          <Button
-                            onClick={handleWithdraw}
-                            disabled={
-                              isWithdrawing ||
-                              !withdrawAmount ||
-                              !selectedUpiId ||
-                              Number(withdrawAmount) <= 0 ||
-                              Number(withdrawAmount) > availableBalance
-                            }
-                          >
-                            {isWithdrawing ? "Processing..." : "Withdraw"}
-                          </Button>
-                        </DialogFooter>
-                      </>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center py-6 space-y-4">
-                        <div className="rounded-full bg-green-100 p-3 text-green-600">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-8 w-8"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                        <h3 className="text-xl font-medium text-center">Withdrawal Initiated!</h3>
-                        <p className="text-center text-muted-foreground">
-                          Your withdrawal request for ₹{Number(withdrawAmount).toFixed(2)} will be processed to your selected UPI ID.
-                        </p>
-                      </div>
-                    )}
-                  </DialogContent>
-                </Dialog> */}
               </div>
 
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
@@ -377,11 +296,11 @@ export default function EarningsPage() {
 
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                     <CardTitle>Earnings History</CardTitle>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
                       <Select defaultValue="all" onValueChange={setFilter}>
-                        <SelectTrigger className="w-[130px]">
+                        <SelectTrigger className="w-full sm:w-[130px]">
                           <SelectValue placeholder="Filter" />
                         </SelectTrigger>
                         <SelectContent>
@@ -403,16 +322,16 @@ export default function EarningsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="rounded-md border">
-                      <div className="grid grid-cols-5 bg-muted/50 p-3 text-sm font-medium">
-                      <div>Task Id</div>
+                    <div className="rounded-md border overflow-x-auto">
+                      <div className="min-w-[600px] grid grid-cols-5 bg-muted/50 p-3 text-sm font-medium">
+                        <div>Task Id</div>
                         <div>Task</div>
                         <div>Date</div>
                         <div>Amount</div>
                         <div>Status</div>
                       </div>
                       {filteredEarnings.map((earning: { taskId:number; taskName: string; date: string; amount: number; status: string }, i: number) => (
-                        <div key={i} className="grid grid-cols-5 items-center p-3 text-sm border-t">
+                        <div key={i} className="min-w-[600px] grid grid-cols-5 items-center p-3 text-sm border-t">
                           <div>{(earning?.taskId) || (i+1)}</div>
                           <div className="font-medium">{earning.taskName}</div>
                           <div className="text-muted-foreground">{new Date(earning.date).toLocaleDateString()}</div>

@@ -23,6 +23,7 @@ export default function DashboardPage() {
   const [activeTask, setActiveTask]=useState([]);
   const [pendingTask, setPendingTask]=useState([]);
   const [completedTask, setCompletedTask]=useState([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     getProfile().then(profile => {
@@ -54,15 +55,25 @@ export default function DashboardPage() {
  
   return (
     <div className="flex min-h-screen flex-col">
-      <Header isLoggedIn={true} />
-      <div className="flex">
-        <Leftsidebar />
-        <main className={`flex-1 p-6 transition-all duration-300 ml-[256px] dark:bg-gray-900`}>
-          <div className="container mx-auto max-w-7xl">
+      <Header isLoggedIn={true} setSidebarOpen={setSidebarOpen} />
+      <div className="flex relative">
+        {/* Sidebar overlays on mobile */}
+        <div className="z-50">
+          <Leftsidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        </div>
+        {/* Overlay for mobile when sidebar is open */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-40 z-40 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+        <main className="flex-1 p-4 md:p-6 transition-all duration-300 dark:bg-gray-900">
+          <div className="mx-auto max-w-7xl">
             <div className="flex flex-col gap-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <h1 className="text-2xl font-bold">Dashboard</h1>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Link href="/tasks">
                     <Button>Find Tasks</Button>
                   </Link>
@@ -75,8 +86,9 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-4">
-                <Card className="bg-white border shadow-sm">
+              {/* Responsive cards: horizontal scroll on mobile */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4 overflow-x-auto">
+                <Card className="bg-white border shadow-sm min-w-[220px]">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
                     <DollarSign className="h-4 w-4 text-gray-500" />
@@ -87,7 +99,7 @@ export default function DashboardPage() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="bg-white border shadow-sm">
+                <Card className="bg-white border shadow-sm min-w-[220px]">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Completed Tasks</CardTitle>
                     <CheckCircle className="h-4 w-4 text-gray-500" />
@@ -96,7 +108,7 @@ export default function DashboardPage() {
                     <div className="text-2xl font-bold">{completedTasks}</div>
                   </CardContent>
                 </Card>
-                <Card className="bg-white border shadow-sm">
+                <Card className="bg-white border shadow-sm min-w-[220px]">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">In Progress</CardTitle>
                     <Clock className="h-4 w-4 text-gray-500" />
@@ -106,7 +118,7 @@ export default function DashboardPage() {
                     <p className="text-xs text-gray-500">Tasks awaiting completion</p>
                   </CardContent>
                 </Card>
-                <Card className="bg-white border shadow-sm">
+                <Card className="bg-white border shadow-sm min-w-[220px]">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Wallet Balance</CardTitle>
                     <Wallet className="h-4 w-4 text-gray-500" />
@@ -125,12 +137,13 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="active">
-                    <TabsList>
+                    <TabsList className="flex flex-wrap gap-2">
                       <TabsTrigger value="active">Active Tasks</TabsTrigger>
                       <TabsTrigger value="completed">Completed</TabsTrigger>
                       <TabsTrigger value="pending">Pending Review</TabsTrigger>
                     </TabsList>
                     <TabsContent value="active" className="space-y-4 mt-4">
+                      {activeTask.length === 0 && <div className="text-gray-500">No active tasks.</div>}
                       {activeTask.map((task:any) => (
                         <Card key={task.id} className="bg-white border shadow-sm">
                           <CardHeader className="pb-2">
@@ -138,8 +151,8 @@ export default function DashboardPage() {
                             <CardDescription>{task.task.taskDescription}</CardDescription>
                           </CardHeader>
                           <CardContent>
-                            <div className="flex justify-between items-center">
-                              <div className="flex items-center gap-2">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <Badge variant="outline" className="flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
                                   {task.task.estimatedTime} min
@@ -164,6 +177,7 @@ export default function DashboardPage() {
                     </TabsContent>
 
                     <TabsContent value="completed" className="space-y-4 mt-4">
+                      {completedTask.length === 0 && <div className="text-gray-500">No completed tasks.</div>}
                       {completedTask.map((task: any) => (
                         <Card key={task.id} className="bg-white border shadow-sm">
                           <CardHeader className="pb-2">
@@ -171,8 +185,8 @@ export default function DashboardPage() {
                             <CardDescription>{task.task.taskDescription}</CardDescription>
                           </CardHeader>
                           <CardContent>
-                            <div className="flex justify-between items-center">
-                              <div className="flex items-center gap-2">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <Badge variant="outline" className="flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
                                   {task.task.estimatedTime} min
@@ -192,6 +206,7 @@ export default function DashboardPage() {
                     </TabsContent>
 
                     <TabsContent value="pending" className="space-y-4 mt-4">
+                      {pendingTask.length === 0 && <div className="text-gray-500">No pending review tasks.</div>}
                       {pendingTask.map((task: any) => (
                         <Card key={task.id} className="bg-white border shadow-sm">
                           <CardHeader className="pb-2">
@@ -199,8 +214,8 @@ export default function DashboardPage() {
                             <CardDescription>{task.task.taskDescription}</CardDescription>
                           </CardHeader>
                           <CardContent>
-                            <div className="flex justify-between items-center">
-                              <div className="flex items-center gap-2">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <Badge variant="outline" className="flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
                                   {task.task.estimatedTime} min
