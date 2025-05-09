@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 const { decryptPayload, encryptPayload } = require('../lib/crypto');
 // Base URL for API requests, set via environment variable
-const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 const ADMIN_BASE_URL = `${API_BASE_URL}/admin`;
 
 // Get API config with provided token
